@@ -11,14 +11,14 @@ export default {
     entryPoint: './src/app.js',
     ios: {
       supportsTablet: true,
-      bundleIdentifier: 'com.anonymous.cherrystudio'
+      bundleIdentifier: process.env.BUNDLE_ID
     },
     android: {
       adaptiveIcon: {
         foregroundImage: './src/assets/images/adaptive-icon.png',
         backgroundColor: '#ffffff'
       },
-      package: 'com.anonymous.cherrystudio'
+      package: process.env.BUNDLE_ID
     },
     web: {
       bundler: 'metro',
@@ -60,6 +60,7 @@ export default {
       eas: {
         projectId: '80096eaf-3ad0-4b87-a466-15f04da1bacc'
       }
-    }
+    },
+    owner: 'cherry-ai'
   }
 }

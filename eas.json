@@ -9,7 +9,17 @@
       "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "ios": {
+        "env": {
+          "BUNDLE_ID": "com.cherry-studio.app"
+        }
+      },
+      "android": {
+        "env": {
+          "BUNDLE_ID": "com.cherry_studio.app"
+        }
+      }
     },
     "production": {
       "autoIncrement": true
