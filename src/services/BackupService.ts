@@ -39,7 +39,17 @@ async function restoreIndexedDbData(data: ExportIndexedData, onProgress: OnProgr
   onProgress({ step: 'restore_messages', status: 'in_progress' })
   await topicDatabase.upsertTopics(data.topics)
   await messageDatabase.upsertMessages(data.messages)
-  await messageBlockDatabase.upsertBlocks(data.message_blocks)
+
+  // Filter message_blocks to only include those with valid message_id references
+  const validMessageIds = new Set(data.messages.map(msg => msg.id))
+  const validBlocks = data.message_blocks.filter(block => validMessageIds.has(block.messageId))
+  const filteredCount = data.message_blocks.length - validBlocks.length
+
+  if (filteredCount > 0) {
+    logger.warn(`Filtered out ${filteredCount} message block(s) with invalid message_id references during restore`)
+  }
+
+  await messageBlockDatabase.upsertBlocks(validBlocks)
 
   if (data.settings) {
     const avatarSetting = data.settings.find(setting => setting.id === 'image://avatar')
