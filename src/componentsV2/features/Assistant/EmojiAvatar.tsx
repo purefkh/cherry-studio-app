@@ -59,7 +59,7 @@ const EmojiAvatar = ({
         }}
       />
       {/* 前景清晰emoji */}
-      <Text style={{ fontSize: size * 0.5 }}>{formateEmoji(emoji)}</Text>
+      <Text style={{ fontSize: size * 0.5, lineHeight: size * 0.5 }}>{formateEmoji(emoji)}</Text>
     </View>
   )
 }
