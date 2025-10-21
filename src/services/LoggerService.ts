@@ -36,6 +36,9 @@ export class LoggerService {
   private module: string = ''
   private context: Record<string, any> = {}
 
+  // Reference to the root instance (for instances created by withContext)
+  private root?: LoggerService
+
   // New properties for file logging
   private logFilePath: string
   private logQueue: string[] = []
@@ -57,15 +60,15 @@ export class LoggerService {
 
   // initWindowSource is removed as it's not applicable to React Native.
 
-  // withContext remains the same. It's a great pattern.
-  // Using Object.create is efficient as it creates a new object with the original as its prototype.
+  // withContext creates a new logger instance with specific module/context
+  // but shares the same log queue and file writing state with the root instance
   public withContext(module: string, context?: Record<string, any>): LoggerService {
     const newLogger = Object.create(this) as LoggerService
 
     newLogger.module = module
-    // We create a new queue for the new logger instance to not interfere with others
-    newLogger.logQueue = []
     newLogger.context = { ...this.context, ...context }
+    // Point to the root instance to share logQueue and isWritingToFile
+    newLogger.root = this.root || this
 
     return newLogger
   }
@@ -121,8 +124,10 @@ export class LoggerService {
       }
 
       // Add formatted log to queue and trigger write
-      this.logQueue.push(JSON.stringify(logEntry) + '\n')
-      this.flushQueue()
+      // Use root instance to ensure all logs are written to the same queue
+      const rootInstance = this.root || this
+      rootInstance.logQueue.push(JSON.stringify(logEntry) + '\n')
+      rootInstance.flushQueue()
     }
   }
 
@@ -136,7 +141,19 @@ export class LoggerService {
 
     try {
       const file = new File(this.logFilePath)
-      file.write(logsToWrite)
+
+      // Read existing content to append instead of overwrite
+      let existingContent = ''
+      if (file.exists) {
+        try {
+          existingContent = file.textSync()
+        } catch (readError) {
+          console.error('[LoggerService] Failed to read existing log file:', readError)
+        }
+      }
+
+      // Append new logs to existing content
+      file.write(existingContent + logsToWrite)
     } catch (error) {
       console.error('[LoggerService] Failed to write to log file:', error)
     } finally {

@@ -1,7 +1,6 @@
 import { DrawerNavigationProp } from '@react-navigation/drawer'
 import { DrawerActions, useNavigation } from '@react-navigation/native'
 import { ImpactFeedbackStyle } from 'expo-haptics'
-import * as React from 'react'
 import { ActivityIndicator, Platform, View } from 'react-native'
 import { PanGestureHandler, State } from 'react-native-gesture-handler'
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller'
@@ -16,6 +15,10 @@ import { haptic } from '@/utils/haptic'
 
 import ChatContent from './ChatContent'
 import { ChatScreenHeader } from '@/componentsV2/features/ChatScreen/Header'
+import { loggerService } from '@/services/LoggerService'
+import React, { useEffect } from 'react'
+
+const logger = loggerService.withContext('ChatScreen')
 
 const ChatScreen = () => {
   const navigation = useNavigation<DrawerNavigationProp<any>>()
@@ -42,6 +45,13 @@ const ChatScreen = () => {
       }
     }
   }
+
+  useEffect(() => {
+    logger.info('ChatScreen useEffect1')
+    logger.info('ChatScreen useEffect2')
+    logger.info('ChatScreen useEffect3')
+    logger.info('ChatScreen useEffect4')
+  }, [])
 
   if (!topic || isLoading || !assistant || assistantLoading) {
     return (
