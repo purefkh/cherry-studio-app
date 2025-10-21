@@ -1,8 +1,9 @@
 import { RouteProp, useRoute } from '@react-navigation/native'
 import React from 'react'
+import { ActivityIndicator } from 'react-native'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
 
-import { YStack } from '@/componentsV2'
+import { YStack, SafeAreaContainer } from '@/componentsV2'
 import { useAssistant } from '@/hooks/useAssistant'
 import { useTheme } from 'heroui-native'
 import { AssistantDetailTabParamList } from '@/navigators/AssistantDetailTabNavigator'
@@ -16,7 +17,13 @@ export default function ToolTabScreen() {
   const { assistant: _assistant } = route.params
   const { assistant, updateAssistant } = useAssistant(_assistant.id)
 
-  if (!assistant) return null
+  if (!assistant) {
+    return (
+      <SafeAreaContainer className="flex-1  items-center justify-center">
+        <ActivityIndicator />
+      </SafeAreaContainer>
+    )
+  }
 
   return (
     <KeyboardAwareScrollView

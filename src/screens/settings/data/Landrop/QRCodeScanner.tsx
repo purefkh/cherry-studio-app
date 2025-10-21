@@ -1,5 +1,6 @@
 import { CameraView, useCameraPermissions, PermissionStatus } from 'expo-camera'
 import React, { useEffect, useState } from 'react'
+import { ActivityIndicator } from 'react-native'
 import { useTranslation } from 'react-i18next'
 
 import { Container, Text, XStack, YStack } from '@/componentsV2'
@@ -75,7 +76,11 @@ export function QRCodeScanner({ onQRCodeScanned }: QRCodeScannerProps) {
   }
 
   if (!permission.granted) {
-    return null
+    return (
+      <Container className="flex-1 items-center justify-center">
+        <ActivityIndicator />
+      </Container>
+    )
   }
 
   return (

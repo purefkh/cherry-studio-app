@@ -46,7 +46,7 @@ export default function WebSearchProviderSettingsScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaContainer className="items-center justify-center">
+      <SafeAreaContainer className="flex-1 items-center justify-center">
         <ActivityIndicator />
       </SafeAreaContainer>
     )
