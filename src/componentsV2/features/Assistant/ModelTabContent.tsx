@@ -16,6 +16,8 @@ import Row from '@/componentsV2/layout/Row'
 import TextField from '@/componentsV2/base/TextField'
 import YStack from '@/componentsV2/layout/YStack'
 import ModelSheet from '../Sheet/ModelSheet'
+import { getBaseModelName } from '@/utils/naming'
+import XStack from '@/componentsV2/layout/XStack'
 
 interface ModelTabContentProps {
   assistant: Assistant
@@ -80,22 +82,22 @@ export function ModelTabContent({ assistant, updateAssistant }: ModelTabContentP
         variant="tertiary"
         className="border-0 justify-between bg-ui-card-background dark:bg-ui-card-background-dark rounded-xl"
         onPress={handleModelPress}>
-        <Button.Label className="flex-1 justify-between items-center flex-row">
-          {model.length > 0 ? (
-            <>
-              <Text className="text-base" numberOfLines={1} ellipsizeMode="tail">
-                {t(`provider.${model[0].provider}`)}
-              </Text>
-              <Text className="text-base max-w-[80%]" numberOfLines={1} ellipsizeMode="tail">
-                {model[0].name}
-              </Text>
-            </>
-          ) : (
+        {model.length > 0 ? (
+          <XStack className="flex-1 flex-row justify-between items-center">
+            <Text className="text-base" numberOfLines={1} ellipsizeMode="tail">
+              {t(`provider.${model[0].provider}`)}
+            </Text>
+            <Text className="text-base max-w-[70%]" numberOfLines={1} ellipsizeMode="middle">
+              {getBaseModelName(model[0].name)}
+            </Text>
+          </XStack>
+        ) : (
+          <Button.Label>
             <Text className="text-base" numberOfLines={1} ellipsizeMode="tail">
               {t('settings.models.empty')}
             </Text>
-          )}
-        </Button.Label>
+          </Button.Label>
+        )}
         <ChevronRight size={14} />
       </Button>
       <Group>
@@ -189,13 +191,15 @@ export function ModelTabContent({ assistant, updateAssistant }: ModelTabContentP
             className="border-0 py-3 pl-4 pr-5 justify-between bg-transparent rounded-xl"
             onPress={handleReasoningPress}>
             <Button.Label className="flex-1 justify-between items-center flex-row">
-              <Text className="flex-1">{t('assistants.settings.reasoning')}</Text>
+              <XStack>
+                <Text className="flex-1">{t('assistants.settings.reasoning')}</Text>
 
-              <YStack className="justify-end">
-                <Text className="text-sm bg-green-10 dark:bg-green-dark-10 border-green-20 dark:border-green-dark-20 text-green-100 dark:text-green-dark-100 border-[0.5px] py-[2px] px-2 rounded-lg">
-                  {t(`assistants.settings.reasoning.${settings.reasoning_effort || 'off'}`)}
-                </Text>
-              </YStack>
+                <YStack className="justify-end">
+                  <Text className="text-sm bg-green-10 dark:bg-green-dark-10 border-green-20 dark:border-green-dark-20 text-green-100 dark:text-green-dark-100 border-[0.5px] py-[2px] px-2 rounded-lg">
+                    {t(`assistants.settings.reasoning.${settings.reasoning_effort || 'off'}`)}
+                  </Text>
+                </YStack>
+              </XStack>
             </Button.Label>
             <ChevronRight size={14} />
           </Button>
