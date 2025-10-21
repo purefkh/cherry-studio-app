@@ -205,8 +205,10 @@ export const TopicItem: FC<TopicItemProps> = ({
           borderColor={isDark ? '#444444' : '#ffffff'}
         />
         <YStack className="flex-1 gap-0.5">
-          <XStack className="justify-between">
-            <Text className="text-md leading-[18px] font-bold ">{assistant?.name}</Text>
+          <XStack className="justify-between items-center gap-2">
+            <Text className="flex-1 text-base font-bold" numberOfLines={1} ellipsizeMode="tail">
+              {assistant?.name}
+            </Text>
             <Text className="text-xs text-text-secondary dark:text-text-secondary-dark shrink-0 text-wrap-none">
               {displayTime}
             </Text>
