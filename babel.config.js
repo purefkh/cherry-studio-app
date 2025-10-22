@@ -18,8 +18,6 @@ module.exports = function (api) {
         'module-resolver',
         {
           alias: {
-            '@mcp-trace/trace-core': '../packages/mcp-trace/trace-core',
-            '@mcp-trace/trace-node': '../packages/mcp-trace/trace-node',
             '@db': './db'
           }
         }
