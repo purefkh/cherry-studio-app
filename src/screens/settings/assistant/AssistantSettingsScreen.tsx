@@ -43,7 +43,7 @@ function ModelPicker({ assistant, onPress }: { assistant: Assistant; onPress: ()
             </>
           ) : (
             <Text numberOfLines={1} className="flex-1">
-              {t('settings.models.empty')}
+              {t('settings.models.empty.label')}
             </Text>
           )}
         </XStack>
@@ -93,7 +93,7 @@ function AssistantSettingItem({
           />
         </XStack>
         <ModelPicker assistant={assistant} onPress={() => sheetRef.current?.present()} />
-        <Text size="sm" className="px-[10px] text-text-secondary dark:text-text-secondary-dark opacity-70">
+        <Text className="px-[10px] text-text-secondary dark:text-text-secondary-dark opacity-70">
           {t(descriptionKey)}
         </Text>
       </YStack>

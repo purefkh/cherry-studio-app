@@ -60,7 +60,7 @@ export function ToolTabContent({ assistant, updateAssistant }: ToolTabContentPro
 
     return {
       icon: null,
-      text: t('settings.websearch.empty'),
+      text: t('settings.websearch.empty.label'),
       isActive: false
     }
   }

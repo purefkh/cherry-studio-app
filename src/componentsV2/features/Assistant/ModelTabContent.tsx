@@ -94,7 +94,7 @@ export function ModelTabContent({ assistant, updateAssistant }: ModelTabContentP
         ) : (
           <Button.Label>
             <Text className="text-base" numberOfLines={1} ellipsizeMode="tail">
-              {t('settings.models.empty')}
+              {t('settings.models.empty.label')}
             </Text>
           </Button.Label>
         )}
@@ -192,7 +192,7 @@ export function ModelTabContent({ assistant, updateAssistant }: ModelTabContentP
             onPress={handleReasoningPress}>
             <Button.Label className="flex-1 justify-between items-center flex-row">
               <XStack>
-                <Text className="flex-1">{t('assistants.settings.reasoning')}</Text>
+                <Text className="flex-1">{t('assistants.settings.reasoning.label')}</Text>
 
                 <YStack className="justify-end">
                   <Text className="text-sm bg-green-10 dark:bg-green-dark-10 border-green-20 dark:border-green-dark-20 text-green-100 dark:text-green-dark-100 border-[0.5px] py-[2px] px-2 rounded-lg">

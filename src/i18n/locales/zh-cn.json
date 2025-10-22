@@ -2,8 +2,12 @@
   "translation": {
     "assistants": {
       "market": {
-        "add.success": "添加 {{assistant_name}} 成功",
-        "button.chat": "立即聊天",
+        "add": {
+          "success": "添加 {{assistant_name}} 成功"
+        },
+        "button": {
+          "chat": "立即聊天"
+        },
         "groups": {
           "all": "全部",
           "business": "业务",
@@ -18,38 +22,46 @@
       },
       "name": "助手名称",
       "save": "保存助手",
-      "search.no_results": "未找到助手",
-      "settings.context": "上下文",
-      "settings.max_tokens": "启用最大token限制",
-      "settings.max_tokens_value": "最大token限制",
-      "settings.reasoning": "思考深度",
-      "settings.reasoning.auto": "默认",
-      "settings.reasoning.high": "沉思",
-      "settings.reasoning.low": "浮想",
-      "settings.reasoning.medium": "斟酌",
-      "settings.reasoning.minimal": "微念",
-      "settings.reasoning.off": "关闭",
-      "settings.stream_output": "流式输出",
-      "settings.temperature": "温度",
-      "settings.tooluse": {
-        "empty": "未设置工具调用方式",
-        "function": "函数调用",
-        "prompt": "提示词调用",
-        "title": "工具调用方式"
+      "search": {
+        "no_results": "未找到助手"
       },
-      "settings.top_p": "Top P",
+      "settings": {
+        "context": "上下文",
+        "max_tokens": "启用最大token限制",
+        "max_tokens_value": "最大token限制",
+        "reasoning": {
+          "auto": "默认",
+          "high": "沉思",
+          "label": "思考深度",
+          "low": "浮想",
+          "medium": "斟酌",
+          "minimal": "微念",
+          "off": "关闭"
+        },
+        "stream_output": "流式输出",
+        "temperature": "温度",
+        "tooluse": {
+          "empty": "未设置工具调用方式",
+          "function": "函数调用",
+          "prompt": "提示词调用",
+          "title": "工具调用方式"
+        },
+        "top_p": "Top P"
+      },
       "sort": {
         "alphabetical": "按字母顺序的",
         "recent_add": "最近添加",
         "recent_use": "最近使用",
         "title": "排序助手"
       },
-      "title": "助手",
-      "title.change": "切换助手",
-      "title.create": "创建助手",
-      "title.edit": "编辑助手",
-      "title.mine": "我的助手",
-      "title.recent": "最近使用的助手"
+      "title": {
+        "change": "切换助手",
+        "create": "创建助手",
+        "edit": "编辑助手",
+        "label": "助手",
+        "mine": "我的助手",
+        "recent": "最近使用的助手"
+      }
     },
     "button": {
       "add": "添加",
@@ -79,7 +91,9 @@
         }
       },
       "citation": "+ {{count}} 个来源",
-      "default.name": "默认",
+      "default": {
+        "name": "默认"
+      },
       "think": "正在思考 {{seconds}} 秒",
       "think_expand": "点击看穿我的心思",
       "title": "欢迎使用 Cherry Studio!",
@@ -279,9 +293,15 @@
       "yuque": "导出到语雀"
     },
     "history": {
-      "search.placeholder": "搜索话题或消息...",
-      "search.topics.empty": "未找到话题，按 Enter 搜索所有消息",
-      "topics.empty": "未找到话题"
+      "search": {
+        "placeholder": "搜索话题或消息...",
+        "topics": {
+          "empty": "未找到话题，按 Enter 搜索所有消息"
+        }
+      },
+      "topics": {
+        "empty": "未找到话题"
+      }
     },
     "inputs": {
       "mentions": "@ {{number}} 个模型",
@@ -460,18 +480,22 @@
           "description": "用于简单任务的助手，例如话题命名和关键字提取",
           "name": "快速助手"
         },
+        "show": {
+          "icon": "显示模型图标"
+        },
         "title": "默认助手",
         "translate_assistant": {
           "description": "用于翻译服务的助手",
           "name": "翻译助手"
         }
       },
-      "assistant.show.icon": "显示模型图标",
       "data": {
         "app_data": "应用数据",
         "app_data_location": "应用数据位置",
-        "app_knowledge": "知识库文件",
-        "app_knowledge.remove_all": "删除文件",
+        "app_knowledge": {
+          "label": "知识库文件",
+          "remove_all": "删除文件"
+        },
         "app_logs": "应用日志",
         "backup": "数据备份",
         "basic_title": "基础数据设置",
@@ -482,7 +506,9 @@
           "warning": "清除缓存将删除所有缓存数据，包括缓存文件，图片和备份。"
         },
         "cloud_backup": "云端备份设置",
-        "data.title": "数据目录",
+        "data": {
+          "title": "数据目录"
+        },
         "data_reset": {
           "error": "数据重置失败。请重试，如果问题持续存在，请联系技术支持。"
         },
@@ -535,14 +561,22 @@
       },
       "dataAndSecurity": "数据与安全",
       "general": {
-        "display.title": "显示设置",
-        "language.title": "语言",
-        "privacy.anonymous": "匿名报告错误和统计",
-        "privacy.title": "隐私设置",
-        "theme.auto": "自动",
-        "theme.dark": "深色",
-        "theme.light": "浅色",
-        "theme.title": "主题",
+        "display": {
+          "title": "显示设置"
+        },
+        "language": {
+          "title": "语言"
+        },
+        "privacy": {
+          "anonymous": "匿名报告错误和统计",
+          "title": "隐私设置"
+        },
+        "theme": {
+          "auto": "自动",
+          "dark": "深色",
+          "light": "浅色",
+          "title": "主题"
+        },
         "title": "常规设置"
       },
       "joplin": {
@@ -553,8 +587,10 @@
           "fail": "Joplin 连接验证失败",
           "success": "Joplin 连接验证成功"
         },
-        "export_reasoning.help": "启用后，导出的内容将包含助手生成的推理链（思考过程）。",
-        "export_reasoning.title": "在导出时包含推理链",
+        "export_reasoning": {
+          "help": "启用后，导出的内容将包含助手生成的推理链（思考过程）。",
+          "title": "在导出时包含推理链"
+        },
         "help": "点击此处获取 Joplin 授权令牌",
         "title": "Joplin 配置",
         "token": "Joplin 授权令牌",
@@ -570,17 +606,29 @@
       },
       "modelAndService": "AI模型与服务",
       "models": {
-        "add.model": "添加模型",
-        "add.model.group": "模型组",
-        "add.model.group.placeholder": "可选，例如 OpenAI",
-        "add.model.id": "模型 ID",
-        "add.model.id.placeholder": "必填，例如 gpt-4o",
-        "add.model.name": "模型名称",
-        "add.model.name.placeholder": "可选，例如 GPT-4o",
+        "add": {
+          "model": {
+            "group": {
+              "label": "模型组",
+              "placeholder": "可选，例如 OpenAI"
+            },
+            "id": {
+              "label": "模型 ID",
+              "placeholder": "必填，例如 gpt-4o"
+            },
+            "label": "添加模型",
+            "name": {
+              "label": "模型名称",
+              "placeholder": "可选，例如 GPT-4o"
+            }
+          }
+        },
         "default_model": "默认模型",
-        "empty": "尚未有模型...",
-        "empty.add_model": "让我们添加你的第一个模型。",
-        "empty.tooltip": "您查找的页面超出了我们的范围。给您带来的不便，我们深表歉意。",
+        "empty": {
+          "add_model": "让我们添加你的第一个模型。",
+          "label": "尚未有模型...",
+          "tooltip": "您查找的页面超出了我们的范围。给您带来的不便，我们深表歉意。"
+        },
         "search": "搜索模型...",
         "title": "模型"
       },
@@ -597,8 +645,10 @@
         },
         "database_id": "Notion 数据库 ID",
         "database_id_placeholder": "输入 Notion 数据库 ID",
-        "export_reasoning.help": "启用后，导出的内容将包含助手生成的推理链（思考过程）。",
-        "export_reasoning.title": "在导出时包含推理链",
+        "export_reasoning": {
+          "help": "启用后，导出的内容将包含助手生成的推理链（思考过程）。",
+          "title": "在导出时包含推理链"
+        },
         "help": "Notion 配置文档",
         "page_name_key": "页面标题字段名",
         "page_name_key_placeholder": "输入页面标题字段名，默认为 Name",
@@ -631,22 +681,36 @@
         "title": "个人设置"
       },
       "provider": {
-        "add.name": "服务商名称",
-        "add.name.placeholder": "示例：OpenAI",
-        "add.title": "添加服务商",
-        "add.type": "服务商类型",
+        "add": {
+          "name": {
+            "label": "服务商名称",
+            "placeholder": "示例：OpenAI"
+          },
+          "title": "添加服务商",
+          "type": "服务商类型"
+        },
         "added": "已添加",
-        "api.url.preview": "预览: {{url}}",
-        "api.url.reset": "重置",
-        "api.url.tip": "以 / 结尾忽略 v1，以 # 结尾强制使用输入地址",
-        "api_check.title": "检测",
-        "api_check.tooltip": "选择用于检测的模型",
-        "api_host": "API 主机",
-        "api_host.placeholder": "请输入 API 主机",
-        "api_key": "API 密钥",
-        "api_key.get": "获取 API 密钥",
-        "api_key.placeholder": "请输入 API 密钥",
-        "api_key.tip": "多个密钥用逗号分隔",
+        "api": {
+          "url": {
+            "preview": "预览: {{url}}",
+            "reset": "重置",
+            "tip": "以 / 结尾忽略 v1，以 # 结尾强制使用输入地址"
+          }
+        },
+        "api_check": {
+          "title": "检测",
+          "tooltip": "选择用于检测的模型"
+        },
+        "api_host": {
+          "label": "API 主机",
+          "placeholder": "请输入 API 主机"
+        },
+        "api_key": {
+          "get": "获取 API 密钥",
+          "label": "API 密钥",
+          "placeholder": "请输入 API 密钥",
+          "tip": "多个密钥用逗号分隔"
+        },
         "api_service": "API 服务",
         "auth": {
           "balance_recharge": "余额充值",
@@ -660,20 +724,26 @@
           "model_empty": "模型不能为空",
           "title": "模型检查失败"
         },
-        "delete.content": "您确定要删除此服务商吗？",
-        "delete.title": "删除服务商",
+        "delete": {
+          "content": "您确定要删除此服务商吗？",
+          "title": "删除服务商"
+        },
         "edit": {
           "title": "编辑服务商"
         },
         "enabled": "开启",
-        "list.title": "服务商列表",
+        "list": {
+          "title": "服务商列表"
+        },
         "not_found": "未找到服务商",
         "not_found_message": "导航到服务商页面时出现错误",
         "provider_deleted": "服务商已删除",
         "search": "搜索服务商...",
         "title": "模型服务商"
       },
-      "proxy.title": "代理地址",
+      "proxy": {
+        "title": "代理地址"
+      },
       "siyuan": {
         "api_url": "思源笔记 API URL",
         "api_url_placeholder": "例如：http://127.0.0.1:6806",
@@ -690,19 +760,35 @@
         "root_path": "思源笔记根路径",
         "root_path_placeholder": "例如：/CherryStudio",
         "title": "思源笔记配置",
-        "token": "思源笔记 Token",
-        "token.help": "获取思源笔记 Token",
+        "token": {
+          "help": "获取思源笔记 Token",
+          "label": "思源笔记 Token"
+        },
         "token_placeholder": "请输入思源笔记 Token"
       },
-      "theme.window.style.opaque": "不透明窗口",
-      "theme.window.style.title": "窗口样式",
-      "theme.window.style.transparent": "透明窗口",
+      "theme": {
+        "window": {
+          "style": {
+            "opaque": "不透明窗口",
+            "title": "窗口样式",
+            "transparent": "透明窗口"
+          }
+        }
+      },
       "title": "设置",
-      "topic.position": "话题位置",
-      "topic.position.left": "左侧",
-      "topic.position.right": "正确",
-      "topic.show.time": "显示话题时间",
-      "tray.title": "启用系统托盘图标",
+      "topic": {
+        "position": {
+          "label": "话题位置",
+          "left": "左侧",
+          "right": "正确"
+        },
+        "show": {
+          "time": "显示话题时间"
+        }
+      },
+      "tray": {
+        "title": "启用系统托盘图标"
+      },
       "webdav": {
         "backup": {
           "auto_backup": "自动备份",
@@ -729,13 +815,19 @@
         "title": "WebDAV"
       },
       "websearch": {
-        "api_host": "API 主机",
-        "api_host.placeholder": "请输入 API 主机",
-        "api_key": "API 密钥",
-        "api_key.get": "获取 API 密钥",
-        "api_key.placeholder": "请输入 API 密钥",
+        "api_host": {
+          "label": "API 主机",
+          "placeholder": "请输入 API 主机"
+        },
+        "api_key": {
+          "get": "获取 API 密钥",
+          "label": "API 密钥",
+          "placeholder": "请输入 API 密钥"
+        },
         "api_service": "API 服务",
-        "blacklist.title": "黑名单",
+        "blacklist": {
+          "title": "黑名单"
+        },
         "blacklist_description": "来自以下网站的结果将不会出现在搜索结果中",
         "blacklist_placeholder": "请使用以下格式（按行分隔）\n模式匹配：*://*.example.com/*\n正则表达式：/example\\.(net|org)/",
         "builtin": "内置网络搜索",
@@ -744,8 +836,10 @@
         "check_success": "检查成功 🎉",
         "check_success_message": "API 运作正常",
         "contentLengthLimit": "内容长度限制",
-        "empty": "暂无服务商...",
-        "empty.description": "前往添加服务商",
+        "empty": {
+          "description": "前往添加服务商",
+          "label": "暂无服务商..."
+        },
         "overrideSearchService": "覆盖搜索服务",
         "provider": {
           "api": {
@@ -759,7 +853,9 @@
         "searchCount": "搜索数量",
         "searchWithDates": "包含日期搜索",
         "selectPlaceholder": "请选择网页搜索服务商...",
-        "subscribe.title": "黑名单订阅",
+        "subscribe": {
+          "title": "黑名单订阅"
+        },
         "title": "网络搜索"
       },
       "yuque": {
@@ -784,8 +880,10 @@
         "title": "重命名话题"
       },
       "select_assistant": "选择新对话助手",
-      "title": "话题",
-      "title.recent": "最近的话题"
+      "title": {
+        "label": "话题",
+        "recent": "最近的话题"
+      }
     }
   }
 }

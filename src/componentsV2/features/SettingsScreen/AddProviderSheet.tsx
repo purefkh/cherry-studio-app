@@ -158,7 +158,7 @@ export const AddProviderSheet = forwardRef<BottomSheetModal, ProviderSheetProps>
                 <YStack className="w-full gap-2">
                   <XStack className="gap-2">
                     <Text className="text-text-secondary dark:text-text-secondary-dark">
-                      {t('settings.provider.add.name')}
+                      {t('settings.provider.add.name.label')}
                     </Text>
                     <Text size="lg" className="text-red-500 dark:text-red-500">
                       *

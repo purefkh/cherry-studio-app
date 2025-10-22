@@ -158,7 +158,7 @@ export default function ApiServiceScreen() {
         {/* API Key 配置 */}
         <YStack className="gap-2">
           <XStack className="justify-between items-center">
-            <GroupTitle>{t('settings.provider.api_key')}</GroupTitle>
+            <GroupTitle>{t('settings.provider.api_key.label')}</GroupTitle>
             <Button size="sm" isIconOnly variant="ghost" onPress={handleOpenBottomSheet}>
               <Button.Label>
                 {checkApiStatus === 'idle' && <ShieldCheck size={16} />}
@@ -199,7 +199,7 @@ export default function ApiServiceScreen() {
         {/* API Host 配置 */}
         <YStack className="gap-2">
           <XStack className="pr-3 justify-between items-center">
-            <GroupTitle>{t('settings.provider.api_host')}</GroupTitle>
+            <GroupTitle>{t('settings.provider.api_host.label')}</GroupTitle>
           </XStack>
           <TextField>
             <TextField.Input

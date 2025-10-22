@@ -2,8 +2,12 @@
   "translation": {
     "assistants": {
       "market": {
-        "add.success": "{{assistant_name}}の追加に成功しました",
-        "button.chat": "今すぐチャット",
+        "add": {
+          "success": "{{assistant_name}}の追加に成功しました"
+        },
+        "button": {
+          "chat": "今すぐチャット"
+        },
         "groups": {
           "all": "オール",
           "business": "ビジネス",
@@ -18,38 +22,46 @@
       },
       "name": "アシスタント名",
       "save": "セーブアシスタント",
-      "search.no_results": "アシスタントが見つかりません",
-      "settings.context": "文脈",
-      "settings.max_tokens": "最大トークン制限を有効にする",
-      "settings.max_tokens_value": "最大トークン制限",
-      "settings.reasoning": "推論努力",
-      "settings.reasoning.auto": "オート",
-      "settings.reasoning.high": "ハイ",
-      "settings.reasoning.low": "ロウ",
-      "settings.reasoning.medium": "ミディアム",
-      "settings.reasoning.minimal": "マイニン",
-      "settings.reasoning.off": "オフ",
-      "settings.stream_output": "ストリーム出力",
-      "settings.temperature": "温度",
-      "settings.tooluse": {
-        "empty": "ツール呼び出し方法が設定されていません",
-        "function": "関数呼び出し",
-        "prompt": "プロンプト呼び出し",
-        "title": "ツール呼び出し方法"
+      "search": {
+        "no_results": "アシスタントが見つかりません"
       },
-      "settings.top_p": "トップP",
+      "settings": {
+        "context": "文脈",
+        "max_tokens": "最大トークン制限を有効にする",
+        "max_tokens_value": "最大トークン制限",
+        "reasoning": {
+          "auto": "オート",
+          "high": "ハイ",
+          "label": "推論努力",
+          "low": "ロウ",
+          "medium": "ミディアム",
+          "minimal": "マイニン",
+          "off": "オフ"
+        },
+        "stream_output": "ストリーム出力",
+        "temperature": "温度",
+        "tooluse": {
+          "empty": "ツール呼び出し方法が設定されていません",
+          "function": "関数呼び出し",
+          "prompt": "プロンプト呼び出し",
+          "title": "ツール呼び出し方法"
+        },
+        "top_p": "トップP"
+      },
       "sort": {
         "alphabetical": "アルファベット順",
         "recent_add": "最近追加された",
         "recent_use": "最近使用したもの",
         "title": "アシスタントのソート"
       },
-      "title": "アシスタント",
-      "title.change": "アシスタントを切り替える",
-      "title.create": "アシスタントを作成",
-      "title.edit": "編集アシスタント",
-      "title.mine": "私のアシスタント",
-      "title.recent": "最近のアシスタント"
+      "title": {
+        "change": "アシスタントを切り替える",
+        "create": "アシスタントを作成",
+        "edit": "編集アシスタント",
+        "label": "アシスタント",
+        "mine": "私のアシスタント",
+        "recent": "最近のアシスタント"
+      }
     },
     "button": {
       "add": "追加",
@@ -79,7 +91,9 @@
         }
       },
       "citation": "+ {{count}}件のソース",
-      "default.name": "デフォルト",
+      "default": {
+        "name": "デフォルト"
+      },
       "think": "{{seconds}}秒考え中",
       "think_expand": "タップして私の心を読む",
       "title": "Cherry Studio へようこそ！",
@@ -279,9 +293,15 @@
       "yuque": "語雀にエクスポート"
     },
     "history": {
-      "search.placeholder": "トピックまたはメッセージを検索...",
-      "search.topics.empty": "トピックが見つかりません。すべてのメッセージを検索するには Enter キーを押してください。",
-      "topics.empty": "トピックが見つかりません。"
+      "search": {
+        "placeholder": "トピックまたはメッセージを検索...",
+        "topics": {
+          "empty": "トピックが見つかりません。すべてのメッセージを検索するには Enter キーを押してください。"
+        }
+      },
+      "topics": {
+        "empty": "トピックが見つかりません。"
+      }
     },
     "inputs": {
       "mentions": "@ {{number}} モデル",
@@ -460,18 +480,22 @@
           "description": "シンプルなタスクを行うためのアシスタント。トピック命名やキーワード抽出などに使用。",
           "name": "クイックアシスタント"
         },
+        "show": {
+          "icon": "モデルのアイコンを表示する"
+        },
         "title": "デフォルトアシスタント",
         "translate_assistant": {
           "description": "翻訳サービスに使用されるアシスタント",
           "name": "翻訳アシスタント"
         }
       },
-      "assistant.show.icon": "モデルのアイコンを表示する",
       "data": {
         "app_data": "アプリデータ",
         "app_data_location": "アプリケーションデータの場所",
-        "app_knowledge": "ナレッジベースファイル",
-        "app_knowledge.remove_all": "ファイルの削除",
+        "app_knowledge": {
+          "label": "ナレッジベースファイル",
+          "remove_all": "ファイルの削除"
+        },
         "app_logs": "アプリログ",
         "backup": "データバックアップ",
         "basic_title": "基本データ設定",
@@ -482,7 +506,9 @@
           "warning": "キャッシュをクリアすると、キャッシュファイル、画像、バックアップを含むすべてのキャッシュデータが削除されます。"
         },
         "cloud_backup": "クラウドバックアップ設定",
-        "data.title": "データディレクトリ",
+        "data": {
+          "title": "データディレクトリ"
+        },
         "data_reset": {
           "error": "データのリセットに失敗しました。もう一度試してください。問題が解決しない場合は、技術サポートまでお問い合わせください。"
         },
@@ -535,14 +561,22 @@
       },
       "dataAndSecurity": "データ & セキュリティ",
       "general": {
-        "display.title": "表示設定",
-        "language.title": "言語",
-        "privacy.anonymous": "エラーと統計を匿名で報告",
-        "privacy.title": "プライバシー設定",
-        "theme.auto": "自動",
-        "theme.dark": "ダーク",
-        "theme.light": "ライト",
-        "theme.title": "テーマ",
+        "display": {
+          "title": "表示設定"
+        },
+        "language": {
+          "title": "言語"
+        },
+        "privacy": {
+          "anonymous": "エラーと統計を匿名で報告",
+          "title": "プライバシー設定"
+        },
+        "theme": {
+          "auto": "自動",
+          "dark": "ダーク",
+          "light": "ライト",
+          "title": "テーマ"
+        },
         "title": "一般設定"
       },
       "joplin": {
@@ -553,8 +587,10 @@
           "fail": "Joplin接続の検証に失敗しました",
           "success": "Joplin接続の検証に成功しました"
         },
-        "export_reasoning.help": "有効にすると、エクスポートされるコンテンツにアシスタントが生成した推論チェーン（思考過程）が含まれます。",
-        "export_reasoning.title": "エクスポートに推論チェーンを含める",
+        "export_reasoning": {
+          "help": "有効にすると、エクスポートされるコンテンツにアシスタントが生成した推論チェーン（思考過程）が含まれます。",
+          "title": "エクスポートに推論チェーンを含める"
+        },
         "help": "Joplin認証トークンを取得するにはここをクリック",
         "title": "Joplin設定",
         "token": "Joplin認証トークン",
@@ -570,17 +606,29 @@
       },
       "modelAndService": "AIモデル＆サービス",
       "models": {
-        "add.model": "モデルを追加",
-        "add.model.group": "モデルグループ",
-        "add.model.group.placeholder": "任意 例: OpenAI",
-        "add.model.id": "モデルID",
-        "add.model.id.placeholder": "必須 例: gpt-4o",
-        "add.model.name": "モデル名",
-        "add.model.name.placeholder": "任意 例: GPT-4o",
+        "add": {
+          "model": {
+            "group": {
+              "label": "モデルグループ",
+              "placeholder": "任意 例: OpenAI"
+            },
+            "id": {
+              "label": "モデルID",
+              "placeholder": "必須 例: gpt-4o"
+            },
+            "label": "モデルを追加",
+            "name": {
+              "label": "モデル名",
+              "placeholder": "任意 例: GPT-4o"
+            }
+          }
+        },
         "default_model": "デフォルトモデル",
-        "empty": "まだモデルがありません...",
-        "empty.add_model": "最初のモデルを追加しましょう。",
-        "empty.tooltip": "お探しのページは見つかりませんでした。ご不便をおかけして申し訳ありません。",
+        "empty": {
+          "add_model": "最初のモデルを追加しましょう。",
+          "label": "まだモデルがありません...",
+          "tooltip": "お探しのページは見つかりませんでした。ご不便をおかけして申し訳ありません。"
+        },
         "search": "モデルを検索...",
         "title": "モデル"
       },
@@ -597,8 +645,10 @@
         },
         "database_id": "NotionデータベースID",
         "database_id_placeholder": "NotionデータベースIDを入力してください",
-        "export_reasoning.help": "有効にすると、エクスポートされるコンテンツに推論チェーン（思考過程）が含まれます。",
-        "export_reasoning.title": "エクスポートに推論チェーンを含める",
+        "export_reasoning": {
+          "help": "有効にすると、エクスポートされるコンテンツに推論チェーン（思考過程）が含まれます。",
+          "title": "エクスポートに推論チェーンを含める"
+        },
         "help": "Notion設定ドキュメント",
         "page_name_key": "ページタイトルフィールド名",
         "page_name_key_placeholder": "ページタイトルフィールド名を入力してください（デフォルトはName）",
@@ -631,22 +681,36 @@
         "title": "個人設定"
       },
       "provider": {
-        "add.name": "プロバイダー名",
-        "add.name.placeholder": "例：OpenAI",
-        "add.title": "プロバイダーを追加する",
-        "add.type": "プロバイダータイプ",
+        "add": {
+          "name": {
+            "label": "プロバイダー名",
+            "placeholder": "例：OpenAI"
+          },
+          "title": "プロバイダーを追加する",
+          "type": "プロバイダータイプ"
+        },
         "added": "追加しました",
-        "api.url.preview": "プレビュー: {{url}}",
-        "api.url.reset": "リセット",
-        "api.url.tip": "/で終わる場合はv1を無視し、#で終わる場合は入力アドレスの使用を強制します。",
-        "api_check.title": "検出",
-        "api_check.tooltip": "検出に使用するモデルを選択",
-        "api_host": "APIホスト",
-        "api_host.placeholder": "APIホストを入力してください",
-        "api_key": "APIキー",
-        "api_key.get": "APIキーを取得",
-        "api_key.placeholder": "APIキーを入力してください",
-        "api_key.tip": "カンマで区切られた複数のキー",
+        "api": {
+          "url": {
+            "preview": "プレビュー: {{url}}",
+            "reset": "リセット",
+            "tip": "/で終わる場合はv1を無視し、#で終わる場合は入力アドレスの使用を強制します。"
+          }
+        },
+        "api_check": {
+          "title": "検出",
+          "tooltip": "検出に使用するモデルを選択"
+        },
+        "api_host": {
+          "label": "APIホスト",
+          "placeholder": "APIホストを入力してください"
+        },
+        "api_key": {
+          "get": "APIキーを取得",
+          "label": "APIキー",
+          "placeholder": "APIキーを入力してください",
+          "tip": "カンマで区切られた複数のキー"
+        },
         "api_service": "APIサービス",
         "auth": {
           "balance_recharge": "残高チャージ",
@@ -660,20 +724,26 @@
           "model_empty": "モデルを空にすることはできません",
           "title": "モデルチェック失敗"
         },
-        "delete.content": "このプロバイダーを削除してもよろしいですか？",
-        "delete.title": "プロバイダーの削除",
+        "delete": {
+          "content": "このプロバイダーを削除してもよろしいですか？",
+          "title": "プロバイダーの削除"
+        },
         "edit": {
           "title": "編集サービスプロバイダ"
         },
         "enabled": "オン",
-        "list.title": "プロバイダーリスト",
+        "list": {
+          "title": "プロバイダーリスト"
+        },
         "not_found": "プロバイダーが見つかりません",
         "not_found_message": "プロバイダーページに移動する際にエラーが発生しました。",
         "provider_deleted": "プロバイダーが削除されました",
         "search": "検索プロバイダー...",
         "title": "モデルプロバイダー"
       },
-      "proxy.title": "プロキシ アドレス",
+      "proxy": {
+        "title": "プロキシ アドレス"
+      },
       "siyuan": {
         "api_url": "思源ノートAPI URL",
         "api_url_placeholder": "例：http://127.0.0.1:6806",
@@ -690,19 +760,35 @@
         "root_path": "思源ノートルートパス",
         "root_path_placeholder": "例：/CherryStudio",
         "title": "思源ノート設定",
-        "token": "思源ノートトークン",
-        "token.help": "思源ノートトークンを取得",
+        "token": {
+          "help": "思源ノートトークンを取得",
+          "label": "思源ノートトークン"
+        },
         "token_placeholder": "思源ノートトークンを入力してください"
       },
-      "theme.window.style.opaque": "不透明ウィンドウ",
-      "theme.window.style.title": "ウィンドウスタイル",
-      "theme.window.style.transparent": "透明ウィンドウ",
+      "theme": {
+        "window": {
+          "style": {
+            "opaque": "不透明ウィンドウ",
+            "title": "ウィンドウスタイル",
+            "transparent": "透明ウィンドウ"
+          }
+        }
+      },
       "title": "設定",
-      "topic.position": "トピックの位置",
-      "topic.position.left": "左",
-      "topic.position.right": "右",
-      "topic.show.time": "トピックの時間を表示する",
-      "tray.title": "システムトレイアイコンを有効にする",
+      "topic": {
+        "position": {
+          "label": "トピックの位置",
+          "left": "左",
+          "right": "右"
+        },
+        "show": {
+          "time": "トピックの時間を表示する"
+        }
+      },
+      "tray": {
+        "title": "システムトレイアイコンを有効にする"
+      },
       "webdav": {
         "backup": {
           "auto_backup": "自動バックアップ",
@@ -729,13 +815,19 @@
         "title": "WebDAV"
       },
       "websearch": {
-        "api_host": "APIホスト",
-        "api_host.placeholder": "APIホストを入力してください",
-        "api_key": "APIキー",
-        "api_key.get": "APIキーを取得",
-        "api_key.placeholder": "APIキーを入力してください",
+        "api_host": {
+          "label": "APIホスト",
+          "placeholder": "APIホストを入力してください"
+        },
+        "api_key": {
+          "get": "APIキーを取得",
+          "label": "APIキー",
+          "placeholder": "APIキーを入力してください"
+        },
         "api_service": "APIサービス",
-        "blacklist.title": "ブラックリスト",
+        "blacklist": {
+          "title": "ブラックリスト"
+        },
         "blacklist_description": "以下のウェブサイトからの結果は検索結果に表示されません",
         "blacklist_placeholder": "以下の形式を使用してください（改行で区切る）\nパターンマッチング：*://*.example.com/*\n正規表現：/example\\.(net|org)/",
         "builtin": "内蔵ネットワーク検索",
@@ -744,8 +836,10 @@
         "check_success": "チェック成功",
         "check_success_message": "APIは正常に動作しています",
         "contentLengthLimit": "コンテンツ長の制限",
-        "empty": "プロバイダーはまだありません...",
-        "empty.description": "プロバイダーを追加",
+        "empty": {
+          "description": "プロバイダーを追加",
+          "label": "プロバイダーはまだありません..."
+        },
         "overrideSearchService": "検索サービスを上書き",
         "provider": {
           "api": {
@@ -759,7 +853,9 @@
         "searchCount": "検索数",
         "searchWithDates": "日付を含めて検索",
         "selectPlaceholder": "ウェブ検索プロバイダーを選択してください...",
-        "subscribe.title": "ブラックリスト購読",
+        "subscribe": {
+          "title": "ブラックリスト購読"
+        },
         "title": "Web検索"
       },
       "yuque": {
@@ -784,8 +880,10 @@
         "title": "トピック名を変更"
       },
       "select_assistant": "新しいアシスタントを選択",
-      "title": "トピック",
-      "title.recent": "最近のトピック"
+      "title": {
+        "label": "トピック",
+        "recent": "最近のトピック"
+      }
     }
   }
 }
