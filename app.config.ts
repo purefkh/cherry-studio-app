@@ -27,7 +27,7 @@ export default {
         backgroundColor: '#F65D5D'
       },
       edgeToEdgeEnabled: true,
-      package: 'com.cherry-ai.cherry-studio-app',
+      package: 'com.cherry_ai.cherry_studio_app',
       userInterfaceStyle: 'automatic',
       predictiveBackGestureEnabled: true
     },
