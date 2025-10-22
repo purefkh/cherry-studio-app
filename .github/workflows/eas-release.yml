@@ -63,7 +63,8 @@ jobs:
           eas build --platform android --profile production --non-interactive --no-wait --json > android_build.json
           BUILD_ID=$(cat android_build.json | jq -r '.[0].id')
           echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
-          echo "Android Build ID: $BUILD_ID"
+          echo "🤖 Android Build ID: $BUILD_ID"
+          echo "🔗 View Android build: https://expo.dev/accounts/[your-account]/projects/cherry-studio/builds/$BUILD_ID"
 
       # Step 8: Build iOS (with auto-submit)
       - name: Build and Submit iOS on EAS
@@ -73,7 +74,9 @@ jobs:
           eas build --platform ios --profile production --auto-submit --non-interactive --no-wait --json > ios_build.json
           BUILD_ID=$(cat ios_build.json | jq -r '.[0].id')
           echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
-          echo "iOS Build ID: $BUILD_ID (will auto-submit to App Store Connect)"
+          echo "🍎 iOS Build ID: $BUILD_ID"
+          echo "📱 iOS build will auto-submit to App Store Connect when complete"
+          echo "🔗 View iOS build: https://expo.dev/accounts/[your-account]/projects/cherry-studio/builds/$BUILD_ID"
 
       # Step 9: Wait for Android build to complete
       - name: Wait for Android build
@@ -83,18 +86,26 @@ jobs:
 
           # Poll build status until complete
           while true; do
+            # Get build status and convert to lowercase for comparison
             STATUS=$(eas build:view $BUILD_ID --json | jq -r '.status')
+            STATUS_LOWER=$(echo "$STATUS" | tr '[:upper:]' '[:lower:]')
+
             echo "Current status: $STATUS"
 
-            if [ "$STATUS" == "finished" ]; then
-              echo "Build completed successfully!"
+            if [ "$STATUS_LOWER" == "finished" ]; then
+              echo "✅ Build completed successfully!"
               break
-            elif [ "$STATUS" == "errored" ] || [ "$STATUS" == "canceled" ]; then
-              echo "Build failed with status: $STATUS"
+            elif [ "$STATUS_LOWER" == "errored" ] || [ "$STATUS_LOWER" == "canceled" ]; then
+              echo "❌ Build failed with status: $STATUS"
+              echo "View build details at: https://expo.dev/accounts/[your-account]/projects/cherry-studio/builds/$BUILD_ID"
               exit 1
+            elif [ -z "$STATUS" ]; then
+              echo "⚠️ Failed to get build status, retrying..."
+              sleep 10
+              continue
             fi
 
-            echo "Build still in progress, waiting 60 seconds..."
+            echo "⏳ Build still in progress, waiting 60 seconds..."
             sleep 60
           done
 
@@ -147,17 +158,51 @@ jobs:
 
       # Step 12: Summary
       - name: Build Summary
+        if: success()
         run: |
           echo "## Build Complete! 🎉" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Android" >> $GITHUB_STEP_SUMMARY
-          echo "- Build ID: \`${{ steps.build_android.outputs.build_id }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Status: ✅ APK uploaded to GitHub Release" >> $GITHUB_STEP_SUMMARY
+          echo "### 🤖 Android" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build ID**: \`${{ steps.build_android.outputs.build_id }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ✅ APK uploaded to GitHub Release" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Details**: [View on Expo](https://expo.dev/accounts/[your-account]/projects/cherry-studio/builds/${{ steps.build_android.outputs.build_id }})" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### iOS" >> $GITHUB_STEP_SUMMARY
-          echo "- Build ID: \`${{ steps.build_ios.outputs.build_id }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Status: 🚀 Submitted to App Store Connect" >> $GITHUB_STEP_SUMMARY
+          echo "### 🍎 iOS" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build ID**: \`${{ steps.build_ios.outputs.build_id }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: 🚀 Submitted to App Store Connect" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Details**: [View on Expo](https://expo.dev/accounts/[your-account]/projects/cherry-studio/builds/${{ steps.build_ios.outputs.build_id }})" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Release" >> $GITHUB_STEP_SUMMARY
-          echo "- Tag: \`${{ steps.version.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- URL: ${{ steps.create_release.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Release" >> $GITHUB_STEP_SUMMARY
+          echo "- **Tag**: \`${{ steps.version.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **GitHub Release**: ${{ steps.create_release.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "_Note: Replace [your-account] with your Expo account name in the links above_" >> $GITHUB_STEP_SUMMARY
+
+      # Step 13: Failure Summary
+      - name: Build Failure Summary
+        if: failure()
+        run: |
+          echo "## Build Failed ❌" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The build process encountered an error. Please check the logs above for details." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -n "${{ steps.build_android.outputs.build_id }}" ]; then
+            echo "### 🤖 Android Build" >> $GITHUB_STEP_SUMMARY
+            echo "- **Build ID**: \`${{ steps.build_android.outputs.build_id }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- **View Details**: [Expo Dashboard](https://expo.dev/accounts/[your-account]/projects/cherry-studio/builds/${{ steps.build_android.outputs.build_id }})" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ -n "${{ steps.build_ios.outputs.build_id }}" ]; then
+            echo "### 🍎 iOS Build" >> $GITHUB_STEP_SUMMARY
+            echo "- **Build ID**: \`${{ steps.build_ios.outputs.build_id }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- **View Details**: [Expo Dashboard](https://expo.dev/accounts/[your-account]/projects/cherry-studio/builds/${{ steps.build_ios.outputs.build_id }})" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "### 🔍 Troubleshooting" >> $GITHUB_STEP_SUMMARY
+          echo "- Check the [EAS Build documentation](https://docs.expo.dev/build/introduction/)" >> $GITHUB_STEP_SUMMARY
+          echo "- Review the build logs on Expo dashboard for detailed error messages" >> $GITHUB_STEP_SUMMARY
+          echo "- Ensure all credentials and secrets are properly configured" >> $GITHUB_STEP_SUMMARY

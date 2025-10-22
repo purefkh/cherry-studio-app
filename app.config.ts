@@ -37,7 +37,8 @@ export default {
         {
           ios: { deploymentTarget: '15.5' },
           android: {
-            kotlinVersion: '2.0.21',
+            kotlinVersion: '2.1.20',
+            kspVersion: '2.1.20-1.0.29',
             buildToolsVersion: '35.0.0',
             compileSdkVersion: 35,
             targetSdkVersion: 35,
