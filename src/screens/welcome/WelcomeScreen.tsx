@@ -58,13 +58,13 @@ export default function WelcomeScreen() {
         {/* register and login*/}
         <View className="justify-center items-center h-1/4 w-full bg-ui-card-background dark:bg-ui-card-background-dark ">
           <YStack className="flex-1 justify-center items-center gap-5">
-            <Button className="w-2/3" variant="primary" onPress={() => bottomSheetModalRef.current?.present()}>
+            <Button className="w-3/4" variant="primary" onPress={() => bottomSheetModalRef.current?.present()}>
               <Button.Label className="w-full text-lg text-center">
                 {t('common.import_from_cherry_studio')}
               </Button.Label>
             </Button>
 
-            <Button className="w-2/3" variant="secondary" onPress={handleStart}>
+            <Button className="w-3/4" variant="secondary" onPress={handleStart}>
               <Button.Label className="w-full text-lg text-center">{t('common.start')}</Button.Label>
             </Button>
           </YStack>
