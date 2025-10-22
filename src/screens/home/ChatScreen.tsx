@@ -16,7 +16,7 @@ import { haptic } from '@/utils/haptic'
 import ChatContent from './ChatContent'
 import { ChatScreenHeader } from '@/componentsV2/features/ChatScreen/Header'
 import { loggerService } from '@/services/LoggerService'
-import React, { useEffect } from 'react'
+import React from 'react'
 
 const logger = loggerService.withContext('ChatScreen')
 
@@ -45,13 +45,6 @@ const ChatScreen = () => {
       }
     }
   }
-
-  useEffect(() => {
-    logger.info('ChatScreen useEffect1')
-    logger.info('ChatScreen useEffect2')
-    logger.info('ChatScreen useEffect3')
-    logger.info('ChatScreen useEffect4')
-  }, [])
 
   if (!topic || isLoading || !assistant || assistantLoading) {
     return (
