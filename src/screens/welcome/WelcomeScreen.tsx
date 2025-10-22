@@ -11,7 +11,7 @@ import { RootNavigationProps } from '@/types/naviagate'
 import { Button } from 'heroui-native'
 import { useTranslation } from 'react-i18next'
 import { setCurrentTopicId } from '@/store/topic'
-import SquircleView from 'react-native-fast-squircle'
+import FastSquircleView from 'react-native-fast-squircle'
 import WelcomeTitle from './WelcomeTitle'
 import { ImportDataSheet } from './ImportDataSheet'
 import { BottomSheetModal } from '@gorhom/bottom-sheet'
@@ -40,7 +40,7 @@ export default function WelcomeScreen() {
     <>
       <SafeAreaContainer style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 0 }}>
         <View className="flex-1 justify-center items-center gap-5">
-          <SquircleView
+          <FastSquircleView
             style={{
               width: 176,
               height: 176,
@@ -49,7 +49,7 @@ export default function WelcomeScreen() {
             }}
             cornerSmoothing={0.6}>
             <Image className="w-full h-full" source={require('@/assets/images/favicon.png')} />
-          </SquircleView>
+          </FastSquircleView>
           <View className="flex-row items-center justify-center">
             <WelcomeTitle className="text-3xl font-bold" />
             <View className="w-7 h-7 ml-2 rounded-full bg-black dark:bg-white" />
