@@ -13,6 +13,7 @@ Cherry Studio 采用 **SQLite + Drizzle ORM + useLiveQuery** 的响应式数据�
 **总体评分**: ⭐⭐⭐⭐ (3.7/5)
 
 **关键发现**:
+
 - ✅ 响应式设计优秀，完美支持 AI 流式输出
 - ⚠️ 存在严重的 N+1 查询问题，影响长对话加载性能
 - ⚠️ 缺少外键约束，存在数据一致性风险
@@ -25,6 +26,7 @@ Cherry Studio 采用 **SQLite + Drizzle ORM + useLiveQuery** 的响应式数据�
 ### 1. Topics 表（对话线程）
 
 **Schema** (`db/schema/topics.ts`):
+
 ```typescript
 {
   id: text                        // 主键
@@ -44,6 +46,7 @@ Cherry Studio 采用 **SQLite + Drizzle ORM + useLiveQuery** 的响应式数据�
 ```
 
 **TypeScript 类型** (`src/types/assistant.ts:97`):
+
 ```typescript
 export type Topic = {
   id: string
@@ -51,7 +54,7 @@ export type Topic = {
   name: string
   createdAt: string
   updatedAt: string
-  messages: Message[]  // 应用层水合为完整对象
+  messages: Message[] // 应用层水合为完整对象
   pinned?: boolean
   prompt?: string
   isNameManuallyEdited?: boolean
@@ -63,6 +66,7 @@ export type Topic = {
 ### 2. Messages 表（消息）
 
 **Schema** (`db/schema/messages.ts`):
+
 ```typescript
 {
   id: text                        // 主键
@@ -87,6 +91,7 @@ export type Topic = {
 ```
 
 **TypeScript 类型** (`src/types/message.ts:151`):
+
 ```typescript
 export type Message = {
   id: string
@@ -121,6 +126,7 @@ export type Message = {
 ### 3. MessageBlocks 表（消息内容块）
 
 **Schema** (`db/schema/messageBlocks.ts`):
+
 ```typescript
 {
   id: text                        // 主键
@@ -163,18 +169,19 @@ export type Message = {
 ```
 
 **支持的 Block 类型**:
+
 ```typescript
 export enum MessageBlockType {
   UNKNOWN = 'unknown',
-  MAIN_TEXT = 'main_text',     // 主要文本内容
-  THINKING = 'thinking',       // 思考过程（Claude、OpenAI-o系列）
+  MAIN_TEXT = 'main_text', // 主要文本内容
+  THINKING = 'thinking', // 思考过程（Claude、OpenAI-o系列）
   TRANSLATION = 'translation', // 翻译
-  IMAGE = 'image',             // 图片
-  CODE = 'code',               // 代码块
-  TOOL = 'tool',               // 工具调用（MCP等）
-  FILE = 'file',               // 文件
-  ERROR = 'error',             // 错误信息
-  CITATION = 'citation'        // 引用（网络搜索、知识库）
+  IMAGE = 'image', // 图片
+  CODE = 'code', // 代码块
+  TOOL = 'tool', // 工具调用（MCP等）
+  FILE = 'file', // 文件
+  ERROR = 'error', // 错误信息
+  CITATION = 'citation' // 引用（网络搜索、知识库）
 }
 ```
 
@@ -257,17 +264,21 @@ Topic (话题/对话)
 ### 组件消费链
 
 **Messages.tsx** (`src/screens/home/messages/Messages.tsx:23`):
+
 ```typescript
 const { messages } = useMessages(topic.id)
 ```
+
 - 监听整个 topic 的 messages 变化
 - 每个 message 异步获取 block IDs
 - 按消息分组后传递给子组件
 
 **MessageContent.tsx** (`src/screens/home/messages/MessageContent.tsx:20`):
+
 ```typescript
 const { processedBlocks } = useMessageBlocks(message.id)
 ```
+
 - 监听单个 message 的所有 blocks
 - 实时渲染流式内容
 - 分离媒体块和内容块
@@ -275,6 +286,7 @@ const { processedBlocks } = useMessageBlocks(message.id)
 ### useLiveQuery 工作机制
 
 **useMessages** (`src/hooks/useMessages.ts:12-50`):
+
 ```typescript
 export const useMessages = (topicId: string) => {
   // 1. LiveQuery 监听 messages 表变化
@@ -308,18 +320,14 @@ export const useMessages = (topicId: string) => {
 ```
 
 **useMessageBlocks** (`src/hooks/useMessageBlocks.ts:8-16`):
+
 ```typescript
 export const useMessageBlocks = (messageId: string) => {
-  const query = db
-    .select()
-    .from(messageBlocksSchema)
-    .where(eq(messageBlocksSchema.message_id, messageId))
+  const query = db.select().from(messageBlocksSchema).where(eq(messageBlocksSchema.message_id, messageId))
 
   const { data: rawBlocks } = useLiveQuery(query)
 
-  const processedBlocks = !rawBlocks
-    ? []
-    : rawBlocks.map(block => transformDbToMessageBlock(block))
+  const processedBlocks = !rawBlocks ? [] : rawBlocks.map(block => transformDbToMessageBlock(block))
 
   return { processedBlocks }
 }
@@ -332,16 +340,18 @@ export const useMessageBlocks = (messageId: string) => {
 ### 1. 响应式设计优秀
 
 **优点**:
+
 - `useLiveQuery` 完美适配 AI 流式输出场景
 - MessageBlock 粒度更新，避免整个 Message 重新渲染
 - 支持实时打字效果（如 Claude 的 thinking block 边思考边显示）
 
 **实际效果**:
+
 ```typescript
 // AI返回新的thinking内容
 upsertBlocks({
   id: 'block-2',
-  content: '正在分析需求...',  // 内容增量更新
+  content: '正在分析需求...', // 内容增量更新
   status: 'streaming'
 })
 
@@ -352,11 +362,13 @@ upsertBlocks({
 ### 2. 类型灵活性强
 
 **单表多字段设计**:
+
 - 支持 9 种不同的 block 类型
 - 避免了多表 JOIN 的复杂性
 - TypeScript 联合类型保障类型安全
 
 **示例**:
+
 ```typescript
 // 同一个表存储不同类型的块
 message_blocks:
@@ -369,6 +381,7 @@ message_blocks:
 ### 3. 扩展性好
 
 **添加新 block 类型流程**:
+
 1. 在 `MessageBlockType` 枚举中添加类型
 2. 在 `messageBlocks` 表中添加必要字段（如需要）
 3. 创建对应的 TypeScript 接口
@@ -378,6 +391,7 @@ message_blocks:
 ### 4. 数据隔离清晰
 
 **每个实体职责明确**:
+
 - **Topic**: 对话线程管理、标题、置顶
 - **Message**: 消息元数据、模型信息、使用统计
 - **MessageBlock**: 具体内容、类型、状态
@@ -393,6 +407,7 @@ message_blocks:
 **问题位置**: `src/hooks/useMessages.ts:30-35`
 
 **问题代码**:
+
 ```typescript
 const messagesWithBlocks = await Promise.all(
   rawMessages.map(async rawMsg => {
@@ -404,6 +419,7 @@ const messagesWithBlocks = await Promise.all(
 ```
 
 **性能影响**:
+
 ```
 场景: 一个topic有50条messages
 
@@ -418,6 +434,7 @@ const messagesWithBlocks = await Promise.all(
 ```
 
 **实际影响**:
+
 - 长对话加载明显卡顿
 - 数据库连接池压力大
 - 移动端电池消耗增加
@@ -431,6 +448,7 @@ const messagesWithBlocks = await Promise.all(
 **问题**: `message_blocks.message_id` 缺少外键约束
 
 **风险场景**:
+
 ```typescript
 // 场景1: 直接删除message，忘记删除blocks
 await db.delete(messages).where(eq(messages.id, messageId))
@@ -447,6 +465,7 @@ if (someCondition) {
 ```
 
 **当前依赖手动维护**:
+
 ```typescript
 // db/queries/messageBlocks.queries.ts:513
 export async function deleteBlocksByMessageId(messageId: string)
@@ -456,6 +475,7 @@ export async function deleteBlocksByMessageId(messageId: string)
 ```
 
 **数据库层面无保障**:
+
 ```sql
 -- 查询孤立blocks
 SELECT * FROM message_blocks
@@ -470,6 +490,7 @@ WHERE message_id NOT IN (SELECT id FROM messages);
 **问题**: MessageContent 组件为每个 message 创建独立监听器
 
 **代码分析**:
+
 ```typescript
 // Messages.tsx 渲染50条消息
 {messages.map(message => (
@@ -481,6 +502,7 @@ const { processedBlocks } = useMessageBlocks(message.id)  // 50个独立的LiveQ
 ```
 
 **性能影响**:
+
 ```
 50条消息的topic:
 - LiveQuery监听器: 50个
@@ -490,6 +512,7 @@ const { processedBlocks } = useMessageBlocks(message.id)  // 50个独立的LiveQ
 ```
 
 **移动端影响**:
+
 - 内存压力大，可能触发GC
 - 电池消耗增加
 - 低端设备可能出现掉帧
@@ -503,12 +526,14 @@ const { processedBlocks } = useMessageBlocks(message.id)  // 50个独立的LiveQ
 **问题**: `topics.messages` 字段存储 message IDs 的 JSON 数组
 
 **Schema**:
+
 ```typescript
 // db/schema/topics.ts:15
 messages: text('messages').notNull().default('[]')
 ```
 
 **维护成本**:
+
 ```typescript
 // 创建消息时需要双向更新
 async function createMessage(message: Message) {
@@ -519,7 +544,8 @@ async function createMessage(message: Message) {
   const topic = await getTopic(message.topicId)
   const messageIds = JSON.parse(topic.messages)
   messageIds.push(message.id)
-  await db.update(topics)
+  await db
+    .update(topics)
     .set({ messages: JSON.stringify(messageIds) })
     .where(eq(topics.id, message.topicId))
 
@@ -536,13 +562,15 @@ async function deleteMessage(messageId: string) {
   // 2. 从topic.messages数组中移除
   const topic = await getTopic(message.topicId)
   const messageIds = JSON.parse(topic.messages).filter(id => id !== messageId)
-  await db.update(topics)
+  await db
+    .update(topics)
     .set({ messages: JSON.stringify(messageIds) })
     .where(eq(topics.id, message.topicId))
 }
 ```
 
 **实际收益分析**:
+
 ```typescript
 // 检查实际使用情况
 // src/hooks/useTopic.ts - 未使用messages字段
@@ -560,16 +588,25 @@ async function deleteMessage(messageId: string) {
 **问题**: 大量字段存储为 JSON 字符串
 
 **影响字段**:
+
 ```typescript
 // messages表
-model, mentions, usage, metrics (每条消息4个JSON字段)
+;(model, mentions, usage, metrics(每条消息4个JSON字段))
 
 // message_blocks表
-model, metadata, error, arguments, file, response, knowledge,
-knowledge_base_ids, citation_references (最多9个JSON字段)
+;(model,
+  metadata,
+  error,
+  arguments,
+  file,
+  response,
+  knowledge,
+  knowledge_base_ids,
+  citation_references(最多9个JSON字段))
 ```
 
 **性能测试**:
+
 ```typescript
 // 50条消息，每条平均3个blocks
 JSON.parse调用次数: 50 * 4 + 150 * 5 = 950次
@@ -584,6 +621,7 @@ JSON.parse调用次数: 50 * 4 + 150 * 5 = 950次
 ```
 
 **移动端影响**:
+
 - JS引擎解析JSON有性能成本
 - 复杂对象（如 `WebSearchResponse`）解析耗时长
 - 阻塞主线程，影响UI响应
@@ -597,12 +635,14 @@ JSON.parse调用次数: 50 * 4 + 150 * 5 = 950次
 #### 6. 索引覆盖不足
 
 **当前索引**:
+
 ```typescript
 // message_blocks表只有一个索引
 index('idx_message_blocks_message_id').on(table.message_id)
 ```
 
 **潜在查询场景**:
+
 ```sql
 -- 场景1: 获取所有处理中的blocks（流式输出监控）
 SELECT * FROM message_blocks WHERE status = 'streaming';
@@ -617,10 +657,11 @@ SELECT * FROM message_blocks WHERE created_at BETWEEN ? AND ?;
 **影响**: 以上查询会全表扫描
 
 **建议索引**:
+
 ```typescript
-index('idx_message_blocks_status').on(table.status),
-index('idx_message_blocks_type').on(table.type),
-index('idx_message_blocks_created_at').on(table.created_at)
+;(index('idx_message_blocks_status').on(table.status),
+  index('idx_message_blocks_type').on(table.type),
+  index('idx_message_blocks_created_at').on(table.created_at))
 ```
 
 ---
@@ -628,18 +669,18 @@ index('idx_message_blocks_created_at').on(table.created_at)
 #### 7. 批量操作优化空间
 
 **当前实现** (`db/queries/messageBlocks.queries.ts:332-338`):
+
 ```typescript
 await db.transaction(async tx => {
   const upsertPromises = dbRecords.map(record =>
-    tx.insert(messageBlocks)
-      .values(record)
-      .onConflictDoUpdate({ target: messageBlocks.id, set: record })
+    tx.insert(messageBlocks).values(record).onConflictDoUpdate({ target: messageBlocks.id, set: record })
   )
-  await Promise.all(upsertPromises)  // 多次SQL执行
+  await Promise.all(upsertPromises) // 多次SQL执行
 })
 ```
 
 **优化方案**:
+
 ```typescript
 await db.transaction(async tx => {
   // 单次批量插入，减少SQL执行次数
@@ -710,6 +751,7 @@ export async function getMessagesWithBlocksByTopicId(topicId: string): Promise<M
 ```
 
 **更新 useMessages Hook**:
+
 ```typescript
 // src/hooks/useMessages.ts
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
@@ -747,11 +789,14 @@ export const useMessages = (topicId: string) => {
     if (!rawMessages || !rawBlocks) return
 
     // 在内存中组装blocks
-    const blocksByMessage = rawBlocks.reduce((acc, block) => {
-      if (!acc[block.message_id]) acc[block.message_id] = []
-      acc[block.message_id].push(block.id)
-      return acc
-    }, {} as Record<string, string[]>)
+    const blocksByMessage = rawBlocks.reduce(
+      (acc, block) => {
+        if (!acc[block.message_id]) acc[block.message_id] = []
+        acc[block.message_id].push(block.id)
+        return acc
+      },
+      {} as Record<string, string[]>
+    )
 
     // 组装messages
     const messages = rawMessages.map(rawMsg => ({
@@ -767,6 +812,7 @@ export const useMessages = (topicId: string) => {
 ```
 
 **性能对比**:
+
 ```
 Before:
 - 50条消息: 51次查询
@@ -794,7 +840,7 @@ export const messageBlocks = sqliteTable(
     id: text('id').notNull().unique().primaryKey(),
     message_id: text('message_id')
       .notNull()
-      .references(() => messages.id, { onDelete: 'cascade' }), // ← 添加级联删除
+      .references(() => messages.id, { onDelete: 'cascade' }) // ← 添加级联删除
     // ... 其他字段
   },
   table => [index('idx_message_blocks_message_id').on(table.message_id)]
@@ -802,11 +848,13 @@ export const messageBlocks = sqliteTable(
 ```
 
 **生成迁移**:
+
 ```bash
 npx drizzle-kit generate
 ```
 
 **迁移SQL示例**:
+
 ```sql
 -- 1. 清理已有孤立数据（如果有）
 DELETE FROM message_blocks
@@ -821,6 +869,7 @@ ON DELETE CASCADE;
 ```
 
 **好处**:
+
 - 数据库层面保证一致性
 - 删除message自动清理blocks
 - 减少手动维护代码
@@ -867,11 +916,14 @@ export const useTopicBlocks = (topicId: string) => {
   const blocksByMessage = useMemo(() => {
     if (!rawData) return {}
 
-    return rawData.reduce((acc, { block, messageId }) => {
-      if (!acc[messageId]) acc[messageId] = []
-      acc[messageId].push(transformDbToMessageBlock(block))
-      return acc
-    }, {} as Record<string, MessageBlock[]>)
+    return rawData.reduce(
+      (acc, { block, messageId }) => {
+        if (!acc[messageId]) acc[messageId] = []
+        acc[messageId].push(transformDbToMessageBlock(block))
+        return acc
+      },
+      {} as Record<string, MessageBlock[]>
+    )
   }, [rawData])
 
   return blocksByMessage
@@ -893,14 +945,14 @@ interface Props {
   message: Message
   assistant?: Assistant
   isMultiModel?: boolean
-  blocks: MessageBlock[]  // ← 从父组件传入，不再自己查询
+  blocks: MessageBlock[] // ← 从父组件传入，不再自己查询
 }
 
 const MessageContent: React.FC<Props> = ({
   message,
   assistant,
   isMultiModel = false,
-  blocks = []  // ← 新增prop
+  blocks = [] // ← 新增prop
 }) => {
   const isUser = message.role === 'user'
 
@@ -951,6 +1003,7 @@ const Messages: FC<MessagesProps> = ({ assistant, topic }) => {
 ```
 
 **性能对比**:
+
 ```
 Before:
 - 50条消息: 50个LiveQuery监听器
@@ -996,12 +1049,13 @@ export const topics = sqliteTable(
     pinned: integer('pinned', { mode: 'boolean' }),
     prompt: text('prompt'),
     is_name_manually_edited: integer('is_name_manually_edited', { mode: 'boolean' })
-  },
+  }
   // ... 索引定义
 )
 ```
 
 **迁移SQL**:
+
 ```sql
 ALTER TABLE topics DROP COLUMN messages;
 ```
@@ -1010,24 +1064,24 @@ ALTER TABLE topics DROP COLUMN messages;
 
 ```typescript
 // db/schema/topics.ts
-export const topics = sqliteTable(
-  'topics',
-  {
-    // ... 其他字段
-    message_count: integer('message_count').default(0),  // ← 新增
-  }
-)
+export const topics = sqliteTable('topics', {
+  // ... 其他字段
+  message_count: integer('message_count').default(0) // ← 新增
+})
 ```
 
 **维护逻辑**:
+
 ```typescript
 // 创建消息时
-await db.update(topics)
+await db
+  .update(topics)
   .set({ message_count: sql`message_count + 1` })
   .where(eq(topics.id, topicId))
 
 // 删除消息时
-await db.update(topics)
+await db
+  .update(topics)
   .set({ message_count: sql`message_count - 1` })
   .where(eq(topics.id, topicId))
 ```
@@ -1058,7 +1112,7 @@ export const queryPerformanceMonitor = (queryName: string) => {
   return {
     end: (rowCount?: number) => {
       const duration = performance.now() - start
-      const slow = duration > 100  // 超过100ms视为慢查询
+      const slow = duration > 100 // 超过100ms视为慢查询
 
       const stats: QueryStats = {
         queryName,
@@ -1094,16 +1148,14 @@ export const getSlowQueries = () => queryStats.filter(q => q.slow)
 ```
 
 **使用示例**:
+
 ```typescript
 // db/queries/messages.queries.ts
 export async function getMessagesByTopicId(topicId: string): Promise<Message[]> {
   const monitor = queryPerformanceMonitor('getMessagesByTopicId')
 
   try {
-    const results = await db
-      .select()
-      .from(messages)
-      .where(eq(messages.topic_id, topicId))
+    const results = await db.select().from(messages).where(eq(messages.topic_id, topicId))
 
     monitor.end(results.length)
     return results.map(transformDbToMessage)
@@ -1144,6 +1196,7 @@ export const messageBlocks = sqliteTable(
 ```
 
 **适用查询**:
+
 ```sql
 -- 现在可以高效执行
 SELECT * FROM message_blocks WHERE status = 'streaming';
@@ -1195,6 +1248,7 @@ export const useCachedMessageBlocks = (rawBlocks: any[]) => {
 ```
 
 **性能提升**:
+
 ```
 Before:
 - 每次渲染重新解析所有JSON: ~100-200ms
@@ -1208,15 +1262,15 @@ After:
 
 ## 📊 架构评分卡
 
-| 维度 | 评分 | 说明 | 权重 |
-|------|------|------|------|
-| **响应式设计** | ⭐⭐⭐⭐⭐ | useLiveQuery完美适配AI流式场景 | 20% |
-| **类型安全** | ⭐⭐⭐⭐⭐ | TypeScript + Drizzle强类型保障 | 15% |
-| **查询性能** | ⭐⭐ | N+1问题严重影响长对话加载 | 25% |
-| **数据一致性** | ⭐⭐⭐ | 缺少FK约束，依赖手动维护 | 15% |
-| **扩展性** | ⭐⭐⭐⭐ | 新block类型扩展方便 | 10% |
-| **可维护性** | ⭐⭐⭐⭐ | 代码组织清晰，职责分明 | 10% |
-| **移动端适配** | ⭐⭐⭐ | JSON解析开销可优化 | 5% |
+| 维度           | 评分       | 说明                           | 权重 |
+| -------------- | ---------- | ------------------------------ | ---- |
+| **响应式设计** | ⭐⭐⭐⭐⭐ | useLiveQuery完美适配AI流式场景 | 20%  |
+| **类型安全**   | ⭐⭐⭐⭐⭐ | TypeScript + Drizzle强类型保障 | 15%  |
+| **查询性能**   | ⭐⭐       | N+1问题严重影响长对话加载      | 25%  |
+| **数据一致性** | ⭐⭐⭐     | 缺少FK约束，依赖手动维护       | 15%  |
+| **扩展性**     | ⭐⭐⭐⭐   | 新block类型扩展方便            | 10%  |
+| **可维护性**   | ⭐⭐⭐⭐   | 代码组织清晰，职责分明         | 10%  |
+| **移动端适配** | ⭐⭐⭐     | JSON解析开销可优化             | 5%   |
 
 **加权总分**: 3.2/5 → 调整后 **3.7/5**
 （考虑到响应式设计和类型安全的优势）
@@ -1272,6 +1326,7 @@ After:
 **优先级**: 🟢 P2
 
 7. **分页加载历史消息**
+
    ```typescript
    // 实现虚拟滚动 + 分页
    const { messages, loadMore } = useInfiniteMessages(topicId, {
@@ -1281,16 +1336,18 @@ After:
    ```
 
 8. **引入消息缓存层**
+
    ```typescript
    // 使用React Query管理缓存
    const { data: messages } = useQuery({
      queryKey: ['messages', topicId],
      queryFn: () => getMessagesWithBlocks(topicId),
-     staleTime: 5 * 60 * 1000  // 5分钟
+     staleTime: 5 * 60 * 1000 // 5分钟
    })
    ```
 
 9. **全文搜索支持**
+
    ```sql
    -- 使用SQLite FTS5
    CREATE VIRTUAL TABLE message_blocks_fts
@@ -1306,11 +1363,13 @@ After:
 ## 📝 总结
 
 ### 核心优势
+
 - ✅ **响应式架构设计优秀**，useLiveQuery完美支持AI流式输出
 - ✅ **类型系统健壮**，TypeScript + Drizzle保障类型安全
 - ✅ **扩展性良好**，新增block类型成本低
 
 ### 关键问题
+
 - ⚠️ **N+1查询问题严重**，长对话加载性能差
 - ⚠️ **缺少外键约束**，存在数据一致性风险
 - ⚠️ **监听器过多**，移动端内存压力大
@@ -1319,13 +1378,13 @@ After:
 
 实施P0优化后：
 
-| 指标 | 当前 | 优化后 | 提升 |
-|------|------|--------|------|
-| 50条消息加载时间 | ~500ms | ~50ms | 90% ↓ |
-| 数据库查询次数 | 51次 | 2次 | 96% ↓ |
-| LiveQuery监听器 | 50个 | 1个 | 98% ↓ |
-| 内存占用 | ~15MB | ~3MB | 80% ↓ |
-| 数据一致性风险 | 高 | 低 | - |
+| 指标             | 当前   | 优化后 | 提升  |
+| ---------------- | ------ | ------ | ----- |
+| 50条消息加载时间 | ~500ms | ~50ms  | 90% ↓ |
+| 数据库查询次数   | 51次   | 2次    | 96% ↓ |
+| LiveQuery监听器  | 50个   | 1个    | 98% ↓ |
+| 内存占用         | ~15MB  | ~3MB   | 80% ↓ |
+| 数据一致性风险   | 高     | 低     | -     |
 
 ### 最终建议
 

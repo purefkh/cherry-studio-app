@@ -124,9 +124,7 @@
       "indexes": {
         "assistants_id_unique": {
           "name": "assistants_id_unique",
-          "columns": [
-            "id"
-          ],
+          "columns": ["id"],
           "isUnique": true
         }
       },
@@ -236,9 +234,7 @@
       "indexes": {
         "files_id_unique": {
           "name": "files_id_unique",
-          "columns": [
-            "id"
-          ],
+          "columns": ["id"],
           "isUnique": true
         }
       },
@@ -352,9 +348,7 @@
       "indexes": {
         "knowledges_id_unique": {
           "name": "knowledges_id_unique",
-          "columns": [
-            "id"
-          ],
+          "columns": ["id"],
           "isUnique": true
         }
       },
@@ -538,16 +532,12 @@
       "indexes": {
         "message_blocks_id_unique": {
           "name": "message_blocks_id_unique",
-          "columns": [
-            "id"
-          ],
+          "columns": ["id"],
           "isUnique": true
         },
         "idx_message_blocks_message_id": {
           "name": "idx_message_blocks_message_id",
-          "columns": [
-            "message_id"
-          ],
+          "columns": ["message_id"],
           "isUnique": false
         }
       },
@@ -556,12 +546,8 @@
           "name": "message_blocks_message_id_messages_id_fk",
           "tableFrom": "message_blocks",
           "tableTo": "messages",
-          "columnsFrom": [
-            "message_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["message_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -696,23 +682,17 @@
       "indexes": {
         "messages_id_unique": {
           "name": "messages_id_unique",
-          "columns": [
-            "id"
-          ],
+          "columns": ["id"],
           "isUnique": true
         },
         "idx_messages_topic_id": {
           "name": "idx_messages_topic_id",
-          "columns": [
-            "topic_id"
-          ],
+          "columns": ["topic_id"],
           "isUnique": false
         },
         "idx_messages_assistant_id": {
           "name": "idx_messages_assistant_id",
-          "columns": [
-            "assistant_id"
-          ],
+          "columns": ["assistant_id"],
           "isUnique": false
         }
       },
@@ -721,12 +701,8 @@
           "name": "messages_assistant_id_assistants_id_fk",
           "tableFrom": "messages",
           "tableTo": "assistants",
-          "columnsFrom": [
-            "assistant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["assistant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -734,12 +710,8 @@
           "name": "messages_topic_id_topics_id_fk",
           "tableFrom": "messages",
           "tableTo": "topics",
-          "columnsFrom": [
-            "topic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["topic_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -920,31 +892,22 @@
       "indexes": {
         "topics_id_unique": {
           "name": "topics_id_unique",
-          "columns": [
-            "id"
-          ],
+          "columns": ["id"],
           "isUnique": true
         },
         "idx_topics_assistant_id": {
           "name": "idx_topics_assistant_id",
-          "columns": [
-            "assistant_id"
-          ],
+          "columns": ["assistant_id"],
           "isUnique": false
         },
         "idx_topics_created_at": {
           "name": "idx_topics_created_at",
-          "columns": [
-            "created_at"
-          ],
+          "columns": ["created_at"],
           "isUnique": false
         },
         "idx_topics_assistant_id_created_at": {
           "name": "idx_topics_assistant_id_created_at",
-          "columns": [
-            "assistant_id",
-            "created_at"
-          ],
+          "columns": ["assistant_id", "created_at"],
           "isUnique": false
         }
       },
@@ -953,12 +916,8 @@
           "name": "topics_assistant_id_assistants_id_fk",
           "tableFrom": "topics",
           "tableTo": "assistants",
-          "columnsFrom": [
-            "assistant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["assistant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1096,9 +1055,7 @@
       "indexes": {
         "mcp_id_unique": {
           "name": "mcp_id_unique",
-          "columns": [
-            "id"
-          ],
+          "columns": ["id"],
           "isUnique": true
         }
       },

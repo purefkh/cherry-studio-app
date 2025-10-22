@@ -41,6 +41,7 @@
 ### 1.2 核心特性
 
 ✅ **保留 Electron 优秀设计**
+
 - 类型安全的 Schema 系统
 - TTL 惰性清理机制
 - Hook 引用保护
@@ -48,12 +49,14 @@
 - 值对比优化
 
 ✅ **移动端特化**
+
 - AsyncStorage 替代 localStorage
 - 智能预加载策略
 - 内存占用控制
 - 离线优先设计
 
 ❌ **移除多余复杂度**
+
 - 无 IPC 通信
 - 无跨窗口同步
 - 无主进程层
@@ -69,7 +72,7 @@
  */
 export interface CacheEntry<T = any> {
   value: T
-  expireAt?: number  // Unix 时间戳
+  expireAt?: number // Unix 时间戳
   lastAccess?: number // LRU 清理用
 }
 
@@ -82,9 +85,9 @@ export type CacheSubscriber = () => void
  * 存储状态
  */
 export interface StorageStatus {
-  memorySize: number      // 内存缓存大小 (字节)
-  persistSize: number     // 持久化数据大小 (字节)
-  totalKeys: number       // 总键数
+  memorySize: number // 内存缓存大小 (字节)
+  persistSize: number // 持久化数据大小 (字节)
+  totalKeys: number // 总键数
   isStorageAvailable: boolean
 }
 ```
@@ -264,11 +267,7 @@ export class CacheService {
   /**
    * 设置内存缓存
    */
-  public set<K extends MemoryCacheKey>(
-    key: K,
-    value: MemoryCacheSchema[K],
-    ttl?: number
-  ): void {
+  public set<K extends MemoryCacheKey>(key: K, value: MemoryCacheSchema[K], ttl?: number): void {
     const existingEntry = this.memoryCache.get(key)
 
     // 值对比优化
@@ -356,10 +355,7 @@ export class CacheService {
   /**
    * 设置持久化缓存 (防抖写入)
    */
-  public async setPersist<K extends PersistCacheKey>(
-    key: K,
-    value: PersistCacheSchema[K]
-  ): Promise<void> {
+  public async setPersist<K extends PersistCacheKey>(key: K, value: PersistCacheSchema[K]): Promise<void> {
     const existingValue = this.persistCache.get(key)
 
     // 深度对比优化
@@ -378,10 +374,7 @@ export class CacheService {
   /**
    * 防抖写入 AsyncStorage
    */
-  private debouncePersistWrite<K extends PersistCacheKey>(
-    key: K,
-    value: PersistCacheSchema[K]
-  ): void {
+  private debouncePersistWrite<K extends PersistCacheKey>(key: K, value: PersistCacheSchema[K]): void {
     // 清除旧定时器
     const oldTimer = this.persistDebounceTimers.get(key)
     if (oldTimer) {
@@ -456,11 +449,7 @@ export class CacheService {
   private async preloadPersistCache(): Promise<void> {
     try {
       // 定义需要预加载的键
-      const preloadKeys: PersistCacheKey[] = [
-        'user.preferences',
-        'app.settings',
-        'app.recent_topics'
-      ]
+      const preloadKeys: PersistCacheKey[] = ['user.preferences', 'app.settings', 'app.recent_topics']
 
       const storageKeys = preloadKeys.map(key => STORAGE_PREFIX + key)
       const values = await AsyncStorage.multiGet(storageKeys)
@@ -694,9 +683,8 @@ export function useCache<K extends MemoryCacheKey>(
   key: K,
   initValue?: MemoryCacheSchema[K]
 ): [MemoryCacheSchema[K], (value: MemoryCacheSchema[K]) => void] {
-
   const value = useSyncExternalStore(
-    useCallback((callback) => cacheService.subscribe(key, callback), [key]),
+    useCallback(callback => cacheService.subscribe(key, callback), [key]),
     useCallback(() => cacheService.get(key), [key]),
     useCallback(() => cacheService.get(key), [key])
   )
@@ -734,9 +722,8 @@ export function useCache<K extends MemoryCacheKey>(
 export function usePersistCache<K extends PersistCacheKey>(
   key: K
 ): [PersistCacheSchema[K], (value: PersistCacheSchema[K]) => void] {
-
   const value = useSyncExternalStore(
-    useCallback((callback) => cacheService.subscribe(key, callback), [key]),
+    useCallback(callback => cacheService.subscribe(key, callback), [key]),
     useCallback(() => cacheService.getPersist(key), [key]),
     useCallback(() => cacheService.getPersist(key), [key])
   )
@@ -767,7 +754,7 @@ export function useAsyncCache<K extends PersistCacheKey>(key: K) {
   const [error, setError] = useState<Error | null>(null)
 
   const value = useSyncExternalStore(
-    useCallback((callback) => cacheService.subscribe(key, callback), [key]),
+    useCallback(callback => cacheService.subscribe(key, callback), [key]),
     useCallback(() => cacheService.getPersist(key), [key]),
     useCallback(() => cacheService.getPersist(key), [key])
   )
@@ -968,19 +955,14 @@ export function ThemeToggle() {
 
 ```typescript
 // 应用启动时批量预加载
-const PRELOAD_KEYS: PersistCacheKey[] = [
-  'user.preferences',
-  'app.settings',
-  'app.recent_topics'
-]
+const PRELOAD_KEYS: PersistCacheKey[] = ['user.preferences', 'app.settings', 'app.recent_topics']
 
 // 在 initialize() 中使用 multiGet
-const values = await AsyncStorage.multiGet(
-  PRELOAD_KEYS.map(k => STORAGE_PREFIX + k)
-)
+const values = await AsyncStorage.multiGet(PRELOAD_KEYS.map(k => STORAGE_PREFIX + k))
 ```
 
 **收益:**
+
 - 减少后续异步等待
 - 首屏渲染更快
 - 用户体验更流畅
@@ -995,6 +977,7 @@ setPersist('app.settings', { model: 'gpt-4-turbo' }) // 覆盖
 ```
 
 **收益:**
+
 - 减少 I/O 操作
 - 节省电量
 - 避免频繁序列化
@@ -1011,6 +994,7 @@ enforceMemoryLimit() {
 ```
 
 **收益:**
+
 - 防止内存泄漏
 - 低端设备友好
 - 自动清理无用数据
@@ -1027,6 +1011,7 @@ if (entry.expireAt && Date.now() > entry.expireAt) {
 ```
 
 **收益:**
+
 - 零定时器开销
 - 按需清理
 - 更节能
@@ -1080,18 +1065,19 @@ private async checkStorageAvailability() {
 
 ### 6.1 从 Electron 迁移步骤
 
-| Electron 概念 | 移动端对应 | 迁移动作 |
-|--------------|-----------|---------|
-| Main Process Cache | ❌ 删除 | 不需要跨进程通信 |
-| Memory Cache | ✅ 保留 | 直接复用逻辑 |
-| Shared Cache | ❌ 合并到 Memory | 单窗口无需跨窗口同步 |
-| Persist Cache | ✅ 改造 | localStorage → AsyncStorage |
-| IPC 同步 | ❌ 删除 | 无 IPC 概念 |
-| useSyncExternalStore | ✅ 保留 | React Native 支持 |
+| Electron 概念        | 移动端对应       | 迁移动作                    |
+| -------------------- | ---------------- | --------------------------- |
+| Main Process Cache   | ❌ 删除          | 不需要跨进程通信            |
+| Memory Cache         | ✅ 保留          | 直接复用逻辑                |
+| Shared Cache         | ❌ 合并到 Memory | 单窗口无需跨窗口同步        |
+| Persist Cache        | ✅ 改造          | localStorage → AsyncStorage |
+| IPC 同步             | ❌ 删除          | 无 IPC 概念                 |
+| useSyncExternalStore | ✅ 保留          | React Native 支持           |
 
 ### 6.2 代码迁移检查清单
 
 **删除 (30% 代码):**
+
 - [ ] `src/main/data/CacheService.ts` 整个文件
 - [ ] `src/preload/index.ts` 中的 cache IPC
 - [ ] `IpcChannel.Cache_Sync` 相关代码
@@ -1100,6 +1086,7 @@ private async checkStorageAvailability() {
 - [ ] Shared Cache 相关类型和逻辑
 
 **保留 (40% 代码):**
+
 - [ ] Memory Cache 核心逻辑 (get/set/delete/has)
 - [ ] TTL 惰性清理机制
 - [ ] 订阅-发布系统
@@ -1109,6 +1096,7 @@ private async checkStorageAvailability() {
 - [ ] Schema 类型系统
 
 **改造 (30% 代码):**
+
 - [ ] Persist Cache: localStorage → AsyncStorage
 - [ ] 所有持久化操作改为 async/await
 - [ ] 添加预加载逻辑 (multiGet)
@@ -1118,14 +1106,14 @@ private async checkStorageAvailability() {
 
 ### 6.3 性能基准对比
 
-| 指标 | Electron | Expo Mobile | 说明 |
-|-----|----------|-------------|-----|
-| 启动时间 | ~50ms | ~100ms | AsyncStorage 预加载开销 |
-| 内存占用 | 无限制 | 5MB 限制 | 移动端需要 LRU 保护 |
-| 同步操作 | localStorage (同步) | 内存副本 (同步) | 预加载后体验一致 |
-| 异步操作 | 无 | AsyncStorage (异步) | 防抖优化减少影响 |
-| 跨窗口同步 | 实时 (IPC) | 不适用 | 单窗口应用 |
-| 持久化可靠性 | 高 | 中 (有配额限制) | 需要配额管理 |
+| 指标         | Electron            | Expo Mobile         | 说明                    |
+| ------------ | ------------------- | ------------------- | ----------------------- |
+| 启动时间     | ~50ms               | ~100ms              | AsyncStorage 预加载开销 |
+| 内存占用     | 无限制              | 5MB 限制            | 移动端需要 LRU 保护     |
+| 同步操作     | localStorage (同步) | 内存副本 (同步)     | 预加载后体验一致        |
+| 异步操作     | 无                  | AsyncStorage (异步) | 防抖优化减少影响        |
+| 跨窗口同步   | 实时 (IPC)          | 不适用              | 单窗口应用              |
+| 持久化可靠性 | 高                  | 中 (有配额限制)     | 需要配额管理            |
 
 ## 七、最佳实践
 
@@ -1134,18 +1122,19 @@ private async checkStorageAvailability() {
 ```typescript
 // ✅ 好的设计
 export type MemoryCacheSchema = {
-  'ui.theme': 'light' | 'dark'  // 字面量类型，明确约束
-  'chat.messages': Message[]     // 复杂类型，使用接口
+  'ui.theme': 'light' | 'dark' // 字面量类型，明确约束
+  'chat.messages': Message[] // 复杂类型，使用接口
 }
 
 // ❌ 差的设计
 export type MemoryCacheSchema = {
-  'theme': any                   // 太宽泛
-  'x': string                    // 键名无意义
+  theme: any // 太宽泛
+  x: string // 键名无意义
 }
 ```
 
 **原则:**
+
 1. 键名使用命名空间 (如 `ui.`, `chat.`)
 2. 值类型尽可能精确
 3. 为每个键提供默认值
@@ -1153,14 +1142,14 @@ export type MemoryCacheSchema = {
 
 ### 7.2 内存 vs 持久化选择
 
-| 使用场景 | 推荐类型 | 示例 |
-|---------|---------|------|
-| UI 交互状态 | Memory | Modal 显示/隐藏、选中项 |
-| 临时草稿 | Memory | 输入框内容、滚动位置 |
-| 用户偏好 | Persist | 主题、语言、字体大小 |
-| 应用配置 | Persist | API Key、服务器地址 |
-| 会话状态 | Memory | 当前聊天 ID、生成中状态 |
-| 历史记录 | Persist | 最近使用、搜索历史 |
+| 使用场景    | 推荐类型 | 示例                    |
+| ----------- | -------- | ----------------------- |
+| UI 交互状态 | Memory   | Modal 显示/隐藏、选中项 |
+| 临时草稿    | Memory   | 输入框内容、滚动位置    |
+| 用户偏好    | Persist  | 主题、语言、字体大小    |
+| 应用配置    | Persist  | API Key、服务器地址     |
+| 会话状态    | Memory   | 当前聊天 ID、生成中状态 |
+| 历史记录    | Persist  | 最近使用、搜索历史      |
 
 ### 7.3 TTL 使用建议
 
@@ -1189,7 +1178,7 @@ setPersist('app.recent_message_ids', messageIds.slice(0, 50))
 import { AppState } from 'react-native'
 
 useEffect(() => {
-  const subscription = AppState.addEventListener('change', async (state) => {
+  const subscription = AppState.addEventListener('change', async state => {
     if (state === 'background') {
       await cacheService.flush() // 强制保存
     }
@@ -1247,22 +1236,26 @@ private async setPersist<K>(key: K, value: any) {
 ### 9.1 架构优势
 
 ✅ **简洁高效**
+
 - 比 Electron 版本减少 40% 代码
 - 无 IPC 通信开销
 - AsyncStorage API 简单
 
 ✅ **性能优异**
+
 - 预加载常用数据
 - 防抖批量写入
 - LRU 内存保护
 - 惰性 TTL 清理
 
 ✅ **类型安全**
+
 - Schema 强约束
 - 编译时检查
 - 默认值系统
 
 ✅ **开发友好**
+
 - React hooks 自然集成
 - 同步访问内存副本
 - 错误降级处理
@@ -1271,14 +1264,14 @@ private async setPersist<K>(key: K, value: any) {
 
 **为什么选择 AsyncStorage 而非 SQLite?**
 
-| 维度 | AsyncStorage | SQLite |
-|-----|--------------|--------|
-| API 复杂度 | ⭐ 简单 | ⭐⭐⭐ 复杂 |
-| 类型安全 | ⭐⭐⭐ Schema 约束 | ⭐⭐ 需手动映射 |
-| 查询能力 | ⭐ 键值存储 | ⭐⭐⭐ SQL 查询 |
-| 数据量 | ⭐⭐ 6-10MB | ⭐⭐⭐ 无限制 |
-| 维护成本 | ⭐ 低 | ⭐⭐⭐ 高 (迁移/索引) |
-| 缓存场景适配 | ⭐⭐⭐ 完美 | ⭐⭐ 过度设计 |
+| 维度         | AsyncStorage       | SQLite                |
+| ------------ | ------------------ | --------------------- |
+| API 复杂度   | ⭐ 简单            | ⭐⭐⭐ 复杂           |
+| 类型安全     | ⭐⭐⭐ Schema 约束 | ⭐⭐ 需手动映射       |
+| 查询能力     | ⭐ 键值存储        | ⭐⭐⭐ SQL 查询       |
+| 数据量       | ⭐⭐ 6-10MB        | ⭐⭐⭐ 无限制         |
+| 维护成本     | ⭐ 低              | ⭐⭐⭐ 高 (迁移/索引) |
+| 缓存场景适配 | ⭐⭐⭐ 完美        | ⭐⭐ 过度设计         |
 
 **结论:** 对于缓存系统，AsyncStorage 是最佳选择。如果需要存储大量业务数据(如消息记录)，应该用 SQLite，但那不是缓存的职责。
 

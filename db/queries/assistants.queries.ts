@@ -25,13 +25,10 @@ export async function upsertAssistants(assistantsToUpsert: Assistant[]) {
     await db.transaction(async tx => {
       const updateFields = buildExcludedSet(dbRecords[0])
 
-      await tx
-        .insert(assistants)
-        .values(dbRecords)
-        .onConflictDoUpdate({
-          target: assistants.id,
-          set: updateFields
-        })
+      await tx.insert(assistants).values(dbRecords).onConflictDoUpdate({
+        target: assistants.id,
+        set: updateFields
+      })
     })
   } catch (error) {
     logger.error('Error upserting assistants:', error)

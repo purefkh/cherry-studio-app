@@ -39,7 +39,7 @@ export default function MessageTool({ block }: Props) {
 
   const toolRenderer = ChooseTool(toolResponse)
 
-  if (!toolRenderer) return <MessageMcpTool block={block}/>
+  if (!toolRenderer) return <MessageMcpTool block={block} />
 
   return toolRenderer.label
 }

@@ -2,7 +2,6 @@ import { McpMarketScreen } from '@/screens/mcp/McpMarketScreen'
 import { createStackNavigator, TransitionPresets } from '@react-navigation/stack'
 import React from 'react'
 
-
 export type McpStackParamList = {
   McpMarketScreen: undefined
 }

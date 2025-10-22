@@ -49,7 +49,7 @@ export function PromptTabContent({ assistant, updateAssistant }: PromptTabConten
       transition={{
         type: 'timing'
       }}>
-      <KeyboardAvoidingView className='flex-1'>
+      <KeyboardAvoidingView className="flex-1">
         <YStack className="flex-1 gap-4">
           <TextField className="gap-2">
             <TextField.Label className="text-sm font-medium text-text-secondary dark:text-text-secondary">

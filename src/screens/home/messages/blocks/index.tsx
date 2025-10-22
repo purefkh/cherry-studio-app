@@ -69,7 +69,7 @@ const prepareBlocksForRender = (blocks: MessageBlock[]) => {
 const MessageBlockRenderer: FC<MessageBlockRendererProps> = ({ blocks, message }) => {
   const { contentBlocks, citationBlocks } = useMemo(() => prepareBlocksForRender(blocks), [blocks])
   return (
-    <View className='gap-2'>
+    <View className="gap-2">
       {contentBlocks.map(blockOrGroup => {
         if (Array.isArray(blockOrGroup)) {
           const groupKey = blockOrGroup[0]?.id || 'media-group'

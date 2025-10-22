@@ -26,7 +26,6 @@ export const McpServerTypeSchema = z
   })
   .pipe(z.union([z.literal('stdio'), z.literal('sse'), z.literal('streamableHttp'), z.literal('inMemory')])) // 大多数情况下默认使用 stdio
 
-
 /**
  * 定义单个 MCP 服务器的配置。
  * FIXME: 为了兼容性，暂时允许用户编辑任意字段，这可能会导致问题。
@@ -315,7 +314,7 @@ export const isBuiltinMCPServer = (server: MCPServer): server is BuiltinMCPServe
 export const BuiltinMCPServerNames = {
   fetch: '@cherry/fetch',
   time: '@cherry/time',
-  calendar:'@cherry/calendar'
+  calendar: '@cherry/calendar'
 } as const
 
 export type BuiltinMCPServerName = (typeof BuiltinMCPServerNames)[keyof typeof BuiltinMCPServerNames]

@@ -17,10 +17,13 @@ export function buildExcludedSet<T extends Record<string, any>>(
   sample: T,
   excludeKeys: string[] = ['id']
 ): Record<string, any> {
-  return Object.keys(sample).reduce((acc, key) => {
-    if (!excludeKeys.includes(key)) {
-      acc[key] = sql.raw(`excluded."${key}"`)
-    }
-    return acc
-  }, {} as Record<string, any>)
+  return Object.keys(sample).reduce(
+    (acc, key) => {
+      if (!excludeKeys.includes(key)) {
+        acc[key] = sql.raw(`excluded."${key}"`)
+      }
+      return acc
+    },
+    {} as Record<string, any>
+  )
 }

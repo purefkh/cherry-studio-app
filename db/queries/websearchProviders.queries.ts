@@ -25,13 +25,10 @@ export async function upsertWebSearchProviders(providersToUpsert: WebSearchProvi
     await db.transaction(async tx => {
       const updateFields = buildExcludedSet(dbRecords[0])
 
-      await tx
-        .insert(websearch_providers)
-        .values(dbRecords)
-        .onConflictDoUpdate({
-          target: websearch_providers.id,
-          set: updateFields
-        })
+      await tx.insert(websearch_providers).values(dbRecords).onConflictDoUpdate({
+        target: websearch_providers.id,
+        set: updateFields
+      })
     })
   } catch (error) {
     logger.error('Error in upsertWebSearchProviders:', error)
