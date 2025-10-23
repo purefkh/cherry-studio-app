@@ -7,7 +7,6 @@ import { topics } from './topics'
 
 export * from './assistants'
 export * from './files'
-export * from './knowledges'
 export * from './messageBlocks'
 export * from './messages'
 export * from './preference'

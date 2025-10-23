@@ -4,7 +4,6 @@ import { db } from '..'
 import {
   assistants,
   files,
-  knowledges,
   messageBlocks,
   messages,
   providers,
@@ -52,9 +51,6 @@ export async function clearAllTables(): Promise<void> {
 
       await tx.delete(files)
       logger.info('Cleared files table')
-
-      await tx.delete(knowledges)
-      logger.info('Cleared knowledges table')
 
       await tx.delete(preferenceTable)
       logger.info('Cleared preference table')
