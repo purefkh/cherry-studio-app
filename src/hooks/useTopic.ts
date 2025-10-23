@@ -57,9 +57,7 @@ export function useTopics() {
       name: topicSchema.name,
       created_at: topicSchema.created_at,
       updated_at: topicSchema.updated_at,
-      pinned: topicSchema.pinned,
-      prompt: topicSchema.prompt,
-      is_name_manually_edited: topicSchema.is_name_manually_edited
+      isLoading: topicSchema.isLoading
     })
     .from(topicSchema)
     .orderBy(desc(topicSchema.created_at))

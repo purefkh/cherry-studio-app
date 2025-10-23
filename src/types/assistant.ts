@@ -100,9 +100,7 @@ export type Topic = {
   name: string
   createdAt: number
   updatedAt: number
-  pinned?: boolean
-  prompt?: string
-  isNameManuallyEdited?: boolean
+  isLoading?: boolean
 }
 
 export type ModelPricing = {

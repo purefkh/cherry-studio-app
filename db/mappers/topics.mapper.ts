@@ -13,9 +13,7 @@ export function transformDbToTopic(dbRecord: any): Topic {
     createdAt: dbRecord.created_at,
     updatedAt: dbRecord.updated_at,
     // 将数字（0 或 1）转换为布尔值
-    pinned: !!dbRecord.pinned,
-    prompt: dbRecord.prompt,
-    isNameManuallyEdited: !!dbRecord.is_name_manually_edited
+    isLoading: !!dbRecord.isLoading
   }
 }
 
@@ -32,8 +30,6 @@ export function transformTopicToDb(topic: Topic): any {
     created_at: topic.createdAt,
     updated_at: topic.updatedAt,
     // 将布尔值转换为数字（1 表示 true，0 表示 false）
-    pinned: topic.pinned ? 1 : 0,
-    prompt: topic.prompt,
-    is_name_manually_edited: topic.isNameManuallyEdited ? 1 : 0
+    isLoading: topic.isLoading ? 1 : 0
   }
 }
