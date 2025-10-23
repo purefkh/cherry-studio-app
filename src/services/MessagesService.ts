@@ -155,11 +155,7 @@ export async function sendMessage(
   }
 }
 
-export async function regenerateAssistantMessage(
-  assistantMessage: Message,
-  assistant: Assistant,
-  dispatch: AppDispatch
-) {
+export async function regenerateAssistantMessage(assistantMessage: Message, assistant: Assistant) {
   const topicId = assistantMessage.topicId
 
   try {

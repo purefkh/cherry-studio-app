@@ -6,7 +6,6 @@ import { useTranslation } from 'react-i18next'
 
 import { loggerService } from '@/services/LoggerService'
 import { deleteMessageById, fetchTranslateThunk, regenerateAssistantMessage } from '@/services/MessagesService'
-import { useAppDispatch } from '@/store'
 import { Assistant } from '@/types/assistant'
 import { Message } from '@/types/message'
 import { HomeNavigationProps } from '@/types/naviagate'
@@ -28,7 +27,6 @@ interface UseMessageActionsProps {
 
 export const useMessageActions = ({ message, assistant }: UseMessageActionsProps) => {
   const { t } = useTranslation()
-  const dispatch = useAppDispatch()
   const [playState, setPlayState] = useState<PlayState>('idle')
   const [isTranslating, setIsTranslating] = useState(false)
   const [isTranslated, setIsTranslated] = useState(false)
@@ -106,7 +104,7 @@ export const useMessageActions = ({ message, assistant }: UseMessageActionsProps
     }
 
     try {
-      await regenerateAssistantMessage(message, assistant, dispatch)
+      await regenerateAssistantMessage(message, assistant)
     } catch (error) {
       logger.error('Error regenerating message:', error)
     }
