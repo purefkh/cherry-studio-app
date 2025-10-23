@@ -328,7 +328,7 @@ export type PreferenceKeyType = keyof PreferenceSchemas['default']
 
 ## Redux Store 结构
 
-应用状态通过 Redux Toolkit 管理，并通过 AsyncStorage 进行持久化。除 `runtime` 外的所有 slice 都会自动持久化。
+应用状态通过 Redux Toolkit 管理，并通过 AsyncStorage 进行持久化。
 
 ### Store Slices
 
@@ -343,27 +343,6 @@ interface AssistantsState {
 **说明：**
 - 管理系统内置的 AI 助手
 - 用户自定义的助手存储在 SQLite `assistants` 表中
-
-#### `runtime` - 临时状态（不持久化）
-
-```typescript
-interface RuntimeState {
-  websearch: {
-    activeSearches: Record<string, WebSearchStatus> // 活跃的网页搜索状态
-  }
-}
-
-interface WebSearchStatus {
-  phase: 'default' | 'fetch_complete' | 'rag' | 'rag_complete' | 'rag_failed' | 'cutoff'
-  countBefore?: number
-  countAfter?: number
-}
-```
-
-**说明：**
-- 仅存储运行时临时状态
-- 应用重启后不持久化
-- 主要用于实时 UI 状态同步
 
 ---
 
@@ -727,16 +706,14 @@ AI 生成回复
 ### Redux Store
 
 **存储位置：** AsyncStorage (React Native)
-**持久化：** 通过 redux-persist 自动持久化（除 `runtime` slice）
+**持久化：** 通过 redux-persist 自动持久化
 
 **当前使用：**
 - `assistant` slice：内置助手配置
-- `runtime` slice：运行时临时状态（不持久化）
 
 **适用场景：**
-- 全局共享的运行时状态
-- 需要跨组件同步的临时数据
-- 不需要持久化的状态
+- 全局共享的应用状态
+- 需要跨组件同步的数据
 
 ### SQLite 数据库
 
@@ -762,9 +739,9 @@ AI 生成回复
 |---------|---------|------|
 | 用户配置 | Preference | 类型安全，乐观更新，懒加载 |
 | 应用状态 | Preference | 简单键值对，快速访问 |
-| 运行时状态 | Redux (runtime) | 不需要持久化，跨组件共享 |
 | 实体数据 | SQLite | 需要关系查询，支持索引 |
 | 大量数据 | SQLite | 高效存储和检索 |
+| 运行时状态 | Memory/State | 生命周期短，无需持久化 |
 | 临时缓存 | Memory/State | 生命周期短，无需持久化 |
 
 ---
@@ -802,16 +779,6 @@ const messages = await db.select().from(messagesTable)
 // ❌ 避免：不要直接使用 SQL 字符串（除非必要）
 ```
 
-### Redux 使用
-
-```typescript
-// ✅ 推荐：只用于运行时状态
-dispatch(setWebSearchStatus({ requestId, status }))
-
-// ❌ 避免：不要用于需要持久化的配置
-// 应该使用 Preference 系统
-```
-
 ---
 
 ## 数据迁移
@@ -820,6 +787,7 @@ dispatch(setWebSearchStatus({ requestId, status }))
 
 1. **Redux → Preference 迁移**：
    - 旧的 `settings`、`topic`、`websearch`、`app` slices 已迁移到 Preference
+   - `runtime` slice 已被删除（未使用的功能）
    - 数据会在首次启动时自动从 Redux AsyncStorage 迁移到 SQLite（如需要）
 
 2. **数据库架构更新**：
@@ -838,7 +806,7 @@ dispatch(setWebSearchStatus({ requestId, status }))
 Cherry Studio 采用混合存储策略：
 
 - **Preference System (SQLite)**: 管理所有用户配置和应用状态（10 项）
-- **Redux Store**: 管理内置助手和运行时状态
+- **Redux Store**: 管理内置助手配置
 - **SQLite Database**: 存储所有实体数据和关系数据
 
 这种架构提供了：
