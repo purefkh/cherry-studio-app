@@ -38,6 +38,7 @@ import MainStackNavigator from './navigators/MainStackNavigator'
 import { storage } from './utils'
 import { initBuiltinMcp } from './config/mcp'
 import { DATABASE_NAME, db, expoDb } from '@db'
+import { seedDatabase } from '@db/seeding'
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync()
@@ -63,10 +64,14 @@ function DatabaseInitializer() {
   }, [success, error])
 
   useEffect(() => {
-    if (success && loaded && !initialized) {
+    if (success && loaded) {
       const initializeApp = async () => {
         try {
           logger.info('First launch, initializing app data...')
+
+          // Seed database with default preferences and app state
+          await seedDatabase(db)
+
           const systemAssistants = getSystemAssistants()
           await assistantDatabase.upsertAssistants([...systemAssistants])
           await providerDatabase.upsertProviders(SYSTEM_PROVIDERS)
