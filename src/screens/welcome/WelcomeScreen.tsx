@@ -50,9 +50,11 @@ export default function WelcomeScreen() {
             cornerSmoothing={0.6}>
             <Image className="w-full h-full" source={require('@/assets/images/favicon.png')} />
           </FastSquircleView>
-          <View className="flex-row items-center justify-center">
-            <WelcomeTitle className="text-3xl font-bold" />
-            <View className="w-7 h-7 ml-2 rounded-full bg-black dark:bg-white" />
+          <View className="items-center justify-center px-4">
+            <View className="flex-row items-center justify-center flex-wrap">
+              <WelcomeTitle className="text-3xl font-bold text-center" />
+              <View className="w-7 h-7 ml-2 rounded-full bg-black dark:bg-white" />
+            </View>
           </View>
         </View>
         {/* register and login*/}
