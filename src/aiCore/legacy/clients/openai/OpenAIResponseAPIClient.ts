@@ -163,7 +163,7 @@ export class OpenAIResponseAPIClient extends OpenAIBaseClient<
     //   return undefined
     // }
 
-    const data = new File(file.path).base64()
+    const data = await new File(file.path).base64()
     return {
       type: 'input_file',
       filename: file.origin_name,
@@ -206,7 +206,7 @@ export class OpenAIResponseAPIClient extends OpenAIBaseClient<
         parts.push({
           detail: 'auto',
           type: 'input_image',
-          image_url: image.base64()
+          image_url: await image.base64()
         })
       }
     }

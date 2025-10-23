@@ -418,7 +418,7 @@ export class OpenAIAPIClient extends OpenAIBaseClient<
     if (imageContents.length > 0) {
       for (const imageContent of imageContents) {
         const image = new File(Paths.join(Paths.cache, 'Files', imageContent.fileId + imageContent.fileExt))
-        parts.push({ type: 'image_url', image_url: { url: image.base64() } })
+        parts.push({ type: 'image_url', image_url: { url: await image.base64() } })
       }
     }
 
@@ -426,7 +426,7 @@ export class OpenAIAPIClient extends OpenAIBaseClient<
       if (isVision) {
         if (imageBlock.file) {
           const image = new File(imageBlock.file.path)
-          parts.push({ type: 'image_url', image_url: { url: image.base64() } })
+          parts.push({ type: 'image_url', image_url: { url: await image.base64() } })
         } else if (imageBlock.url && imageBlock.url.startsWith('data:')) {
           parts.push({ type: 'image_url', image_url: { url: imageBlock.url } })
         }

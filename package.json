@@ -93,7 +93,7 @@
     "expo-dev-client": "~6.0.15",
     "expo-document-picker": "~14.0.7",
     "expo-drizzle-studio-plugin": "^0.2.0",
-    "expo-file-system": "~19.0.14",
+    "expo-file-system": "~19.0.17",
     "expo-font": "~14.0.8",
     "expo-haptics": "~15.0.7",
     "expo-image": "~3.0.8",

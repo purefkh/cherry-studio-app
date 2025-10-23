@@ -8017,7 +8017,7 @@ __metadata:
     expo-dev-client: "npm:~6.0.15"
     expo-document-picker: "npm:~14.0.7"
     expo-drizzle-studio-plugin: "npm:^0.2.0"
-    expo-file-system: "npm:~19.0.14"
+    expo-file-system: "npm:~19.0.17"
     expo-font: "npm:~14.0.8"
     expo-haptics: "npm:~15.0.7"
     expo-image: "npm:~3.0.8"
@@ -11410,7 +11410,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"expo-file-system@npm:~19.0.14, expo-file-system@npm:~19.0.17":
+"expo-file-system@npm:~19.0.17":
   version: 19.0.17
   resolution: "expo-file-system@npm:19.0.17"
   peerDependencies:

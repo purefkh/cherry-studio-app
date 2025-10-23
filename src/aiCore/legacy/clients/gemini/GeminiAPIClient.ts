@@ -259,7 +259,7 @@ export class GeminiAPIClient extends BaseApiClient<
         const image = new File(Paths.join(Paths.cache, 'Files', imageContent.fileId + imageContent.fileExt))
         parts.push({
           inlineData: {
-            data: image.base64(),
+            data: await image.base64(),
             mimeType: image.type || 'image/png'
           } satisfies Part['inlineData']
         })
@@ -299,7 +299,7 @@ export class GeminiAPIClient extends BaseApiClient<
         const image = new File(file.path)
         parts.push({
           inlineData: {
-            data: image.base64(),
+            data: await image.base64(),
             mimeType: image.type || 'image/png'
           } satisfies Part['inlineData']
         })
@@ -315,7 +315,7 @@ export class GeminiAPIClient extends BaseApiClient<
         const image = new File(file.path)
         parts.push({
           inlineData: {
-            data: image.base64(),
+            data: await image.base64(),
             mimeType: image.type || 'image/png'
           } satisfies Part['inlineData']
         })
@@ -812,7 +812,7 @@ export class GeminiAPIClient extends BaseApiClient<
   private async base64File(file: FileMetadata) {
     const _file = new File(file.path)
     return {
-      file: _file.base64(),
+      file: await _file.base64(),
       mimeType: 'application/pdf'
     }
   }

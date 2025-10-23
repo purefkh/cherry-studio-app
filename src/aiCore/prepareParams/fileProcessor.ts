@@ -151,7 +151,7 @@ export async function convertFileBlockToFilePart(fileBlock: FileMessageBlock, mo
       const _file = new File(file.path)
       return {
         type: 'file',
-        data: _file.base64(),
+        data: await _file.base64(),
         mediaType: _file.type || 'application/pdf',
         filename: file.origin_name
       }
@@ -178,7 +178,7 @@ export async function convertFileBlockToFilePart(fileBlock: FileMessageBlock, mo
 
       return {
         type: 'file',
-        data: image.base64(),
+        data: await image.base64(),
         mediaType: mediaType || 'image/jpeg',
         filename: file.origin_name
       }

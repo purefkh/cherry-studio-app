@@ -34,7 +34,8 @@ export const useFileHandler = ({ files, setFiles, onSuccess }: UseFileHandlerPro
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
         allowsMultipleSelection: true,
-        quality: 1
+        quality: 1,
+        base64: true
       })
 
       if (result.canceled) {
@@ -102,9 +103,9 @@ export const useFileHandler = ({ files, setFiles, onSuccess }: UseFileHandlerPro
 
   const handleAddPhotoFromCamera = async (photoUri: string) => {
     try {
-      const fileInfo = await FileSystem.getInfoAsync(photoUri)
+      const file = new FileSystem.File(photoUri)
 
-      if (!fileInfo.exists) {
+      if (!file.exists) {
         logger.error('Photo from camera not found at uri:', photoUri)
         return
       }
@@ -118,7 +119,7 @@ export const useFileHandler = ({ files, setFiles, onSuccess }: UseFileHandlerPro
         name: fileName,
         origin_name: fileName,
         path: compressedUri,
-        size: fileInfo.size,
+        size: file.size,
         ext: 'jpg',
         type: FileTypes.IMAGE,
         created_at: Date.now(),

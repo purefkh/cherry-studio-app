@@ -61,7 +61,7 @@ async function convertMessageToUserModelMessage(
           const image = new ExpoFile(imageBlock.file.path)
           parts.push({
             type: 'image',
-            image: image.base64(),
+            image: await image.base64(),
             mediaType: image.type || undefined
           })
         } catch (error) {

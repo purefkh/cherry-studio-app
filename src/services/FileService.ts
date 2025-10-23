@@ -31,7 +31,7 @@ export function readFile(file: FileMetadata): string {
 }
 
 export function readBase64File(file: FileMetadata): string {
-  return new File(file.path).base64()
+  return new File(file.path).base64Sync()
 }
 
 export async function writeBase64File(data: string): Promise<FileMetadata> {
