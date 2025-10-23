@@ -307,7 +307,7 @@ function SettingItem({ title, screen, icon, subtitle, danger, onPress, disabled 
         {icon}
         <YStack>
           <Text className={danger ? 'text-red-500 dark:text-red-500' : ''}>{title}</Text>
-          {subtitle && <Text size="sm">{subtitle}</Text>}
+          {subtitle && <Text className="text-sm">{subtitle}</Text>}
         </YStack>
       </XStack>
       {screen && <RowRightArrow />}

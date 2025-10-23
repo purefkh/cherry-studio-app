@@ -25,7 +25,7 @@ export function getDefaultTopic(assistantId: string): Topic {
     createdAt: Date.now(),
     updatedAt: Date.now(),
     name: i18n.t('chat.default.topic.name'),
-    isNameManuallyEdited: false
+    isLoading: false
   }
 }
 
