@@ -28,7 +28,7 @@ interface MessageInputProps {
 export const MessageInput: React.FC<MessageInputProps> = ({ topic, assistant, updateAssistant }) => {
   const { t } = useTranslation()
   const bottomPad = useBottom()
-  const { text, setText, files, setFiles, mentions, setMentions, isReasoning, isTopicLoading, sendMessage, onPause } =
+  const { text, setText, files, setFiles, mentions, setMentions, isReasoning, sendMessage, onPause } =
     useMessageInputLogic(topic, assistant)
 
   return (
@@ -87,7 +87,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({ topic, assistant, up
           </XStack>
           <XStack className="gap-5 items-center">
             <AnimatePresence exitBeforeEnter>
-              {isTopicLoading ? (
+              {topic.isLoading ? (
                 <MotiView
                   key="pause-button"
                   from={{ opacity: 0, scale: 0.5 }}

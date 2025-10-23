@@ -16,7 +16,6 @@ import Text from '@/componentsV2/base/Text'
 import YStack from '@/componentsV2/layout/YStack'
 import { useDialog } from '@/hooks/useDialog'
 import { FlashList } from '@shopify/flash-list'
-import { newMessagesActions } from '@/store/newMessage'
 import { topicDatabase } from '@/database'
 
 const logger = loggerService.withContext('GroupTopicList')
@@ -87,7 +86,6 @@ export function TopicList({ topics, enableScroll, handleNavigateChatScreen }: Gr
 
           await deleteMessagesByTopicId(topicId)
           await topicDatabase.deleteTopicById(topicId)
-          dispatch(newMessagesActions.deleteTopicLoading({ topicId }))
 
           toast.show(t('message.topic_deleted'))
 

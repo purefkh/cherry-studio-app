@@ -3,7 +3,6 @@ import { AiSdkMiddlewareConfig } from '@/aiCore/middleware/AiSdkMiddlewareBuilde
 import { buildStreamTextParams, convertMessagesToSdkMessages } from '@/aiCore/prepareParams'
 import { loggerService } from '@/services/LoggerService'
 import { AppDispatch } from '@/store'
-import { newMessagesActions } from '@/store/newMessage'
 import { Assistant, Model, Topic, Usage } from '@/types/assistant'
 import { ChunkType } from '@/types/chunk'
 import { FileMetadata, FileTypes } from '@/types/file'
@@ -21,7 +20,7 @@ import {
 } from '@/utils/messageUtils/create'
 import { getTopicQueue } from '@/utils/queue'
 
-import { assistantDatabase, messageBlockDatabase, messageDatabase } from '@database'
+import { assistantDatabase, messageBlockDatabase, messageDatabase, topicDatabase } from '@database'
 import { fetchTopicNaming } from './ApiService'
 import { getDefaultModel } from './AssistantService'
 import { BlockManager, createCallbacks } from './messageStreaming'
@@ -32,7 +31,10 @@ import { createStreamProcessor, StreamProcessorCallbacks } from './StreamProcess
 const logger = loggerService.withContext('Messages Service')
 
 const finishTopicLoading = async (topicId: string) => {
-  store.dispatch(newMessagesActions.setTopicLoading({ topicId, loading: false }))
+  const topic = await topicDatabase.getTopicById(topicId)
+  if (topic) {
+    await topicDatabase.upsertTopics({ ...topic, isLoading: false })
+  }
 }
 
 /**
@@ -144,7 +146,7 @@ export async function sendMessage(
         model: assistant.model
       })
       await saveMessageAndBlocksToDB(assistantMessage, [])
-      await fetchAndProcessAssistantResponseImpl(topicId, assistant, assistantMessage, dispatch)
+      await fetchAndProcessAssistantResponseImpl(topicId, assistant, assistantMessage)
     }
   } catch (error) {
     logger.error('Error in sendMessage:', error)
@@ -220,7 +222,7 @@ export async function regenerateAssistantMessage(
     }
 
     // Add the fetch/process call to the queue
-    await fetchAndProcessAssistantResponseImpl(topicId, assistantConfigForRegen, resetAssistantMsg, dispatch)
+    await fetchAndProcessAssistantResponseImpl(topicId, assistantConfigForRegen, resetAssistantMsg)
   } catch (error) {
     logger.error('Error in regenerateAssistantMessage:', error)
   } finally {
@@ -424,14 +426,16 @@ export async function saveMessageAndBlocksToDB(message: Message, blocks: Message
 export async function fetchAndProcessAssistantResponseImpl(
   topicId: string,
   assistant: Assistant,
-  assistantMessage: Message,
-  dispatch: AppDispatch
+  assistantMessage: Message
 ) {
   const assistantMsgId = assistantMessage.id
   let callbacks: StreamProcessorCallbacks = {}
 
   try {
-    dispatch(newMessagesActions.setTopicLoading({ topicId, loading: true }))
+    const currentTopic = await topicDatabase.getTopicById(topicId)
+    if (currentTopic) {
+      await topicDatabase.upsertTopics({ ...currentTopic, isLoading: true })
+    }
 
     // 创建 BlockManager 实例
     const blockManager = new BlockManager({
@@ -497,7 +501,10 @@ export async function fetchAndProcessAssistantResponseImpl(
       logger.error('Error in onError callback:', callbackError as Error)
     } finally {
       // 确保无论如何都设置 loading 为 false（onError 回调中已设置，这里是保险）
-      dispatch(newMessagesActions.setTopicLoading({ topicId, loading: false }))
+      const topic = await topicDatabase.getTopicById(topicId)
+      if (topic) {
+        await topicDatabase.upsertTopics({ ...topic, isLoading: false })
+      }
     }
   } finally {
     await fetchTopicNaming(topicId)
@@ -533,7 +540,7 @@ export async function multiModelResponses(
 
   for (const task of tasksToQueue) {
     queue.add(async () => {
-      await fetchAndProcessAssistantResponseImpl(topicId, task.assistantConfig, task.messageStub, dispatch)
+      await fetchAndProcessAssistantResponseImpl(topicId, task.assistantConfig, task.messageStub)
     })
   }
 }

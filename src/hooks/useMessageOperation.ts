@@ -1,22 +1,13 @@
-import { createSelector } from '@reduxjs/toolkit'
 import { useCallback } from 'react'
 
 import { loggerService } from '@/services/LoggerService'
-import { RootState, useAppDispatch, useAppSelector } from '@/store'
-import { newMessagesActions } from '@/store/newMessage'
 import { Topic } from '@/types/assistant'
 import { abortCompletion } from '@/utils/abortController'
+import { useTopic } from './useTopic'
 
-import { messageDatabase } from '@database'
+import { messageDatabase, topicDatabase } from '@database'
 
 const logger = loggerService.withContext('UseMessageOperations')
-
-const selectMessagesState = (state: RootState) => state.messages
-
-export const selectNewTopicLoading = createSelector(
-  [selectMessagesState, (_, topicId: string) => topicId],
-  (messagesState, topicId) => messagesState.loadingByTopic[topicId] || false
-)
 
 /**
  * Hook 提供针对特定主题的消息操作方法。 / Hook providing various operations for messages within a specific topic.
@@ -24,8 +15,6 @@ export const selectNewTopicLoading = createSelector(
  * @returns 包含消息操作函数的对象。 / An object containing message operation functions.
  */
 export function useMessageOperations(topic: Topic) {
-  const dispatch = useAppDispatch()
-
   /**
    * todo: 暂停当前主题正在进行的消息生成。 / Pauses ongoing message generation for the current topic.
    */
@@ -40,14 +29,21 @@ export function useMessageOperations(topic: Topic) {
       abortCompletion(askId)
     }
 
-    dispatch(newMessagesActions.setTopicLoading({ topicId: topic.id, loading: false }))
-  }, [topic.id, dispatch])
+    await topicDatabase.upsertTopics({ ...topic, isLoading: false })
+  }, [topic])
 
   return {
     pauseMessages
   }
 }
 
-export const useTopicLoading = (topic: Topic) => {
-  return useAppSelector(state => selectNewTopicLoading(state, topic.id))
+export const useTopicLoading = (topicId: string) => {
+  const { topic, isLoading: isTopicQueryLoading } = useTopic(topicId)
+
+  // 如果 topic 查询还在加载中，返回 false 作为默认值
+  if (isTopicQueryLoading || !topic) {
+    return false
+  }
+
+  return topic.isLoading || false
 }

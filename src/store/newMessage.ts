@@ -12,31 +12,18 @@ const messagesAdapter = createEntityAdapter<Message>()
 export interface MessagesState extends EntityState<Message, string> {
   messageIdsByTopic: Record<string, string[]> // Map: topicId -> ordered message IDs
   currentTopicId: string | null
-  loadingByTopic: Record<string, boolean>
 }
 
 // 3. Define the Initial State
 const initialState: MessagesState = messagesAdapter.getInitialState({
   messageIdsByTopic: {},
-  currentTopicId: null,
-  loadingByTopic: {}
+  currentTopicId: null
 })
 
 // Payload for receiving messages (used by loadTopicMessagesThunk)
 interface MessagesReceivedPayload {
   topicId: string
   messages: Message[]
-}
-
-// Payload for setting topic loading state
-interface SetTopicLoadingPayload {
-  topicId: string
-  loading: boolean
-}
-
-// Payload for deleting topic loading state
-interface DeleteTopicLoadingPayload {
-  topicId: string
 }
 
 // Payload for upserting a block reference
@@ -62,16 +49,7 @@ export const messagesSlice = createSlice({
 
       if (action.payload && !(action.payload in state.messageIdsByTopic)) {
         state.messageIdsByTopic[action.payload] = []
-        state.loadingByTopic[action.payload] = false
       }
-    },
-    setTopicLoading(state, action: PayloadAction<SetTopicLoadingPayload>) {
-      const { topicId, loading } = action.payload
-      state.loadingByTopic[topicId] = loading
-    },
-    deleteTopicLoading(state, action: PayloadAction<DeleteTopicLoadingPayload>) {
-      const { topicId } = action.payload
-      delete state.loadingByTopic[topicId]
     },
     messagesReceived(state, action: PayloadAction<MessagesReceivedPayload>) {
       const { topicId, messages } = action.payload
@@ -88,10 +66,6 @@ export const messagesSlice = createSlice({
       }
 
       state.messageIdsByTopic[topicId].push(message.id)
-
-      if (!(topicId in state.loadingByTopic)) {
-        state.loadingByTopic[topicId] = false
-      }
     },
     updateMessage(
       state,
@@ -140,7 +114,6 @@ export const messagesSlice = createSlice({
       }
 
       delete state.messageIdsByTopic[topicId]
-      state.loadingByTopic[topicId] = false
     },
     removeMessage(state, action: PayloadAction<RemoveMessagePayload>) {
       const { topicId, messageId } = action.payload

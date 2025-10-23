@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Keyboard } from 'react-native'
 
 import { isReasoningModel } from '@/config/models'
-import { useMessageOperations, useTopicLoading } from '@/hooks/useMessageOperation'
+import { useMessageOperations } from '@/hooks/useMessageOperation'
 import { loggerService } from '@/services/LoggerService'
 import { sendMessage as _sendMessage, getUserMessage } from '@/services/MessagesService'
 import { useAppDispatch } from '@/store'
@@ -12,6 +12,7 @@ import { Assistant, Model, Topic } from '@/types/assistant'
 import { FileMetadata } from '@/types/file'
 import { MessageInputBaseParams } from '@/types/message'
 import { haptic } from '@/utils/haptic'
+import { topicDatabase } from '@/database'
 
 const logger = loggerService.withContext('Message Input')
 
@@ -20,7 +21,6 @@ export const useMessageInputLogic = (topic: Topic, assistant: Assistant) => {
   const [text, setText] = useState('')
   const [files, setFiles] = useState<FileMetadata[]>([])
   const [mentions, setMentions] = useState<Model[]>([])
-  const isTopicLoading = useTopicLoading(topic)
   const { pauseMessages } = useMessageOperations(topic)
 
   const isReasoning = isReasoningModel(assistant.model)
@@ -41,6 +41,7 @@ export const useMessageInputLogic = (topic: Topic, assistant: Assistant) => {
     setText('')
     setFiles([])
     Keyboard.dismiss()
+    await topicDatabase.upsertTopics({ ...topic, isLoading: true })
 
     try {
       const baseUserMessage: MessageInputBaseParams = { assistant, topic, content: text }
@@ -79,7 +80,6 @@ export const useMessageInputLogic = (topic: Topic, assistant: Assistant) => {
     mentions,
     setMentions,
     isReasoning,
-    isTopicLoading,
     sendMessage,
     onPause
   }
