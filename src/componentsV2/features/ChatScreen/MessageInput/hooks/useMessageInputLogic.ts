@@ -7,7 +7,6 @@ import { isReasoningModel } from '@/config/models'
 import { useMessageOperations } from '@/hooks/useMessageOperation'
 import { loggerService } from '@/services/LoggerService'
 import { sendMessage as _sendMessage, getUserMessage } from '@/services/MessagesService'
-import { useAppDispatch } from '@/store'
 import { Assistant, Model, Topic } from '@/types/assistant'
 import { FileMetadata } from '@/types/file'
 import { MessageInputBaseParams } from '@/types/message'
@@ -17,7 +16,6 @@ import { topicDatabase } from '@/database'
 const logger = loggerService.withContext('Message Input')
 
 export const useMessageInputLogic = (topic: Topic, assistant: Assistant) => {
-  const dispatch = useAppDispatch()
   const [text, setText] = useState('')
   const [files, setFiles] = useState<FileMetadata[]>([])
   const [mentions, setMentions] = useState<Model[]>([])
@@ -56,7 +54,7 @@ export const useMessageInputLogic = (topic: Topic, assistant: Assistant) => {
         message.mentions = mentions
       }
 
-      await _sendMessage(message, blocks, assistant, topic.id, dispatch)
+      await _sendMessage(message, blocks, assistant, topic.id)
     } catch (error) {
       logger.error('Error sending message:', error)
     }

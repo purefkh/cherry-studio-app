@@ -160,9 +160,7 @@ export const AddProviderSheet = forwardRef<BottomSheetModal, ProviderSheetProps>
                     <Text className="text-text-secondary dark:text-text-secondary-dark">
                       {t('settings.provider.add.name.label')}
                     </Text>
-                    <Text size="lg" className="text-red-500 dark:text-red-500">
-                      *
-                    </Text>
+                    <Text className="text-red-500 dark:text-red-500">*</Text>
                   </XStack>
                   <BottomSheetTextInput
                     className="h-10 px-3 py-3 rounded-md bg-ui-card-background dark:bg-ui-card-background-dark border border-gray-20"

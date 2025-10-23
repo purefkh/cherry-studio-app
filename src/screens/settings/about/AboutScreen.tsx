@@ -46,13 +46,11 @@ export default function AboutScreen() {
               <Image className="h-[70px] w-[70px] rounded-[41px]" source={require('@/assets/images/favicon.png')} />
               <YStack className="gap-[5px] py-1 flex-1">
                 <Text className="font-bold text-[22px]">{t('common.cherry_studio')}</Text>
-                <Text size="sm" className="text-text-secondary dark:text-text-secondary-dark" numberOfLines={0}>
+                <Text className="text-sm text-text-secondary dark:text-text-secondary-dark" numberOfLines={0}>
                   {t('common.cherry_studio_description')}
                 </Text>
-                <Text
-                  size="sm"
-                  className="border border-green-20 dark:border-green-dark-20 bg-green-10 dark:bg-green-dark-10 text-green-100 dark:text-green-dark-100 self-start px-2 py-0.5 rounded-[25.37px]">
-                  v0.0.1
+                <Text className="text-sm border border-green-20 dark:border-green-dark-20 bg-green-10 dark:bg-green-dark-10 text-green-100 dark:text-green-dark-100 self-start px-2 py-0.5 rounded-[25.37px]">
+                  v0.1.0-beta.1
                 </Text>
               </YStack>
             </Row>

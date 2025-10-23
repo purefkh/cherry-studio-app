@@ -2,7 +2,6 @@ import ModernAiProvider from '@/aiCore/index_new'
 import { AiSdkMiddlewareConfig } from '@/aiCore/middleware/AiSdkMiddlewareBuilder'
 import { buildStreamTextParams, convertMessagesToSdkMessages } from '@/aiCore/prepareParams'
 import { loggerService } from '@/services/LoggerService'
-import { AppDispatch } from '@/store'
 import { Assistant, Model, Topic, Usage } from '@/types/assistant'
 import { ChunkType } from '@/types/chunk'
 import { FileMetadata, FileTypes } from '@/types/file'
@@ -124,8 +123,7 @@ export async function sendMessage(
   userMessage: Message,
   userMessageBlocks: MessageBlock[],
   assistant: Assistant,
-  topicId: Topic['id'],
-  dispatch: AppDispatch
+  topicId: Topic['id']
 ) {
   try {
     if (userMessage.blocks.length === 0) {
@@ -139,7 +137,7 @@ export async function sendMessage(
     const mentionedModels = userMessage.mentions
 
     if (mentionedModels && mentionedModels.length > 0) {
-      await multiModelResponses(topicId, assistant, userMessage, mentionedModels, dispatch)
+      await multiModelResponses(topicId, assistant, userMessage, mentionedModels)
     } else {
       const assistantMessage = createAssistantMessage(assistant.id, topicId, {
         askId: userMessage.id,
@@ -513,8 +511,7 @@ export async function multiModelResponses(
   topicId: string,
   assistant: Assistant,
   triggeringMessage: Message, // userMessage or messageToResend
-  mentionedModels: Model[],
-  dispatch: AppDispatch
+  mentionedModels: Model[]
 ) {
   logger.info('multiModelResponses')
   const assistantMessageStubs: Message[] = []
