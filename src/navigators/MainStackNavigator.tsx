@@ -5,13 +5,13 @@ import React from 'react'
 
 import AppDrawerNavigator from '@/navigators/AppDrawerNavigator'
 import WelcomeStackNavigator from '@/navigators/WelcomeStackNavigator'
-import { useAppSelector } from '@/store'
 import { RootStackParamList } from '@/types/naviagate'
+import { useAppState } from '@/hooks/useAppState'
 
 const Stack = createStackNavigator<RootStackParamList>()
 
 export default function MainStackNavigator() {
-  const welcomeShown = useAppSelector(state => state.app.welcomeShown)
+  const { welcomeShown } = useAppState()
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false, animation: 'none' }}>

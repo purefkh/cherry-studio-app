@@ -1,4 +1,4 @@
-import { WebSearchState } from '@/store/websearch'
+import { WebSearchState } from '@/types/websearch'
 import { WebSearchProvider, WebSearchProviderResponse } from '@/types/websearch'
 import { filterResultWithBlacklist } from '@/utils/blacklistMatchPattern'
 

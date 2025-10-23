@@ -9,7 +9,8 @@ import {
   messages,
   providers,
   topics,
-  websearch_providers
+  websearch_providers,
+  preferenceTable
 } from '../schema'
 
 const logger = loggerService.withContext('Reset Database')
@@ -54,6 +55,9 @@ export async function clearAllTables(): Promise<void> {
 
       await tx.delete(knowledges)
       logger.info('Cleared knowledges table')
+
+      await tx.delete(preferenceTable)
+      logger.info('Cleared preference table')
     })
 
     logger.info('Successfully cleared all database tables')

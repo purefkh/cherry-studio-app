@@ -1,11 +1,9 @@
 import { eq } from 'drizzle-orm'
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
 import { useMemo } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
 
-import { RootState } from '@/store'
-import { setContentLimit, setMaxResult, setOverrideSearchService, setSearchWithTime } from '@/store/websearch'
 import { WebSearchProvider } from '@/types/websearch'
+import { usePreference } from './usePreference'
 
 import { db } from '@db'
 import { transformDbToWebSearchProvider } from '@db/mappers'
@@ -102,35 +100,36 @@ export function useWebSearchProvider(providerId: string) {
 }
 
 /**
- * Hook for managing websearch settings with Redux
+ * Hook for managing websearch settings
+ *
+ * Now uses PreferenceService instead of Redux for better performance
+ * and persistence.
  */
 export function useWebsearchSettings() {
-  const dispatch = useDispatch()
+  // Get preferences using usePreference hooks
+  const [searchWithDates, setSearchWithDatesRaw] = usePreference('websearch.search_with_time')
+  const [overrideSearchService, setOverrideSearchServiceRaw] = usePreference('websearch.override_search_service')
+  const [searchCount, setSearchCountRaw] = usePreference('websearch.max_results')
+  const [contentLimit, setContentLimitRaw] = usePreference('websearch.content_limit')
 
-  // Get state from Redux store
-  const searchWithDates = useSelector((state: RootState) => state.websearch.searchWithTime)
-  const overrideSearchService = useSelector((state: RootState) => state.websearch.overrideSearchService)
-  const searchCount = useSelector((state: RootState) => state.websearch.maxResults)
-  const contentLimit = useSelector((state: RootState) => state.websearch.contentLimit)
-
-  // Action dispatchers
-  const setSearchWithDates = (value: boolean) => {
-    dispatch(setSearchWithTime(value))
+  // Wrapper setters with validation (keeping same API as before)
+  const setSearchWithDates = async (value: boolean) => {
+    await setSearchWithDatesRaw(value)
   }
 
-  const setOverrideSearchServiceSetting = (value: boolean) => {
-    dispatch(setOverrideSearchService(value))
+  const setOverrideSearchServiceSetting = async (value: boolean) => {
+    await setOverrideSearchServiceRaw(value)
   }
 
-  const setSearchCountSetting = (value: number) => {
+  const setSearchCountSetting = async (value: number) => {
     if (typeof value === 'number' && !isNaN(value) && value >= 1 && value <= 20) {
-      dispatch(setMaxResult(Math.round(value)))
+      await setSearchCountRaw(Math.round(value))
     }
   }
 
-  const setContentLimitSetting = (value: number | undefined) => {
+  const setContentLimitSetting = async (value: number | undefined) => {
     if (value === undefined || (typeof value === 'number' && !isNaN(value) && value > 0)) {
-      dispatch(setContentLimit(value))
+      await setContentLimitRaw(value)
     }
   }
 
@@ -140,7 +139,7 @@ export function useWebsearchSettings() {
     overrideSearchService,
     searchCount,
     contentLimit,
-    // Actions
+    // Actions (now async)
     setSearchWithDates,
     setOverrideSearchService: setOverrideSearchServiceSetting,
     setSearchCount: setSearchCountSetting,

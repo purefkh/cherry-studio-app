@@ -1,4 +1,4 @@
-import { WebSearchState } from '@/store/websearch'
+import { WebSearchState } from '@/types/websearch'
 
 import { Assistant, Provider, Topic } from './assistant'
 import { Message, MessageBlock } from './message'

@@ -23,9 +23,9 @@ export default function GeneralSettings() {
   const handleSearchCountChange = (value: string) => {
     const numValue = parseInt(value, 10)
     if (!isNaN(numValue) && numValue >= 1 && numValue <= 20) {
-      setSearchCount(numValue)
+      setSearchCount(numValue).catch(console.error)
     } else if (value === '') {
-      setSearchCount(1)
+      setSearchCount(1).catch(console.error)
     }
   }
 
@@ -34,9 +34,9 @@ export default function GeneralSettings() {
     const numValue = parseInt(value, 10)
 
     if (!isNaN(numValue)) {
-      setContentLimit(numValue)
+      setContentLimit(numValue).catch(console.error)
     } else if (value === '') {
-      setContentLimit(undefined)
+      setContentLimit(undefined).catch(console.error)
     }
   }
 

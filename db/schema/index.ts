@@ -5,7 +5,6 @@ import { messageBlocks } from './messageBlocks'
 import { messages } from './messages'
 import { topics } from './topics'
 
-export * from './appState'
 export * from './assistants'
 export * from './files'
 export * from './knowledges'

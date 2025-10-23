@@ -9,10 +9,9 @@ import { Edit3, Sparkles, Trash2 } from '../../icons/LucideIcon'
 
 import { useTheme } from 'heroui-native'
 import { useToast } from '@/hooks/useToast'
+import { useCurrentTopic } from '@/hooks/useTopic'
 import i18n from '@/i18n'
 import { fetchTopicNaming } from '@/services/ApiService'
-import { useAppDispatch, useAppSelector } from '@/store'
-import { setCurrentTopicId } from '@/store/topic'
 import { Assistant, Topic } from '@/types/assistant'
 import { DrawerNavigationProps } from '@/types/naviagate'
 import { storage } from '@/utils'
@@ -63,16 +62,13 @@ export const TopicItem: FC<TopicItemProps> = ({
 }) => {
   const { t } = useTranslation()
   const [currentLanguage, setCurrentLanguage] = useState<string>(i18n.language)
-  const dispatch = useAppDispatch()
+  const { currentTopicId, setCurrentTopicId } = useCurrentTopic()
   const navigation = useNavigation<DrawerNavigationProps>()
   const [assistant, setAssistant] = useState<Assistant>()
   const [isGeneratingName, setIsGeneratingName] = useState(false)
   const dialog = useDialog()
   const { isDark } = useTheme()
-  const isActive = useAppSelector(
-    state => state.topic.currentTopicId === topic.id,
-    (prev, next) => prev === next
-  )
+  const isActive = currentTopicId === topic.id
   const toast = useToast()
 
   const openTopic = () => {
@@ -82,7 +78,7 @@ export const TopicItem: FC<TopicItemProps> = ({
       haptic(ImpactFeedbackStyle.Medium)
       navigation.navigate('Home', { screen: 'ChatScreen', params: { topicId: topic.id } })
     }
-    dispatch(setCurrentTopicId(topic.id))
+    setCurrentTopicId(topic.id).catch(console.error)
   }
 
   const date = new Date(topic.updatedAt)

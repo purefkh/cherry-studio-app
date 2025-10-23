@@ -31,7 +31,7 @@ export default function PersonalScreen() {
 
         if (selectedImage.base64) {
           const base64Image = `data:image/jpeg;base64,${selectedImage.base64}`
-          setAvatar(base64Image)
+          await setAvatar(base64Image)
         }
       }
     } catch (error) {

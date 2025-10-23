@@ -9,10 +9,9 @@ import { Text, YStack, SelectionSheet } from '@/componentsV2'
 import { MessageSquareDiff } from '@/componentsV2/icons/LucideIcon'
 import EmojiAvatar from '@/componentsV2/features/Assistant/EmojiAvatar'
 import { useExternalAssistants } from '@/hooks/useAssistant'
+import { useCurrentTopic } from '@/hooks/useTopic'
 import { useTheme } from 'heroui-native'
 import { createNewTopic, getNewestTopic } from '@/services/TopicService'
-import { useAppDispatch } from '@/store'
-import { setCurrentTopicId } from '@/store/topic'
 import { Assistant } from '@/types/assistant'
 import { DrawerNavigationProps } from '@/types/naviagate'
 import { haptic } from '@/utils/haptic'
@@ -26,7 +25,7 @@ interface NewTopicButtonProps {
 export const NewTopicButton: React.FC<NewTopicButtonProps> = ({ assistant }) => {
   const { t } = useTranslation()
   const navigation = useNavigation<DrawerNavigationProps>()
-  const dispatch = useAppDispatch()
+  const { setCurrentTopicId } = useCurrentTopic()
   const { assistants, isLoading } = useExternalAssistants()
   const selectionSheetRef = useRef<BottomSheetModal | null>(null)
   const { isDark } = useTheme()
@@ -38,11 +37,11 @@ export const NewTopicButton: React.FC<NewTopicButtonProps> = ({ assistant }) => 
     const hasMessages = await messageDatabase.getHasMessagesWithTopicId(newestTopic?.id ?? '')
     if (hasMessages || !newestTopic) {
       const newTopic = await createNewTopic(targetAssistant)
-      dispatch(setCurrentTopicId(newTopic.id))
+      await setCurrentTopicId(newTopic.id)
       navigation.navigate('Home', { screen: 'ChatScreen', params: { topicId: newTopic.id } })
     } else {
       newestTopic.assistantId = targetAssistant.id
-      dispatch(setCurrentTopicId(newestTopic.id))
+      await setCurrentTopicId(newestTopic.id)
       navigation.navigate('Home', { screen: 'ChatScreen', params: { topicId: newestTopic.id } })
     }
   }

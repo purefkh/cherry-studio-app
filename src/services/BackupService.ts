@@ -6,8 +6,7 @@ import { unzip, zip } from 'react-native-zip-archive'
 import { DEFAULT_BACKUP_STORAGE, DEFAULT_DOCUMENTS_STORAGE } from '@/constants/storage'
 import { getSystemAssistants } from '@/config/assistants'
 import { loggerService } from '@/services/LoggerService'
-import store from '@/store'
-import { setAvatar, setUserName } from '@/store/settings'
+import { preferenceService } from '@/services/PreferenceService'
 import { Assistant, Topic } from '@/types/assistant'
 import { ExportIndexedData, ExportReduxData, ImportIndexedData, ImportReduxData, Setting } from '@/types/databackup'
 import { FileMetadata } from '@/types/file'
@@ -55,7 +54,7 @@ async function restoreIndexedDbData(data: ExportIndexedData, onProgress: OnProgr
     const avatarSetting = data.settings.find(setting => setting.id === 'image://avatar')
 
     if (avatarSetting) {
-      dispatch(setAvatar(avatarSetting.value))
+      await preferenceService.set('user.avatar', avatarSetting.value)
     }
   }
 
@@ -79,7 +78,7 @@ async function restoreReduxData(data: ExportReduxData, onProgress: OnProgressCal
   await websearchProviderDatabase.upsertWebSearchProviders(data.websearch.providers)
   await new Promise(resolve => setTimeout(resolve, 200)) // Delay between steps
 
-  dispatch(setUserName(data.settings.userName))
+  await preferenceService.set('user.name', data.settings.userName)
   onProgress({ step: 'restore_settings', status: 'completed' })
 }
 
@@ -184,7 +183,13 @@ async function getAllData(): Promise<string> {
       messageBlockDatabase.getAllBlocks()
     ])
 
-    const { settings: settingsState, websearch: websearchState } = store.getState()
+    // Get preferences for backup
+    const userName = await preferenceService.get('user.name')
+    const userAvatar = await preferenceService.get('user.avatar')
+    const searchWithTime = await preferenceService.get('websearch.search_with_time')
+    const maxResults = await preferenceService.get('websearch.max_results')
+    const overrideSearchService = await preferenceService.get('websearch.override_search_service')
+    const contentLimit = await preferenceService.get('websearch.content_limit')
 
     let defaultAssistant: Assistant | null = null
 
@@ -236,12 +241,15 @@ async function getAllData(): Promise<string> {
     }
 
     const websearchPayload = {
-      ...websearchState,
+      searchWithTime,
+      maxResults,
+      overrideSearchService,
+      contentLimit,
       providers: webSearchProviders
     }
 
     const settingsPayload = {
-      userName: settingsState.userName
+      userName
     }
 
     const persistDataString = JSON.stringify({
@@ -264,11 +272,11 @@ async function getAllData(): Promise<string> {
       return accumulator
     }, {})
 
-    const indexedSettings: Setting[] = settingsState.avatar
+    const indexedSettings: Setting[] = userAvatar
       ? [
           {
             id: 'image://avatar',
-            value: settingsState.avatar
+            value: userAvatar
           }
         ]
       : []

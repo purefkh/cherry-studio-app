@@ -45,8 +45,7 @@ export async function renameTopic(topicId: string, newName: string): Promise<voi
     const updatedTopic: Topic = {
       ...topic,
       name: newName.trim(),
-      updatedAt: Date.now(),
-      isNameManuallyEdited: true
+      updatedAt: Date.now()
     }
     await topicDatabase.upsertTopics([updatedTopic])
 

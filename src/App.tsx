@@ -19,14 +19,15 @@ import { ActivityIndicator } from 'react-native'
 import { SystemBars } from 'react-native-edge-to-edge'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
-import { Provider, useSelector } from 'react-redux'
+import { Provider } from 'react-redux'
 import { PersistGate } from 'redux-persist/integration/react'
 
 import { getWebSearchProviders } from '@/config/websearchProviders'
 import { useTheme } from '@/hooks/useTheme'
+import { useAppState } from '@/hooks/useAppState'
 import { loggerService } from '@/services/LoggerService'
-import store, { persistor, RootState, useAppDispatch } from '@/store'
-import { setInitialized } from '@/store/app'
+import { preferenceService } from '@/services/PreferenceService'
+import store, { persistor } from '@/store'
 
 import { assistantDatabase, mcpDatabase, providerDatabase, websearchProviderDatabase } from '@database'
 import migrations from '../drizzle/migrations'
@@ -50,8 +51,7 @@ function DatabaseInitializer() {
   const [loaded] = useFonts({
     JetbrainMono: require('./assets/fonts/JetBrainsMono-Regular.ttf')
   })
-  const initialized = useSelector((state: RootState) => state.app.initialized)
-  const dispatch = useAppDispatch()
+  const { initialized } = useAppState()
 
   useDrizzleStudio(expoDb)
 
@@ -80,7 +80,7 @@ function DatabaseInitializer() {
           storage.set('language', Localization.getLocales()[0]?.languageTag)
           const builtinMcp = initBuiltinMcp()
           await mcpDatabase.upsertMcps(builtinMcp)
-          dispatch(setInitialized(true))
+          await preferenceService.set('app.initialized', true)
           logger.info('App data initialized successfully.')
         } catch (e) {
           logger.error('Failed to initialize app data', e)
@@ -89,7 +89,7 @@ function DatabaseInitializer() {
 
       initializeApp()
     }
-  }, [success, loaded, initialized, dispatch])
+  }, [success, loaded, initialized])
 
   useEffect(() => {
     if (loaded && initialized) {

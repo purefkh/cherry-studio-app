@@ -1,21 +1,19 @@
-import { useAppDispatch, useAppSelector } from '@/store'
-import { setAvatar, setTheme, setUserName } from '@/store/settings'
-import { ThemeMode } from '@/types'
+import type { ThemeMode } from '@/types'
+import { usePreference } from './usePreference'
 
 export function useSettings() {
-  const settings = useAppSelector(state => state.settings)
-  const dispatch = useAppDispatch()
+  const [avatar, setAvatar] = usePreference('user.avatar')
+  const [userName, setUserName] = usePreference('user.name')
+  const [userId] = usePreference('user.id')
+  const [theme, setTheme] = usePreference('ui.theme_mode')
 
   return {
-    ...settings,
-    setAvatar(avatar: string) {
-      dispatch(setAvatar(avatar))
-    },
-    setUserName(userName: string) {
-      dispatch(setUserName(userName))
-    },
-    setTheme(theme: ThemeMode) {
-      dispatch(setTheme(theme))
-    }
+    avatar,
+    userName,
+    userId,
+    theme,
+    setAvatar,
+    setUserName,
+    setTheme
   }
 }

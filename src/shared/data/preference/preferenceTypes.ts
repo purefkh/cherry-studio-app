@@ -36,5 +36,9 @@ export interface PreferenceSchemas {
     'websearch.max_results': number
     'websearch.override_search_service': boolean
     'websearch.content_limit': number | undefined
+
+    // App State
+    'app.initialized': boolean
+    'app.welcome_shown': boolean
   }
 }

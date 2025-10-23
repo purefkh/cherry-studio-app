@@ -43,7 +43,7 @@ import { eq } from 'drizzle-orm'
 import { loggerService } from '@/services/LoggerService'
 import { DefaultPreferences } from '@/shared/data/preference/preferenceSchemas'
 import type { PreferenceDefaultScopeType, PreferenceKeyType } from '@/shared/data/preference/preferenceTypes'
-import { appStateTable, preferenceTable } from '@db/schema'
+import { preferenceTable } from '@db/schema'
 import { db } from '@db/index'
 
 const logger = loggerService.withContext('PreferenceService')
@@ -410,7 +410,7 @@ export class PreferenceService {
   /**
    * Load a preference from database
    *
-   * Handles both 'preference' and 'app_state' tables based on key prefix.
+   * Loads from the 'preference' table.
    * Falls back to default value if database query fails.
    *
    * @param key - The preference key to load
@@ -421,12 +421,8 @@ export class PreferenceService {
 
     const loadPromise = (async () => {
       try {
-        // Determine which table to query based on key prefix
-        const isAppState = key.startsWith('app.')
-        const table = isAppState ? appStateTable : preferenceTable
-
-        // Query database
-        const result = await db.select().from(table).where(eq(table.key, key)).get()
+        // Query database from preference table
+        const result = await db.select().from(preferenceTable).where(eq(preferenceTable.key, key)).get()
 
         if (result) {
           const value = result.value as PreferenceValue<K>
@@ -482,13 +478,10 @@ export class PreferenceService {
 
     try {
       // 4. Persist to database in background
-      const isAppState = key.startsWith('app.')
-      const table = isAppState ? appStateTable : preferenceTable
-
       await db
-        .update(table)
+        .update(preferenceTable)
         .set({ value: newValue as any })
-        .where(eq(table.key, key))
+        .where(eq(preferenceTable.key, key))
 
       logger.debug(`Preference ${key} saved to database: ${JSON.stringify(newValue)}`)
     } catch (error) {

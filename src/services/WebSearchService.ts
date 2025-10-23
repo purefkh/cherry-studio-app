@@ -2,15 +2,17 @@ import dayjs from 'dayjs'
 
 import WebSearchEngineProvider from '@/providers/WebSearchProvider'
 import { loggerService } from '@/services/LoggerService'
+import { preferenceService } from '@/services/PreferenceService'
+import store from '@/store'
 import { setWebSearchStatus } from '@/store/runtime'
-import { WebSearchState } from '@/store/websearch'
-import { ExtractResults } from '@/types/extract'
 import {
+  WebSearchState,
   WebSearchProvider,
   WebSearchProviderResponse,
   WebSearchProviderResult,
   WebSearchStatus
 } from '@/types/websearch'
+import { ExtractResults } from '@/types/extract'
 import { hasObjectKey } from '@/utils'
 
 import { websearchProviderDatabase } from '@database'
@@ -29,8 +31,18 @@ class WebSearchService {
    * @private
    * @returns 网络搜索状态
    */
-  private getWebSearchState(): WebSearchState {
-    return store.getState().websearch
+  private async getWebSearchState(): Promise<WebSearchState> {
+    const searchWithTime = await preferenceService.get('websearch.search_with_time')
+    const maxResults = await preferenceService.get('websearch.max_results')
+    const overrideSearchService = await preferenceService.get('websearch.override_search_service')
+    const contentLimit = await preferenceService.get('websearch.content_limit')
+
+    return {
+      searchWithTime,
+      maxResults,
+      overrideSearchService,
+      contentLimit
+    }
   }
 
   /**
@@ -85,7 +97,7 @@ class WebSearchService {
     query: string,
     httpOptions?: RequestInit
   ): Promise<WebSearchProviderResponse> {
-    const websearch = this.getWebSearchState()
+    const websearch = await this.getWebSearchState()
     const webSearchEngine = new WebSearchEngineProvider(provider)
 
     let formattedQuery = query

@@ -11,13 +11,12 @@ import { Text, XStack, YStack } from '@/componentsV2'
 import { UnionPlusIcon, ModelIcon } from '@/componentsV2/icons'
 import { Settings2, X } from '@/componentsV2/icons/LucideIcon'
 import { useToast } from '@/hooks/useToast'
+import { useCurrentTopic } from '@/hooks/useTopic'
 import { createNewTopic } from '@/services/TopicService'
 import { Assistant } from '@/types/assistant'
 import { uuid } from '@/utils'
 import { formateEmoji } from '@/utils/formats'
 import { haptic } from '@/utils/haptic'
-import { setCurrentTopicId } from '@/store/topic'
-import { useAppDispatch } from '@/store'
 
 import EmojiAvatar from './EmojiAvatar'
 import GroupTag from './GroupTag'
@@ -39,7 +38,7 @@ const AssistantItemSheet = forwardRef<BottomSheetModal, AssistantItemSheetProps>
     const { t } = useTranslation()
     const { isDark } = useTheme()
     const { bottom } = useSafeAreaInsets()
-    const dispatch = useAppDispatch()
+    const { setCurrentTopicId } = useCurrentTopic()
     const toast = useToast()
     const [isVisible, setIsVisible] = useState(false)
 
@@ -78,7 +77,7 @@ const AssistantItemSheet = forwardRef<BottomSheetModal, AssistantItemSheetProps>
       }
 
       const topic = await createNewTopic(newAssistant)
-      dispatch(setCurrentTopicId(topic.id))
+      await setCurrentTopicId(topic.id)
       await onChatNavigation(topic.id)
       ;(ref as React.RefObject<BottomSheetModal>)?.current?.dismiss()
     }

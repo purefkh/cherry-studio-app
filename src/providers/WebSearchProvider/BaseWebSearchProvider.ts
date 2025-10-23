@@ -1,4 +1,4 @@
-import { WebSearchState } from '@/store/websearch'
+import { WebSearchState } from '@/types/websearch'
 import { WebSearchProvider, WebSearchProviderResponse } from '@/types/websearch'
 
 export default abstract class BaseWebSearchProvider {

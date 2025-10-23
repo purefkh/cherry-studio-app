@@ -3,8 +3,9 @@ import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
 import { useMemo } from 'react'
 
 import { loggerService } from '@/services/LoggerService'
-import store from '@/store'
+import { preferenceService } from '@/services/PreferenceService'
 import { Topic } from '@/types/assistant'
+import { usePreference } from './usePreference'
 
 import { db } from '@db'
 import { transformDbToTopic } from '@db/mappers'
@@ -13,8 +14,36 @@ import { topics as topicSchema } from '@db/schema'
 
 const logger = loggerService.withContext('useTopic')
 
+/**
+ * Get current topic ID synchronously
+ * This is used in non-React contexts where hooks cannot be used.
+ */
 export function getCurrentTopicId(): string {
-  return store.getState().topic.currentTopicId
+  return preferenceService.getCached('topic.current_id') || ''
+}
+
+/**
+ * React Hook for managing the currently active topic
+ *
+ * Returns the current topic ID and a function to update it.
+ * The topic ID is persisted and synchronized across all components.
+ *
+ * @example
+ * ```typescript
+ * function ChatScreen() {
+ *   const { currentTopicId, setCurrentTopicId } = useCurrentTopic()
+ *
+ *   return <div>Current Topic: {currentTopicId}</div>
+ * }
+ * ```
+ */
+export function useCurrentTopic() {
+  const [currentTopicId, setCurrentTopicId] = usePreference('topic.current_id')
+
+  return {
+    currentTopicId,
+    setCurrentTopicId
+  }
 }
 
 export function useTopic(topicId: string) {

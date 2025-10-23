@@ -5,8 +5,7 @@
  * Seeding is idempotent - running it multiple times will not create duplicates.
  *
  * Seeding includes:
- * - Preferences: User-configurable settings with default values
- * - App State: Application lifecycle and initialization state
+ * - Preferences: User-configurable settings and app state with default values
  *
  * Usage:
  * ```typescript
@@ -16,17 +15,12 @@
  * ```
  */
 
-import { seedAppState } from './appStateSeeding'
 import { seedPreferences } from './preferenceSeeding'
 
 /**
  * Run all seeding functions to initialize the database
  *
  * This is the main entry point for database seeding.
- * It runs all seeding functions in the correct order:
- * 1. App state (application lifecycle)
- * 2. Preferences (user settings)
- *
  * All seeding functions are idempotent - they check for existing
  * data and only insert missing records.
  *
@@ -36,10 +30,7 @@ export async function seedDatabase(db: any) {
   console.log('[Seeding] Starting database seeding...')
 
   try {
-    // Seed app state first (controls initialization flow)
-    await seedAppState(db)
-
-    // Seed preferences (user settings)
+    // Seed preferences (includes user settings and app state)
     await seedPreferences(db)
 
     console.log('[Seeding] Database seeding completed successfully')
@@ -50,5 +41,4 @@ export async function seedDatabase(db: any) {
 }
 
 // Export individual seeding functions for granular control
-export { seedAppState } from './appStateSeeding'
 export { seedPreferences } from './preferenceSeeding'

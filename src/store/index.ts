@@ -4,21 +4,12 @@ import { useDispatch, useSelector } from 'react-redux'
 import devToolsEnhancer from 'redux-devtools-expo-dev-plugin'
 import { FLUSH, PAUSE, PERSIST, persistReducer, persistStore, PURGE, REGISTER, REHYDRATE } from 'redux-persist'
 
-import websearch from '@/store/websearch'
-
-import app from './app'
 import assistant from './assistant'
 import runtime from './runtime'
-import settings from './settings'
-import topic from './topic'
 
 const rootReducer = combineReducers({
-  app,
   runtime,
-  assistant,
-  websearch,
-  settings,
-  topic
+  assistant
 })
 
 const persistedReducer = persistReducer(

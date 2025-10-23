@@ -9,8 +9,8 @@ import { MessageInputContainer } from '@/componentsV2/features/ChatScreen/Messag
 
 import { useAssistant } from '@/hooks/useAssistant'
 import { useBottom } from '@/hooks/useBottom'
+import { usePreference } from '@/hooks/usePreference'
 import { useTopic } from '@/hooks/useTopic'
-import { useAppSelector } from '@/store'
 import { haptic } from '@/utils/haptic'
 
 import ChatContent from './ChatContent'
@@ -22,7 +22,7 @@ const logger = loggerService.withContext('ChatScreen')
 
 const ChatScreen = () => {
   const navigation = useNavigation<DrawerNavigationProp<any>>()
-  const topicId = useAppSelector(state => state.topic.currentTopicId)
+  const [topicId] = usePreference('topic.current_id')
 
   const { topic, isLoading } = useTopic(topicId ?? '')
   const { assistant, isLoading: assistantLoading } = useAssistant(topic?.assistantId || '')

@@ -2,13 +2,11 @@ import React, { useEffect, useMemo, useState } from 'react' // 引入 useMemo
 import { useTranslation } from 'react-i18next'
 
 import { useToast } from '@/hooks/useToast'
-import { getCurrentTopicId } from '@/hooks/useTopic'
+import { useCurrentTopic } from '@/hooks/useTopic'
 import { getDefaultAssistant } from '@/services/AssistantService'
 import { loggerService } from '@/services/LoggerService'
 import { deleteMessagesByTopicId } from '@/services/MessagesService'
 import { createNewTopic, renameTopic } from '@/services/TopicService'
-import { useAppDispatch } from '@/store'
-import { setCurrentTopicId } from '@/store/topic'
 import { Topic } from '@/types/assistant'
 import { DateGroupKey, getTimeFormatForGroup, groupItemsByDate, TimeFormat } from '@/utils/date'
 import { TopicItem } from '../TopicItem'
@@ -32,7 +30,7 @@ type ListItem = { type: 'header'; title: string } | { type: 'topic'; topic: Topi
 export function TopicList({ topics, enableScroll, handleNavigateChatScreen }: GroupedTopicListProps) {
   const { t } = useTranslation()
   const [localTopics, setLocalTopics] = useState<Topic[]>([])
-  const dispatch = useAppDispatch()
+  const { currentTopicId, setCurrentTopicId } = useCurrentTopic()
   const toast = useToast()
   const dialog = useDialog()
 
@@ -89,20 +87,20 @@ export function TopicList({ topics, enableScroll, handleNavigateChatScreen }: Gr
 
           toast.show(t('message.topic_deleted'))
 
-          if (topicId === getCurrentTopicId()) {
+          if (topicId === currentTopicId) {
             const nextTopic =
               updatedTopics.length > 0
                 ? updatedTopics.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0]
                 : null
 
             if (nextTopic) {
-              dispatch(setCurrentTopicId(nextTopic.id))
+              await setCurrentTopicId(nextTopic.id)
               handleNavigateChatScreen?.(nextTopic.id)
               logger.info('navigateToChatScreen after delete', nextTopic)
             } else {
               const defaultAssistant = await getDefaultAssistant()
               const newTopic = await createNewTopic(defaultAssistant)
-              dispatch(setCurrentTopicId(newTopic.id))
+              await setCurrentTopicId(newTopic.id)
               handleNavigateChatScreen?.(newTopic.id)
               logger.info('navigateToChatScreen with new topic', newTopic)
             }

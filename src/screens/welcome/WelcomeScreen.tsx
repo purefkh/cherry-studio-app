@@ -3,14 +3,13 @@ import React, { useRef } from 'react'
 import { View } from 'react-native'
 
 import { Image, SafeAreaContainer, YStack } from '@/componentsV2'
-import { useAppDispatch } from '@/store'
-import { setWelcomeShown } from '@/store/app'
+import { useAppState } from '@/hooks/useAppState'
+import { useCurrentTopic } from '@/hooks/useTopic'
 import { getDefaultAssistant } from '@/services/AssistantService'
 import { createNewTopic } from '@/services/TopicService'
 import { RootNavigationProps } from '@/types/naviagate'
 import { Button } from 'heroui-native'
 import { useTranslation } from 'react-i18next'
-import { setCurrentTopicId } from '@/store/topic'
 import FastSquircleView from 'react-native-fast-squircle'
 import WelcomeTitle from './WelcomeTitle'
 import { ImportDataSheet } from './ImportDataSheet'
@@ -18,7 +17,8 @@ import { BottomSheetModal } from '@gorhom/bottom-sheet'
 
 export default function WelcomeScreen() {
   const navigation = useNavigation<RootNavigationProps>()
-  const dispatch = useAppDispatch()
+  const { setWelcomeShown } = useAppState()
+  const { setCurrentTopicId } = useCurrentTopic()
   const { t } = useTranslation()
   const bottomSheetModalRef = useRef<BottomSheetModal>(null)
 
@@ -32,8 +32,8 @@ export default function WelcomeScreen() {
         params: { topicId: newTopic.id }
       }
     })
-    dispatch(setCurrentTopicId(newTopic.id))
-    dispatch(setWelcomeShown(true))
+    await setCurrentTopicId(newTopic.id)
+    await setWelcomeShown(true)
   }
 
   return (

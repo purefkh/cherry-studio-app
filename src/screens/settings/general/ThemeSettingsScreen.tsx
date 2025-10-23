@@ -17,7 +17,7 @@ export default function ThemeSettingsScreen() {
           {themeOptions.map(opt => (
             <PressableRow
               key={opt.value}
-              onPress={() => setCurrentTheme(opt.value)}
+              onPress={() => setCurrentTheme(opt.value).catch(console.error)}
               className="bg-ui-card-background dark:bg-ui-card-background-dark p-4 rounded-xl">
               <XStack className="items-center">
                 <Text className="text-base">{t(opt.label)}</Text>
