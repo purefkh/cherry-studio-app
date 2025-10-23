@@ -148,7 +148,6 @@ export async function sendMessage(
     }
   } catch (error) {
     logger.error('Error in sendMessage:', error)
-  } finally {
     await finishTopicLoading(topicId)
   }
 }
@@ -501,6 +500,7 @@ export async function fetchAndProcessAssistantResponseImpl(
       }
     }
   } finally {
+    await finishTopicLoading(topicId)
     await fetchTopicNaming(topicId)
   }
 }
@@ -530,12 +530,13 @@ export async function multiModelResponses(
   }
 
   const queue = getTopicQueue(topicId)
-
-  for (const task of tasksToQueue) {
+  const queuedTasks = tasksToQueue.map(task =>
     queue.add(async () => {
       await fetchAndProcessAssistantResponseImpl(topicId, task.assistantConfig, task.messageStub)
     })
-  }
+  )
+
+  await Promise.all(queuedTasks)
 }
 // --- End Helper Function ---
 
