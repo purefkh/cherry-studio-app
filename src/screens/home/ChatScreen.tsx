@@ -10,7 +10,7 @@ import { MessageInputContainer } from '@/componentsV2/features/ChatScreen/Messag
 import { useAssistant } from '@/hooks/useAssistant'
 import { useBottom } from '@/hooks/useBottom'
 import { usePreference } from '@/hooks/usePreference'
-import { useTopic } from '@/hooks/useTopic'
+import { useCurrentTopic } from '@/hooks/useTopic'
 import { haptic } from '@/utils/haptic'
 
 import ChatContent from './ChatContent'
@@ -23,9 +23,9 @@ const logger = loggerService.withContext('ChatScreen')
 const ChatScreen = () => {
   const navigation = useNavigation<DrawerNavigationProp<any>>()
   const [topicId] = usePreference('topic.current_id')
+  const { currentTopic } = useCurrentTopic()
 
-  const { topic, isLoading } = useTopic(topicId ?? '')
-  const { assistant, isLoading: assistantLoading } = useAssistant(topic?.assistantId || '')
+  const { assistant, isLoading: assistantLoading } = useAssistant(currentTopic?.assistantId || '')
   const specificBottom = useBottom()
 
   // 处理侧滑手势
@@ -46,7 +46,7 @@ const ChatScreen = () => {
     }
   }
 
-  if (!topic || isLoading || !assistant || assistantLoading) {
+  if (!currentTopic || !assistant || assistantLoading) {
     return (
       <SafeAreaContainer style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator />
@@ -66,7 +66,7 @@ const ChatScreen = () => {
           keyboardVerticalOffset={Platform.OS === 'ios' ? -20 : -specificBottom}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <YStack className="flex-1">
-            <ChatScreenHeader topic={topic} />
+            <ChatScreenHeader topic={currentTopic} />
 
             <View
               style={{
@@ -74,9 +74,9 @@ const ChatScreen = () => {
               }}>
               {/* ChatContent use key to re-render screen content */}
               {/* if remove key, change topic will not re-render */}
-              <ChatContent key={topicId} topic={topic} assistant={assistant} />
+              <ChatContent key={topicId} topic={currentTopic} assistant={assistant} />
             </View>
-            <MessageInputContainer topic={topic} />
+            <MessageInputContainer topic={currentTopic} />
           </YStack>
         </KeyboardAvoidingView>
       </PanGestureHandler>
