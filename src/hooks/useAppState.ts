@@ -24,21 +24,30 @@
  * ```
  */
 
+import { useCallback } from 'react'
+
+import { useAppDispatch, useAppSelector } from '@/store'
+import { setWelcomeShown as setWelcomeShownAction } from '@/store/app'
+
 import { usePreference } from './usePreference'
 
 /**
  * Hook for managing application state
  *
  * Returns application lifecycle state and functions to update them.
- * These states are persisted in the preference table.
  *
  * State variables:
- * - initialized: Whether the app has completed its first-time setup
- * - welcomeShown: Whether the welcome screen has been shown to the user
+ * - initialized: Whether the app has completed its first-time setup (preference-backed)
+ * - welcomeShown: Whether the welcome screen has been shown to the user (redux-backed)
  */
 export function useAppState() {
+  const dispatch = useAppDispatch()
+  const welcomeShown = useAppSelector(state => state.app.welcomeShown)
   const [initialized, setInitialized] = usePreference('app.initialized')
-  const [welcomeShown, setWelcomeShown] = usePreference('app.welcome_shown')
+
+  const setWelcomeShown = useCallback(async (value: boolean) => {
+    dispatch(setWelcomeShownAction(value))
+  }, [dispatch])
 
   return {
     initialized,

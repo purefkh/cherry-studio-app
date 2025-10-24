@@ -9,7 +9,7 @@
  * - UI configuration: 1
  * - Topic state: 1
  * - Web search configuration: 4
- * - App state: 2
+ * - App state: 1
  */
 
 import type { PreferenceSchemas } from './preferenceTypes'
@@ -64,11 +64,7 @@ export const DefaultPreferences: PreferenceSchemas = {
     // === App State ===
     // Whether the application has completed first-time initialization
     // Includes seeding default data and setting up user environment
-    'app.initialized': false,
-
-    // Whether the welcome/onboarding screen has been shown
-    // Used to control first-run experience
-    'app.welcome_shown': false
+    'app.initialized': false
   }
 }
 
@@ -86,6 +82,5 @@ export const PreferenceDescriptions: Record<keyof PreferenceSchemas['default'], 
   'websearch.max_results': 'Maximum number of search results (1-20)',
   'websearch.override_search_service': 'Use custom search service configuration',
   'websearch.content_limit': 'Content length limit for search results (characters)',
-  'app.initialized': 'Whether the app has completed first-time initialization',
-  'app.welcome_shown': 'Whether the welcome screen has been shown to the user'
+  'app.initialized': 'Whether the app has completed first-time initialization'
 }

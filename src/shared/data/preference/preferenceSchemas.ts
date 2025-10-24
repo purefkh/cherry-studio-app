@@ -4,12 +4,12 @@
  * This file defines all user preferences and their default values.
  * Preferences are stored in the SQLite database and can be synchronized across devices.
  *
- * Total preference items: 11
+ * Total preference items: 10
  * - User configuration: 3
  * - UI configuration: 1
  * - Topic state: 1
  * - Web search configuration: 4
- * - App state: 3
+ * - App state: 2
  */
 
 import type { PreferenceSchemas } from './preferenceTypes'
@@ -68,11 +68,7 @@ export const DefaultPreferences: PreferenceSchemas = {
 
     // Current version of the app data initialization
     // Used to run incremental initialization migrations when new data is added
-    'app.initialization_version': 0,
-
-    // Whether the welcome/onboarding screen has been shown
-    // Used to control first-run experience
-    'app.welcome_shown': false
+    'app.initialization_version': 0
   }
 }
 
@@ -91,6 +87,5 @@ export const PreferenceDescriptions: Record<keyof PreferenceSchemas['default'], 
   'websearch.override_search_service': 'Use custom search service configuration',
   'websearch.content_limit': 'Content length limit for search results (characters)',
   'app.initialized': 'Whether the app has completed first-time initialization',
-  'app.initialization_version': 'Current version of app data initialization migrations',
-  'app.welcome_shown': 'Whether the welcome screen has been shown to the user'
+  'app.initialization_version': 'Current version of app data initialization migrations'
 }

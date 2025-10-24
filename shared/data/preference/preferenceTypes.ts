@@ -39,6 +39,5 @@ export interface PreferenceSchemas {
 
     // App State
     'app.initialized': boolean
-    'app.welcome_shown': boolean
   }
 }
