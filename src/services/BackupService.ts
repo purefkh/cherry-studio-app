@@ -20,6 +20,7 @@ import {
   topicDatabase,
   websearchProviderDatabase
 } from '@database'
+import { topicService } from './TopicService'
 const logger = loggerService.withContext('Backup Service')
 
 export type RestoreStepId = 'restore_settings' | 'restore_messages'
@@ -36,6 +37,8 @@ type OnProgressCallback = (update: ProgressUpdate) => void
 
 async function restoreIndexedDbData(data: ExportIndexedData, onProgress: OnProgressCallback, dispatch: Dispatch) {
   onProgress({ step: 'restore_messages', status: 'in_progress' })
+
+  // Batch import topics directly to database for performance
   await topicDatabase.upsertTopics(data.topics)
   await messageDatabase.upsertMessages(data.messages)
 
@@ -49,6 +52,9 @@ async function restoreIndexedDbData(data: ExportIndexedData, onProgress: OnProgr
   }
 
   await messageBlockDatabase.upsertBlocks(validBlocks)
+
+  // Invalidate TopicService cache after bulk import to ensure consistency
+  topicService.invalidateCache()
 
   if (data.settings) {
     const avatarSetting = data.settings.find(setting => setting.id === 'image://avatar')
@@ -178,7 +184,7 @@ async function getAllData(): Promise<string> {
       providerDatabase.getAllProviders(),
       websearchProviderDatabase.getAllWebSearchProviders(),
       assistantDatabase.getExternalAssistants(),
-      topicDatabase.getTopics(),
+      topicService.getTopics(),
       messageDatabase.getAllMessages(),
       messageBlockDatabase.getAllBlocks()
     ])

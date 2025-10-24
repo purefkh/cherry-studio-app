@@ -17,7 +17,8 @@ import XStack from '@/componentsV2/layout/XStack'
 import YStack from '@/componentsV2/layout/YStack'
 import Text from '@/componentsV2/base/Text'
 import ContextMenu, { ContextMenuListProps } from '@/componentsV2/base/ContextMenu'
-import { assistantDatabase, topicDatabase } from '@/database'
+import { assistantDatabase } from '@/database'
+import { topicService } from '@/services/TopicService'
 
 const logger = loggerService.withContext('Assistant Item')
 
@@ -39,14 +40,14 @@ const AssistantItem: FC<AssistantItemProps> = ({ assistant, onAssistantPress }) 
 
   const handleDelete = async () => {
     try {
-      const isTopicOwnedByAssistant = await topicDatabase.isTopicOwnedByAssistant(assistant.id, getCurrentTopicId())
+      const isTopicOwnedByAssistant = await topicService.isTopicOwnedByAssistant(assistant.id, getCurrentTopicId())
 
       if (isTopicOwnedByAssistant) {
         navigation.navigate('ChatScreen', { topicId: 'new' })
       }
 
       await assistantDatabase.deleteAssistantById(assistant.id)
-      await topicDatabase.deleteTopicsByAssistantId(assistant.id)
+      await topicService.deleteTopicsByAssistantId(assistant.id)
       toast.show(t('message.assistant_deleted'))
     } catch (error) {
       logger.error('Delete Assistant error', error)

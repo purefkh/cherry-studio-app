@@ -21,9 +21,10 @@ import { getDefaultModel } from './AssistantService'
 import { getAssistantProvider } from './ProviderService'
 import { createStreamProcessor, StreamProcessorCallbacks } from './StreamProcessingService'
 import { getActiveMcps } from './McpService'
+import { topicService } from './TopicService'
 import { MCPServer } from '@/types/mcp'
 import { BUILTIN_TOOLS } from '@/config/mcp'
-import { assistantDatabase, messageDatabase, topicDatabase } from '@database'
+import { assistantDatabase, messageDatabase } from '@database'
 
 const logger = loggerService.withContext('fetchChatCompletion')
 
@@ -164,7 +165,7 @@ export async function checkApi(provider: Provider, model: Model): Promise<void> 
 
 export async function fetchTopicNaming(topicId: string, regenerate: boolean = false) {
   logger.info('Fetching topic naming...')
-  const topic = await topicDatabase.getTopicById(topicId)
+  const topic = await topicService.getTopic(topicId)
   const messages = await messageDatabase.getMessagesByTopicId(topicId)
 
   if (!topic) {
@@ -180,12 +181,7 @@ export async function fetchTopicNaming(topicId: string, regenerate: boolean = fa
 
   callbacks = {
     onTextComplete: async finalText => {
-      await topicDatabase.upsertTopics([
-        {
-          ...topic,
-          name: finalText
-        }
-      ])
+      await topicService.updateTopic(topicId, { name: finalText })
     }
   }
   const streamProcessorCallbacks = createStreamProcessor(callbacks)

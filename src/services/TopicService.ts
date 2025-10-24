@@ -565,6 +565,90 @@ export class TopicService {
     return await topicDatabase.getTopicsByAssistantId(assistantId)
   }
 
+  /**
+   * Check if a topic is owned by a specific assistant
+   *
+   * @param assistantId - The assistant ID
+   * @param topicId - The topic ID to check
+   * @returns True if the topic belongs to the assistant
+   */
+  public async isTopicOwnedByAssistant(assistantId: string, topicId: string): Promise<boolean> {
+    return await topicDatabase.isTopicOwnedByAssistant(assistantId, topicId)
+  }
+
+  /**
+   * Delete all topics owned by a specific assistant (optimistic)
+   *
+   * Removes topics from cache and database. If current topic is deleted,
+   * it will be cleared from the cache.
+   *
+   * @param assistantId - The assistant ID whose topics should be deleted
+   */
+  public async deleteTopicsByAssistantId(assistantId: string): Promise<void> {
+    logger.info('Deleting all topics for assistant (optimistic):', assistantId)
+
+    // Check if current topic belongs to this assistant
+    const isCurrentTopicAffected =
+      this.currentTopicCache && (await this.isTopicOwnedByAssistant(assistantId, this.currentTopicCache.id))
+
+    const oldCurrentTopic = isCurrentTopicAffected ? this.currentTopicCache : null
+
+    // Get all topics for this assistant for cache cleanup
+    const affectedTopics = await topicDatabase.getTopicsByAssistantId(assistantId)
+    const affectedTopicIds = new Set(affectedTopics.map((t) => t.id))
+
+    // Optimistically update cache
+    if (isCurrentTopicAffected) {
+      this.currentTopicCache = null
+      this.notifyCurrentTopicSubscribers()
+    }
+
+    // Remove affected topics from LRU cache
+    affectedTopicIds.forEach((topicId) => {
+      if (this.topicCache.has(topicId)) {
+        this.topicCache.delete(topicId)
+        const index = this.accessOrder.indexOf(topicId)
+        if (index > -1) {
+          this.accessOrder.splice(index, 1)
+        }
+      }
+    })
+
+    // Remove affected topics from all topics cache
+    affectedTopicIds.forEach((topicId) => {
+      if (this.allTopicsCache.has(topicId)) {
+        this.allTopicsCache.delete(topicId)
+      }
+    })
+
+    try {
+      // Delete from database
+      await topicDatabase.deleteTopicsByAssistantId(assistantId)
+
+      // Notify subscribers for all affected topics
+      affectedTopicIds.forEach((topicId) => {
+        this.notifyTopicSubscribers(topicId)
+      })
+
+      this.notifyGlobalSubscribers()
+      this.notifyAllTopicsSubscribers()
+
+      logger.info(`Deleted ${affectedTopicIds.size} topics for assistant: ${assistantId}`)
+    } catch (error) {
+      // Rollback on failure
+      logger.error('Failed to delete topics by assistant, rolling back:', error as Error)
+
+      if (isCurrentTopicAffected && oldCurrentTopic) {
+        this.currentTopicCache = oldCurrentTopic
+        this.notifyCurrentTopicSubscribers()
+      }
+
+      // Note: We can't easily rollback LRU and allTopicsCache without re-fetching
+      // This is acceptable since the operation failed at database level
+      throw error
+    }
+  }
+
   // ==================== Public API: Cache Operations ====================
 
   /**
