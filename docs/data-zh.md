@@ -157,12 +157,14 @@ enum ThemeMode {
 ```typescript
 {
   'app.initialized': boolean         // 应用是否已完成首次初始化
+  'app.initialization_version': number // 应用数据初始化的当前版本
   'app.welcome_shown': boolean       // 是否已显示欢迎页面
 }
 ```
 
 **默认值：**
 - `app.initialized`: `false`
+- `app.initialization_version`: `0`
 - `app.welcome_shown`: `false`
 
 ### 使用方法
@@ -318,6 +320,7 @@ export interface PreferenceSchemas {
 
     // App State
     'app.initialized': boolean
+    'app.initialization_version': number
     'app.welcome_shown': boolean
   }
 }

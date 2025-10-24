@@ -39,6 +39,7 @@ export interface PreferenceSchemas {
 
     // App State
     'app.initialized': boolean
+    'app.initialization_version': number
     'app.welcome_shown': boolean
   }
 }

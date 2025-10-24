@@ -11,7 +11,6 @@ import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator'
 import { useDrizzleStudio } from 'expo-drizzle-studio-plugin'
 import { useFonts } from 'expo-font'
-import * as Localization from 'expo-localization'
 import * as SplashScreen from 'expo-splash-screen'
 import { SQLiteProvider } from 'expo-sqlite'
 import React, { Suspense, useEffect } from 'react'
@@ -22,28 +21,21 @@ import { KeyboardProvider } from 'react-native-keyboard-controller'
 import { Provider } from 'react-redux'
 import { PersistGate } from 'redux-persist/integration/react'
 
-import { getWebSearchProviders } from '@/config/websearchProviders'
 import { useTheme } from '@/hooks/useTheme'
 import { useAppState } from '@/hooks/useAppState'
 import { loggerService } from '@/services/LoggerService'
-import { preferenceService } from '@/services/PreferenceService'
 import store, { persistor } from '@/store'
 
-import { assistantDatabase, mcpDatabase, providerDatabase, websearchProviderDatabase } from '@database'
 import migrations from '../drizzle/migrations'
-import { getSystemAssistants } from './config/assistants'
-import { SYSTEM_PROVIDERS } from './config/providers'
 import { DialogProvider } from './hooks/useDialog'
 import { ToastProvider } from './hooks/useToast'
 import MainStackNavigator from './navigators/MainStackNavigator'
-import { storage } from './utils'
-import { initBuiltinMcp } from './config/mcp'
 import { DATABASE_NAME, db, expoDb } from '@db'
-import { seedDatabase } from '@db/seeding'
+import { runAppDataMigrations } from './services/AppInitializationService'
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync()
-const logger = loggerService.withContext('DataBase Assistants')
+const initializationLogger = loggerService.withContext('AppInitialization')
 
 // 数据库初始化组件
 function DatabaseInitializer() {
@@ -57,9 +49,11 @@ function DatabaseInitializer() {
 
   useEffect(() => {
     if (success) {
-      logger.info('Migrations completed successfully', expoDb.databasePath)
-    } else if (error) {
-      logger.error('Migrations failed', error)
+      initializationLogger.info('Database migrations completed successfully', expoDb.databasePath)
+    }
+
+    if (error) {
+      initializationLogger.error('Database migrations failed', error as Error)
     }
   }, [success, error])
 
@@ -67,29 +61,15 @@ function DatabaseInitializer() {
     if (success && loaded) {
       const initializeApp = async () => {
         try {
-          logger.info('First launch, initializing app data...')
-
-          // Seed database with default preferences and app state
-          await seedDatabase(db)
-
-          const systemAssistants = getSystemAssistants()
-          await assistantDatabase.upsertAssistants([...systemAssistants])
-          await providerDatabase.upsertProviders(SYSTEM_PROVIDERS)
-          const websearchProviders = getWebSearchProviders()
-          await websearchProviderDatabase.upsertWebSearchProviders(websearchProviders)
-          storage.set('language', Localization.getLocales()[0]?.languageTag)
-          const builtinMcp = initBuiltinMcp()
-          await mcpDatabase.upsertMcps(builtinMcp)
-          await preferenceService.set('app.initialized', true)
-          logger.info('App data initialized successfully.')
+          await runAppDataMigrations()
         } catch (e) {
-          logger.error('Failed to initialize app data', e)
+          initializationLogger.error('Failed to initialize app data', e as Error)
         }
       }
 
       initializeApp()
     }
-  }, [success, loaded, initialized])
+  }, [success, loaded])
 
   useEffect(() => {
     if (loaded && initialized) {
