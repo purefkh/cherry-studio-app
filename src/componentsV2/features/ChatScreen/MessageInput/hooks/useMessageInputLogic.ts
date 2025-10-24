@@ -7,11 +7,11 @@ import { isReasoningModel } from '@/config/models'
 import { useMessageOperations } from '@/hooks/useMessageOperation'
 import { loggerService } from '@/services/LoggerService'
 import { sendMessage as _sendMessage, getUserMessage } from '@/services/MessagesService'
+import { topicService } from '@/services/TopicService'
 import { Assistant, Model, Topic } from '@/types/assistant'
 import { FileMetadata } from '@/types/file'
 import { MessageInputBaseParams } from '@/types/message'
 import { haptic } from '@/utils/haptic'
-import { topicDatabase } from '@/database'
 
 const logger = loggerService.withContext('Message Input')
 
@@ -39,7 +39,7 @@ export const useMessageInputLogic = (topic: Topic, assistant: Assistant) => {
     setText('')
     setFiles([])
     Keyboard.dismiss()
-    await topicDatabase.upsertTopics({ ...topic, isLoading: true })
+    await topicService.updateTopic(topic.id, { isLoading: true })
 
     try {
       const baseUserMessage: MessageInputBaseParams = { assistant, topic, content: text }

@@ -1,4 +1,3 @@
-import type { ThemeMode } from '@/types'
 import { usePreference } from './usePreference'
 
 export function useSettings() {

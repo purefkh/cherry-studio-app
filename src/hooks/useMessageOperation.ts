@@ -1,11 +1,12 @@
 import { useCallback } from 'react'
 
 import { loggerService } from '@/services/LoggerService'
+import { topicService } from '@/services/TopicService'
 import { Topic } from '@/types/assistant'
 import { abortCompletion } from '@/utils/abortController'
 import { useTopic } from './useTopic'
 
-import { messageDatabase, topicDatabase } from '@database'
+import { messageDatabase } from '@database'
 
 const logger = loggerService.withContext('UseMessageOperations')
 
@@ -29,7 +30,7 @@ export function useMessageOperations(topic: Topic) {
       abortCompletion(askId)
     }
 
-    await topicDatabase.upsertTopics({ ...topic, isLoading: false })
+    await topicService.updateTopic(topic.id, { isLoading: false })
   }, [topic])
 
   return {

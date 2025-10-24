@@ -19,21 +19,19 @@ import {
 } from '@/utils/messageUtils/create'
 import { getTopicQueue } from '@/utils/queue'
 
-import { assistantDatabase, messageBlockDatabase, messageDatabase, topicDatabase } from '@database'
+import { assistantDatabase, messageBlockDatabase, messageDatabase } from '@database'
 import { fetchTopicNaming } from './ApiService'
 import { getDefaultModel } from './AssistantService'
 import { BlockManager, createCallbacks } from './messageStreaming'
 import { transformMessagesAndFetch } from './OrchestrationService'
 import { getAssistantProvider } from './ProviderService'
 import { createStreamProcessor, StreamProcessorCallbacks } from './StreamProcessingService'
+import { topicService } from './TopicService'
 
 const logger = loggerService.withContext('Messages Service')
 
 const finishTopicLoading = async (topicId: string) => {
-  const topic = await topicDatabase.getTopicById(topicId)
-  if (topic) {
-    await topicDatabase.upsertTopics({ ...topic, isLoading: false })
-  }
+  await topicService.updateTopic(topicId, { isLoading: false })
 }
 
 /**
@@ -425,10 +423,7 @@ export async function fetchAndProcessAssistantResponseImpl(
   let callbacks: StreamProcessorCallbacks = {}
 
   try {
-    const currentTopic = await topicDatabase.getTopicById(topicId)
-    if (currentTopic) {
-      await topicDatabase.upsertTopics({ ...currentTopic, isLoading: true })
-    }
+    await topicService.updateTopic(topicId, { isLoading: true })
 
     // 创建 BlockManager 实例
     const blockManager = new BlockManager({
@@ -494,10 +489,7 @@ export async function fetchAndProcessAssistantResponseImpl(
       logger.error('Error in onError callback:', callbackError as Error)
     } finally {
       // 确保无论如何都设置 loading 为 false（onError 回调中已设置，这里是保险）
-      const topic = await topicDatabase.getTopicById(topicId)
-      if (topic) {
-        await topicDatabase.upsertTopics({ ...topic, isLoading: false })
-      }
+      await topicService.updateTopic(topicId, { isLoading: false })
     }
   } finally {
     await finishTopicLoading(topicId)
