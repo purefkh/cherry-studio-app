@@ -11,6 +11,7 @@ import { seedDatabase } from '@db/seeding'
 
 import { loggerService } from './LoggerService'
 import { preferenceService } from './PreferenceService'
+import { providerService } from './ProviderService'
 
 type AppDataMigration = {
   version: number
@@ -66,6 +67,10 @@ export async function runAppDataMigrations(): Promise<void> {
     if (!isInitialized) {
       await preferenceService.set('app.initialized', true)
     }
+
+    // Initialize ProviderService cache (loads default provider)
+    await providerService.initialize()
+
     return
   }
 
@@ -97,6 +102,9 @@ export async function runAppDataMigrations(): Promise<void> {
 
   await preferenceService.set('app.initialized', true)
   logger.info(`App data migrations completed. Current version: ${LATEST_APP_DATA_VERSION}`)
+
+  // Initialize ProviderService cache (loads default provider)
+  await providerService.initialize()
 }
 
 export function getAppDataVersion(): number {

@@ -11,7 +11,6 @@ import { Button, useTheme } from 'heroui-native'
 import { ModelIcon, ProviderIcon } from '@/componentsV2/icons'
 import { BrushCleaning, Settings } from '@/componentsV2/icons/LucideIcon'
 import { isEmbeddingModel, isRerankModel } from '@/config/models'
-import { useAllProviders } from '@/hooks/useProviders'
 import { Model, Provider } from '@/types/assistant'
 import { getModelUniqId } from '@/utils/model'
 import { ModelTags } from '@/componentsV2/features/ModelTags'
@@ -22,6 +21,7 @@ import Text from '@/componentsV2/base/Text'
 import { EmptyModelView } from '../SettingsScreen/EmptyModelView'
 import { useNavigation } from '@react-navigation/native'
 import { HomeNavigationProps } from '@/types/naviagate'
+import { useAllProviders } from '@/hooks/useProviders'
 
 interface ModelSheetProps {
   mentions: Model[]

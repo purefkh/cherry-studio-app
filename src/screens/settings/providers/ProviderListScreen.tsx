@@ -4,18 +4,20 @@ import React, { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator } from 'react-native'
 import { SafeAreaContainer, Container, HeaderBar, SearchInput, Group } from '@/componentsV2'
-import { useAllProviders } from '@/hooks/useProviders'
 import { useSearch } from '@/hooks/useSearch'
 import { Provider } from '@/types/assistant'
 import { AddProviderSheet } from '@/componentsV2/features/SettingsScreen/AddProviderSheet'
 import { ProviderItem } from '@/componentsV2/features/SettingsScreen/ProviderItem'
 import { LegendList } from '@legendapp/list'
+import { useAllProviders } from '@/hooks/useProviders'
+import { providerService } from '@/services/ProviderService'
 
 export default function ProviderListScreen() {
   const { t } = useTranslation()
 
   const bottomSheetRef = useRef<BottomSheetModal>(null)
   const { providers, isLoading } = useAllProviders()
+  providerService.logCacheStatus()
 
   const [sheetMode, setSheetMode] = useState<'add' | 'edit'>('add')
   const [editingProvider, setEditingProvider] = useState<Provider | undefined>(undefined)
