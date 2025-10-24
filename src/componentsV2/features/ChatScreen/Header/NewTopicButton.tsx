@@ -11,8 +11,8 @@ import EmojiAvatar from '@/componentsV2/features/Assistant/EmojiAvatar'
 import { useExternalAssistants } from '@/hooks/useAssistant'
 import { useCurrentTopic } from '@/hooks/useTopic'
 import { useTheme } from 'heroui-native'
-import { createNewTopic, getNewestTopic } from '@/services/TopicService'
-import { Assistant } from '@/types/assistant'
+import { topicService } from '@/services/TopicService'
+import type { Assistant } from '@/types/assistant'
 import { DrawerNavigationProps } from '@/types/naviagate'
 import { haptic } from '@/utils/haptic'
 import { isEmpty } from 'lodash'
@@ -25,7 +25,7 @@ interface NewTopicButtonProps {
 export const NewTopicButton: React.FC<NewTopicButtonProps> = ({ assistant }) => {
   const { t } = useTranslation()
   const navigation = useNavigation<DrawerNavigationProps>()
-  const { setCurrentTopicId } = useCurrentTopic()
+  const { switchTopic } = useCurrentTopic()
   const { assistants, isLoading } = useExternalAssistants()
   const selectionSheetRef = useRef<BottomSheetModal | null>(null)
   const { isDark } = useTheme()
@@ -33,15 +33,24 @@ export const NewTopicButton: React.FC<NewTopicButtonProps> = ({ assistant }) => 
   const handleAddNewTopic = async (selectedAssistant?: Assistant) => {
     haptic(ImpactFeedbackStyle.Medium)
     const targetAssistant = selectedAssistant || assistant
-    const newestTopic = await getNewestTopic()
+
+    // Check if the newest topic has messages
+    const newestTopic = await topicService.getNewestTopic()
     const hasMessages = await messageDatabase.getHasMessagesWithTopicId(newestTopic?.id ?? '')
+
     if (hasMessages || !newestTopic) {
-      const newTopic = await createNewTopic(targetAssistant)
-      await setCurrentTopicId(newTopic.id)
+      // Create new topic (optimistic - UI updates immediately)
+      const newTopic = await topicService.createTopic(targetAssistant)
+      await switchTopic(newTopic.id)
       navigation.navigate('Home', { screen: 'ChatScreen', params: { topicId: newTopic.id } })
     } else {
-      newestTopic.assistantId = targetAssistant.id
-      await setCurrentTopicId(newestTopic.id)
+      // Reuse the newest topic (update assistant if different)
+      if (newestTopic.assistantId !== targetAssistant.id) {
+        await topicService.updateTopic(newestTopic.id, {
+          assistantId: targetAssistant.id
+        })
+      }
+      await switchTopic(newestTopic.id)
       navigation.navigate('Home', { screen: 'ChatScreen', params: { topicId: newestTopic.id } })
     }
   }

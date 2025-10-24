@@ -6,7 +6,7 @@ import { Image, SafeAreaContainer, YStack } from '@/componentsV2'
 import { useAppState } from '@/hooks/useAppState'
 import { useCurrentTopic } from '@/hooks/useTopic'
 import { getDefaultAssistant } from '@/services/AssistantService'
-import { createNewTopic } from '@/services/TopicService'
+import { topicService } from '@/services/TopicService'
 import { RootNavigationProps } from '@/types/naviagate'
 import { Button } from 'heroui-native'
 import { useTranslation } from 'react-i18next'
@@ -18,13 +18,13 @@ import { BottomSheetModal } from '@gorhom/bottom-sheet'
 export default function WelcomeScreen() {
   const navigation = useNavigation<RootNavigationProps>()
   const { setWelcomeShown } = useAppState()
-  const { setCurrentTopicId } = useCurrentTopic()
+  const { switchTopic } = useCurrentTopic()
   const { t } = useTranslation()
   const bottomSheetModalRef = useRef<BottomSheetModal>(null)
 
   const handleStart = async () => {
     const defaultAssistant = await getDefaultAssistant()
-    const newTopic = await createNewTopic(defaultAssistant)
+    const newTopic = await topicService.createTopic(defaultAssistant)
     navigation.navigate('HomeScreen', {
       screen: 'Home',
       params: {
@@ -32,7 +32,7 @@ export default function WelcomeScreen() {
         params: { topicId: newTopic.id }
       }
     })
-    await setCurrentTopicId(newTopic.id)
+    await switchTopic(newTopic.id)
     await setWelcomeShown(true)
   }
 

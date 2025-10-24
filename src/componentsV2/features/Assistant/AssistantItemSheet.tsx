@@ -12,8 +12,8 @@ import { UnionPlusIcon, ModelIcon } from '@/componentsV2/icons'
 import { Settings2, X } from '@/componentsV2/icons/LucideIcon'
 import { useToast } from '@/hooks/useToast'
 import { useCurrentTopic } from '@/hooks/useTopic'
-import { createNewTopic } from '@/services/TopicService'
-import { Assistant } from '@/types/assistant'
+import { topicService } from '@/services/TopicService'
+import type { Assistant } from '@/types/assistant'
 import { uuid } from '@/utils'
 import { formateEmoji } from '@/utils/formats'
 import { haptic } from '@/utils/haptic'
@@ -38,7 +38,7 @@ const AssistantItemSheet = forwardRef<BottomSheetModal, AssistantItemSheetProps>
     const { t } = useTranslation()
     const { isDark } = useTheme()
     const { bottom } = useSafeAreaInsets()
-    const { setCurrentTopicId } = useCurrentTopic()
+    const { switchTopic } = useCurrentTopic()
     const toast = useToast()
     const [isVisible, setIsVisible] = useState(false)
 
@@ -76,8 +76,8 @@ const AssistantItemSheet = forwardRef<BottomSheetModal, AssistantItemSheetProps>
         await assistantDatabase.upsertAssistants([newAssistant])
       }
 
-      const topic = await createNewTopic(newAssistant)
-      await setCurrentTopicId(topic.id)
+      const topic = await topicService.createTopic(newAssistant)
+      await switchTopic(topic.id)
       await onChatNavigation(topic.id)
       ;(ref as React.RefObject<BottomSheetModal>)?.current?.dismiss()
     }

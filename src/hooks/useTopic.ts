@@ -1,15 +1,13 @@
-import { desc, eq } from 'drizzle-orm'
+import { desc } from 'drizzle-orm'
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite'
-import { useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 
 import { loggerService } from '@/services/LoggerService'
-import { preferenceService } from '@/services/PreferenceService'
-import { Topic } from '@/types/assistant'
-import { usePreference } from './usePreference'
+import { topicService } from '@/services/TopicService'
+import type { Assistant, Topic } from '@/types/assistant'
 
 import { db } from '@db'
 import { transformDbToTopic } from '@db/mappers'
-import { topicDatabase } from '@database'
 import { topics as topicSchema } from '@db/schema'
 
 const logger = loggerService.withContext('useTopic')
@@ -19,62 +17,309 @@ const logger = loggerService.withContext('useTopic')
  * This is used in non-React contexts where hooks cannot be used.
  */
 export function getCurrentTopicId(): string {
-  return preferenceService.getCached('topic.current_id') || ''
+  return topicService.getCurrentTopic()?.id || ''
 }
 
 /**
- * React Hook for managing the currently active topic
+ * Get current topic object synchronously
+ * This is used in non-React contexts where hooks cannot be used.
+ */
+export function getCurrentTopic(): Topic | null {
+  return topicService.getCurrentTopic()
+}
+
+/**
+ * React Hook for managing the currently active topic (Refactored with useSyncExternalStore)
  *
- * Returns the current topic ID and a function to update it.
- * The topic ID is persisted and synchronized across all components.
+ * Uses TopicService with optimistic updates for zero-latency UX.
+ * Integrates with React 18's useSyncExternalStore for efficient re-renders.
  *
  * @example
  * ```typescript
  * function ChatScreen() {
- *   const { currentTopicId, setCurrentTopicId } = useCurrentTopic()
+ *   const {
+ *     currentTopic,
+ *     isLoading,
+ *     switchTopic,
+ *     createNewTopic,
+ *     renameTopic,
+ *     deleteTopic
+ *   } = useCurrentTopic()
  *
- *   return <div>Current Topic: {currentTopicId}</div>
+ *   return (
+ *     <div>
+ *       Current Topic: {currentTopic?.name}
+ *       <button onClick={() => createNewTopic(assistant)}>New Topic</button>
+ *     </div>
+ *   )
  * }
  * ```
  */
 export function useCurrentTopic() {
-  const [currentTopicId, setCurrentTopicId] = usePreference('topic.current_id')
+  // ==================== Subscription (useSyncExternalStore) ====================
+
+  /**
+   * Subscribe to current topic changes
+   */
+  const subscribe = useCallback((callback: () => void) => {
+    logger.verbose('Subscribing to current topic changes')
+    return topicService.subscribeCurrentTopic(callback)
+  }, [])
+
+  /**
+   * Get current topic snapshot (synchronous)
+   */
+  const getSnapshot = useCallback(() => {
+    return topicService.getCurrentTopic()
+  }, [])
+
+  /**
+   * Server snapshot (for SSR compatibility - not used in React Native)
+   */
+  const getServerSnapshot = useCallback(() => {
+    return null
+  }, [])
+
+  // Use useSyncExternalStore for reactive updates
+  const currentTopic = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+
+  // ==================== Loading State ====================
+
+  /**
+   * Track if we're loading the topic from database
+   */
+  const [isLoading, setIsLoading] = useState(false)
+
+  /**
+   * Load current topic on mount if not cached
+   */
+  useEffect(() => {
+    if (!currentTopic) {
+      setIsLoading(true)
+      topicService
+        .getCurrentTopicAsync()
+        .then(() => {
+          setIsLoading(false)
+        })
+        .catch(error => {
+          logger.error('Failed to load current topic:', error as Error)
+          setIsLoading(false)
+        })
+    }
+  }, [currentTopic])
+
+  // ==================== Action Methods ====================
+
+  /**
+   * Switch to a different topic (optimistic)
+   */
+  const switchTopic = useCallback(async (topicId: string) => {
+    try {
+      await topicService.switchToTopic(topicId)
+    } catch (error) {
+      logger.error('Failed to switch topic:', error as Error)
+      throw error
+    }
+  }, [])
+
+  /**
+   * Create a new topic (optimistic)
+   */
+  const createNewTopic = useCallback(async (assistant: Assistant) => {
+    try {
+      const newTopic = await topicService.createTopic(assistant)
+      // Automatically switch to the new topic
+      await topicService.switchToTopic(newTopic.id)
+      return newTopic
+    } catch (error) {
+      logger.error('Failed to create new topic:', error as Error)
+      throw error
+    }
+  }, [])
+
+  /**
+   * Rename current topic (optimistic)
+   */
+  const renameTopic = useCallback(
+    async (newName: string) => {
+      if (!currentTopic) {
+        throw new Error('No current topic to rename')
+      }
+      try {
+        await topicService.renameTopic(currentTopic.id, newName)
+      } catch (error) {
+        logger.error('Failed to rename current topic:', error as Error)
+        throw error
+      }
+    },
+    [currentTopic]
+  )
+
+  /**
+   * Delete current topic (optimistic)
+   */
+  const deleteTopic = useCallback(async () => {
+    if (!currentTopic) {
+      throw new Error('No current topic to delete')
+    }
+    try {
+      await topicService.deleteTopic(currentTopic.id)
+    } catch (error) {
+      logger.error('Failed to delete current topic:', error as Error)
+      throw error
+    }
+  }, [currentTopic])
+
+  // ==================== Return API ====================
 
   return {
-    currentTopicId,
-    setCurrentTopicId
+    currentTopic,
+    currentTopicId: currentTopic?.id || '',
+    isLoading,
+    switchTopic,
+    createNewTopic,
+    renameTopic,
+    deleteTopic
   }
 }
 
+/**
+ * React Hook for a specific topic with optimistic updates (Refactored with useSyncExternalStore)
+ *
+ * Uses TopicService's LRU cache and subscription system for efficient reactive updates.
+ * Supports optimistic updates with automatic rollback on failure.
+ *
+ * @param topicId - The topic ID to watch
+ * @returns topic data, loading state, and update/rename/delete methods
+ *
+ * @example
+ * ```typescript
+ * function TopicDetail({ topicId }) {
+ *   const { topic, isLoading, renameTopic, deleteTopic } = useTopic(topicId)
+ *
+ *   if (isLoading) return <Loading />
+ *
+ *   return (
+ *     <div>
+ *       <h1>{topic.name}</h1>
+ *       <button onClick={() => renameTopic('New Name')}>Rename</button>
+ *       <button onClick={deleteTopic}>Delete</button>
+ *     </div>
+ *   )
+ * }
+ * ```
+ */
 export function useTopic(topicId: string) {
-  const query = db.select().from(topicSchema).where(eq(topicSchema.id, topicId))
+  // ==================== Subscription (useSyncExternalStore) ====================
 
-  // add deps https://stackoverflow.com/questions/79258085/drizzle-orm-uselivequery-doesnt-detect-parameters-change
-  const { data: rawTopic, updatedAt } = useLiveQuery(query, [topicId])
-  logger.debug('rawTopic', rawTopic)
+  /**
+   * Subscribe to specific topic changes
+   */
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      logger.verbose(`Subscribing to topic ${topicId} changes`)
+      return topicService.subscribeTopic(topicId, callback)
+    },
+    [topicId]
+  )
 
-  const updateTopic = async (topic: Topic) => {
-    await topicDatabase.upsertTopics([topic])
-  }
+  /**
+   * Get topic snapshot (synchronous from cache)
+   */
+  const getSnapshot = useCallback(() => {
+    return topicService.getTopicCached(topicId)
+  }, [topicId])
 
-  const processedTopic = useMemo(() => {
-    if (!rawTopic || rawTopic.length === 0) return null
-    return transformDbToTopic(rawTopic[0])
-  }, [rawTopic])
+  /**
+   * Server snapshot (for SSR compatibility - not used in React Native)
+   */
+  const getServerSnapshot = useCallback(() => {
+    return null
+  }, [])
 
-  // 当删除最后一个topic时会返回 rawTopic.length === 0, 需要返回加载状态
-  if (!updatedAt || !processedTopic) {
+  // Use useSyncExternalStore for reactive updates
+  const topic = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+
+  // ==================== Loading State ====================
+
+  /**
+   * Track if we're loading the topic from database
+   */
+  const [isLoading, setIsLoading] = useState(false)
+
+  /**
+   * Load topic from database if not cached
+   */
+  useEffect(() => {
+    if (!topic) {
+      setIsLoading(true)
+      topicService
+        .getTopic(topicId)
+        .then(() => {
+          setIsLoading(false)
+        })
+        .catch((error) => {
+          logger.error(`Failed to load topic ${topicId}:`, error as Error)
+          setIsLoading(false)
+        })
+    } else {
+      setIsLoading(false)
+    }
+  }, [topic, topicId])
+
+  // ==================== Action Methods ====================
+
+  /**
+   * Update topic with optimistic updates
+   */
+  const updateTopic = useCallback(
+    async (topic: Topic) => {
+      await topicService.updateTopic(topicId, {
+        name: topic.name,
+        assistantId: topic.assistantId,
+        isLoading: topic.isLoading,
+        updatedAt: topic.updatedAt
+      })
+    },
+    [topicId]
+  )
+
+  /**
+   * Rename topic (optimistic)
+   */
+  const renameTopic = useCallback(
+    async (newName: string) => {
+      await topicService.renameTopic(topicId, newName)
+    },
+    [topicId]
+  )
+
+  /**
+   * Delete topic (optimistic)
+   */
+  const deleteTopic = useCallback(async () => {
+    await topicService.deleteTopic(topicId)
+  }, [topicId])
+
+  // ==================== Return API ====================
+
+  // 当删除最后一个topic时会返回 null, 需要返回加载状态
+  if (!topic) {
     return {
       topic: null,
       isLoading: true,
-      updateTopic
+      updateTopic,
+      renameTopic,
+      deleteTopic
     }
   }
 
   return {
-    topic: processedTopic,
+    topic,
     isLoading: false,
-    updateTopic
+    updateTopic,
+    renameTopic,
+    deleteTopic
   }
 }
 
@@ -106,29 +351,6 @@ export function useTopics() {
 
   return {
     topics: processedTopics,
-    isLoading: false
-  }
-}
-
-export function useNewestTopic(): { topic: Topic | null; isLoading: boolean } {
-  const query = db.select().from(topicSchema).orderBy(desc(topicSchema.created_at)).limit(1)
-
-  const { data: rawTopics, updatedAt } = useLiveQuery(query)
-
-  const processedTopic = useMemo(() => {
-    if (!rawTopics || rawTopics.length === 0) return null
-    return transformDbToTopic(rawTopics[0])
-  }, [rawTopics])
-
-  if (!updatedAt) {
-    return {
-      topic: null,
-      isLoading: true
-    }
-  }
-
-  return {
-    topic: processedTopic,
     isLoading: false
   }
 }
