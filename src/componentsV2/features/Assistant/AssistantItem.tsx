@@ -17,7 +17,7 @@ import XStack from '@/componentsV2/layout/XStack'
 import YStack from '@/componentsV2/layout/YStack'
 import Text from '@/componentsV2/base/Text'
 import ContextMenu, { ContextMenuListProps } from '@/componentsV2/base/ContextMenu'
-import { assistantDatabase } from '@/database'
+import { assistantService } from '@/services/AssistantService'
 import { topicService } from '@/services/TopicService'
 
 const logger = loggerService.withContext('Assistant Item')
@@ -46,7 +46,7 @@ const AssistantItem: FC<AssistantItemProps> = ({ assistant, onAssistantPress }) 
         navigation.navigate('ChatScreen', { topicId: 'new' })
       }
 
-      await assistantDatabase.deleteAssistantById(assistant.id)
+      await assistantService.deleteAssistant(assistant.id)
       await topicService.deleteTopicsByAssistantId(assistant.id)
       toast.show(t('message.assistant_deleted'))
     } catch (error) {

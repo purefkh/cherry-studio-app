@@ -5,11 +5,9 @@ import devToolsEnhancer from 'redux-devtools-expo-dev-plugin'
 import { FLUSH, PAUSE, PERSIST, persistReducer, persistStore, PURGE, REGISTER, REHYDRATE } from 'redux-persist'
 
 import app from './app'
-import assistant from './assistant'
 
 const rootReducer = combineReducers({
-  app,
-  assistant
+  app
 })
 
 const persistedReducer = persistReducer(

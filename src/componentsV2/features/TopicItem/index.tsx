@@ -9,9 +9,10 @@ import { Edit3, Sparkles, Trash2 } from '../../icons/LucideIcon'
 
 import { useTheme } from 'heroui-native'
 import { useToast } from '@/hooks/useToast'
+import { useAssistant } from '@/hooks/useAssistant'
 import i18n from '@/i18n'
 import { fetchTopicNaming } from '@/services/ApiService'
-import { Assistant, Topic } from '@/types/assistant'
+import { Topic } from '@/types/assistant'
 import { DrawerNavigationProps } from '@/types/naviagate'
 import { storage } from '@/utils'
 import { haptic } from '@/utils/haptic'
@@ -22,7 +23,6 @@ import YStack from '@/componentsV2/layout/YStack'
 import Text from '@/componentsV2/base/Text'
 import TextField from '@/componentsV2/base/TextField'
 import ContextMenu from '@/componentsV2/base/ContextMenu'
-import { assistantDatabase } from '@/database'
 
 type TimeFormat = 'time' | 'date'
 
@@ -66,7 +66,7 @@ export const TopicItem: FC<TopicItemProps> = ({
   const { t } = useTranslation()
   const [currentLanguage, setCurrentLanguage] = useState<string>(i18n.language)
   const navigation = useNavigation<DrawerNavigationProps>()
-  const [assistant, setAssistant] = useState<Assistant>()
+  const { assistant } = useAssistant(topic.assistantId)
   const [isGeneratingName, setIsGeneratingName] = useState(false)
   const dialog = useDialog()
   const { isDark } = useTheme()
@@ -105,13 +105,8 @@ export const TopicItem: FC<TopicItemProps> = ({
       }
     }
 
-    const fetchAssistant = async () => {
-      setAssistant(await assistantDatabase.getAssistantById(topic.assistantId))
-    }
-
     fetchCurrentLanguage()
-    fetchAssistant()
-  }, [topic.assistantId])
+  }, [])
 
   const tempNameRef = useRef(topic.name)
 

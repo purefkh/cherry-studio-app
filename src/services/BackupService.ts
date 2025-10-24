@@ -20,6 +20,7 @@ import {
   topicDatabase,
   websearchProviderDatabase
 } from '@database'
+import { assistantService } from './AssistantService'
 import { topicService } from './TopicService'
 const logger = loggerService.withContext('Backup Service')
 
@@ -53,8 +54,9 @@ async function restoreIndexedDbData(data: ExportIndexedData, onProgress: OnProgr
 
   await messageBlockDatabase.upsertBlocks(validBlocks)
 
-  // Invalidate TopicService cache after bulk import to ensure consistency
+  // Invalidate caches after bulk import to ensure consistency
   topicService.invalidateCache()
+  assistantService.invalidateCache()
 
   if (data.settings) {
     const avatarSetting = data.settings.find(setting => setting.id === 'image://avatar')
@@ -183,7 +185,7 @@ async function getAllData(): Promise<string> {
     const [providers, webSearchProviders, assistants, topics, messages, messageBlocks] = await Promise.all([
       providerDatabase.getAllProviders(),
       websearchProviderDatabase.getAllWebSearchProviders(),
-      assistantDatabase.getExternalAssistants(),
+      assistantService.getExternalAssistants(),
       topicService.getTopics(),
       messageDatabase.getAllMessages(),
       messageBlockDatabase.getAllBlocks()
@@ -200,9 +202,9 @@ async function getAllData(): Promise<string> {
     let defaultAssistant: Assistant | null = null
 
     try {
-      defaultAssistant = await assistantDatabase.getAssistantById('default')
+      defaultAssistant = await assistantService.getAssistant('default')
     } catch (error) {
-      logger.warn('Failed to load default assistant from database, falling back to system config.', error)
+      logger.warn('Failed to load default assistant from service, falling back to system config.', error)
     }
 
     if (!defaultAssistant) {

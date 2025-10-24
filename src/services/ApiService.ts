@@ -17,14 +17,14 @@ import { isPromptToolUse, isSupportedToolUse } from '@/utils/mcpTool'
 import { filterMainTextMessages } from '@/utils/messageUtils/filters'
 
 import AiProviderNew from '../aiCore/index_new'
-import { getDefaultModel } from './AssistantService'
+import { getDefaultModel , assistantService } from './AssistantService'
 import { getAssistantProvider } from './ProviderService'
 import { createStreamProcessor, StreamProcessorCallbacks } from './StreamProcessingService'
 import { getActiveMcps } from './McpService'
 import { topicService } from './TopicService'
 import { MCPServer } from '@/types/mcp'
 import { BUILTIN_TOOLS } from '@/config/mcp'
-import { assistantDatabase, messageDatabase } from '@database'
+import { messageDatabase } from '@database'
 
 const logger = loggerService.withContext('fetchChatCompletion')
 
@@ -185,9 +185,9 @@ export async function fetchTopicNaming(topicId: string, regenerate: boolean = fa
     }
   }
   const streamProcessorCallbacks = createStreamProcessor(callbacks)
-  const quickAssistant = await assistantDatabase.getAssistantById('quick')
+  const quickAssistant = await assistantService.getAssistant('quick')
 
-  if (!quickAssistant.defaultModel) {
+  if (!quickAssistant?.defaultModel) {
     return
   }
 

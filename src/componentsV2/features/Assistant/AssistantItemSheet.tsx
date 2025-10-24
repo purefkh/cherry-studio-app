@@ -17,10 +17,10 @@ import type { Assistant } from '@/types/assistant'
 import { uuid } from '@/utils'
 import { formateEmoji } from '@/utils/formats'
 import { haptic } from '@/utils/haptic'
+import { assistantService } from '@/services/AssistantService'
 
 import EmojiAvatar from './EmojiAvatar'
 import GroupTag from './GroupTag'
-import { assistantDatabase } from '@/database'
 
 interface AssistantItemSheetProps {
   assistant: Assistant | null
@@ -73,7 +73,7 @@ const AssistantItemSheet = forwardRef<BottomSheetModal, AssistantItemSheetProps>
           id: uuid(),
           type: 'external'
         }
-        await assistantDatabase.upsertAssistants([newAssistant])
+        await assistantService.createAssistant(newAssistant)
       }
 
       const topic = await topicService.createTopic(newAssistant)
@@ -84,13 +84,11 @@ const AssistantItemSheet = forwardRef<BottomSheetModal, AssistantItemSheetProps>
 
     const handleAddAssistant = async () => {
       if (assistant) {
-        await assistantDatabase.upsertAssistants([
-          {
-            ...assistant,
-            id: uuid(),
-            type: 'external'
-          }
-        ])
+        await assistantService.createAssistant({
+          ...assistant,
+          id: uuid(),
+          type: 'external'
+        })
         ;(ref as React.RefObject<BottomSheetModal>)?.current?.dismiss()
         haptic(ImpactFeedbackStyle.Medium)
         toast.show(t('assistants.market.add.success', { assistant_name: assistant.name }))

@@ -27,6 +27,8 @@ const APP_DATA_MIGRATIONS: AppDataMigration[] = [
     migrate: async () => {
       await seedDatabase(db)
 
+      // Use direct database access for initial seeding (performance)
+      // AssistantService cache will be built naturally as the app is used
       const systemAssistants = getSystemAssistants()
       await assistantDatabase.upsertAssistants(systemAssistants)
 

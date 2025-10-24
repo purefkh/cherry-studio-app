@@ -120,17 +120,9 @@ export function useAssistant(assistantId: string) {
 
   // ==================== Return API ====================
 
-  if (!assistant) {
-    return {
-      assistant: null,
-      isLoading: true,
-      updateAssistant
-    }
-  }
-
   return {
     assistant,
-    isLoading: false,
+    isLoading: !assistant && isLoading,
     updateAssistant
   }
 }
