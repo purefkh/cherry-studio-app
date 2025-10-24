@@ -51,6 +51,26 @@ export async function deleteAssistantById(id: string) {
 }
 
 /**
+ * 获取所有助手
+ * @description 查询所有助手并关联查询其主题数据
+ * @returns 返回所有助手的数组
+ * @throws 当查询操作失败时抛出错误
+ */
+export async function getAllAssistants(): Promise<Assistant[]> {
+  try {
+    const results = await db.query.assistants.findMany({
+      with: {
+        topics: true
+      }
+    })
+    return results.map(transformDbToAssistant)
+  } catch (error) {
+    logger.error('Error getting all assistants:', error)
+    throw error
+  }
+}
+
+/**
  * 获取所有外部助手
  * @description 查询类型为 'external' 的助手，并关联查询其主题数据
  * @returns 返回外部助手的数组

@@ -1,6 +1,7 @@
 import { Assistant } from '@/types/assistant'
 import {
   deleteAssistantById as _deleteAssistantById,
+  getAllAssistants as _getAllAssistants,
   getAssistantById as _getAssistantById,
   getExternalAssistants as _getExternalAssistants,
   upsertAssistants as _upsertAssistants
@@ -19,6 +20,14 @@ export async function deleteAssistantById(id: string) {
     return await _deleteAssistantById(id)
   } catch (error) {
     throw new Error(`Failed to delete assistant with id "${id}": ${error}`)
+  }
+}
+
+export async function getAllAssistants(): Promise<Assistant[]> {
+  try {
+    return await _getAllAssistants()
+  } catch (error) {
+    throw new Error(`Failed to get all assistants: ${error}`)
   }
 }
 
@@ -45,6 +54,7 @@ export async function getAssistantById(id: string): Promise<Assistant> {
 export const assistantDatabase = {
   upsertAssistants,
   deleteAssistantById,
+  getAllAssistants,
   getExternalAssistants,
   getAssistantById
 }
