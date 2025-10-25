@@ -7,7 +7,7 @@ import { useDialog } from '@/hooks/useDialog'
 import { useToast } from '@/hooks/useToast'
 import { deleteProvider } from '@/services/ProviderService'
 import { Provider } from '@/types/assistant'
-import { HomeNavigationProps } from '@/types/naviagate'
+import { ProvidersNavigationProps } from '@/types/naviagate'
 import { Edit3, Trash2, ProviderIcon } from '@/componentsV2/icons'
 import XStack from '@/componentsV2/layout/XStack'
 import RowRightArrow from '@/componentsV2/layout/Row/RowRightArrow'
@@ -22,7 +22,7 @@ interface ProviderItemProps {
 
 export const ProviderItem: React.FC<ProviderItemProps> = ({ provider, mode = 'enabled', onEdit }) => {
   const { t } = useTranslation()
-  const navigation = useNavigation<HomeNavigationProps>()
+  const navigation = useNavigation<ProvidersNavigationProps>()
   const dialog = useDialog()
   const toast = useToast()
 
@@ -54,10 +54,7 @@ export const ProviderItem: React.FC<ProviderItemProps> = ({ provider, mode = 'en
   }
 
   const handlePress = () => {
-    navigation.navigate('ProvidersSettings', {
-      screen: 'ProviderSettingsScreen',
-      params: { providerId: provider.id }
-    })
+    navigation.navigate('ProviderSettingsScreen', { providerId: provider.id })
   }
 
   const providerRow = (
