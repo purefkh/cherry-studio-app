@@ -10,14 +10,12 @@ import { AddProviderSheet } from '@/componentsV2/features/SettingsScreen/AddProv
 import { ProviderItem } from '@/componentsV2/features/SettingsScreen/ProviderItem'
 import { LegendList } from '@legendapp/list'
 import { useAllProviders } from '@/hooks/useProviders'
-import { providerService } from '@/services/ProviderService'
 
 export default function ProviderListScreen() {
   const { t } = useTranslation()
 
   const bottomSheetRef = useRef<BottomSheetModal>(null)
   const { providers, isLoading } = useAllProviders()
-  providerService.logCacheStatus()
 
   const [sheetMode, setSheetMode] = useState<'add' | 'edit'>('add')
   const [editingProvider, setEditingProvider] = useState<Provider | undefined>(undefined)
