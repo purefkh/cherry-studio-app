@@ -6,6 +6,8 @@
 
 - [Preference 系统（偏好设置）](#preference-系统偏好设置)
 - [Topic 系统（对话话题管理）](#topic-系统对话话题管理)
+- [Assistant 系统（AI 助手管理）](#assistant-系统ai-助手管理)
+- [Provider 系统（LLM 服务提供商管理）](#provider-系统llm-服务提供商管理)
 - [Redux Store 结构](#redux-store-结构)
 - [SQLite 数据库架构](#sqlite-数据库架构)
 - [数据关系](#数据关系)
@@ -1162,6 +1164,538 @@ updateAssistant({ name: '新名称' }).catch(console.error)
 
 ---
 
+## Provider 系统（LLM 服务提供商管理）
+
+Cherry Studio 使用 ProviderService 管理所有 LLM 服务提供商配置（OpenAI、Anthropic、Google 等），采用与 AssistantService 类似的架构设计，提供高性能、类型安全的提供商管理解决方案。
+
+### 架构概述
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    React Components                          │
+└───────────────┬─────────────────────────────────────────────┘
+                │ useProvider(id) / useAllProviders() hooks
+                │ (useSyncExternalStore / useLiveQuery)
+                ▼
+┌─────────────────────────────────────────────────────────────┐
+│               ProviderService (Singleton)                    │
+│  ┌──────────────┬──────────────┬─────────────────────────┐  │
+│  │ Default      │ LRU Cache    │ All Providers Cache     │  │
+│  │ Provider     │ (10 provs)   │ (TTL: 5min)            │  │
+│  │ Cache (1)    │ Map<id, P>   │ Map<id, Provider>      │  │
+│  │ (永久)       │              │                         │  │
+│  └──────────────┴──────────────┴─────────────────────────┘  │
+│  ┌──────────────┬──────────────┬─────────────────────────┐  │
+│  │ Subscribers  │ Update Queue │ Load Promises           │  │
+│  │ Map<id, Set> │ Map<id, Prom>│ Map<id, Promise>        │  │
+│  └──────────────┴──────────────┴─────────────────────────┘  │
+│         │                                                     │
+│         │ Optimistic Updates with Rollback                   │
+│         ▼                                                     │
+└─────────────────────────────────────────────────────────────┘
+                │
+                │ Drizzle ORM
+                ▼
+┌─────────────────────────────────────────────────────────────┐
+│          SQLite Database (providers table)                   │
+│   ┌────────┬──────────┬─────────┬─────────┬──────────┐      │
+│   │ id     │ type     │ api_key │enabled  │models    │      │
+│   │        │          │         │         │          │      │
+│   ├────────┼──────────┼─────────┼─────────┼──────────┤      │
+│   │ TEXT   │ TEXT     │ TEXT    │ INTEGER │ TEXT     │      │
+│   └────────┴──────────┴─────────┴─────────┴──────────┘      │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### ProviderService 特性
+
+#### 1. **三层缓存策略**
+
+**默认 Provider 永久缓存（Default Provider Cache）**
+- 存储默认的 LLM Provider
+- 最高优先级，永不驱逐
+- 应用中最频繁访问的 Provider
+- 从 `preference: settings.default_provider_id` 同步
+
+**LRU 缓存（Least Recently Used Cache）**
+- 存储最近访问的 10 个 Provider
+- 使用 LRU 算法自动驱逐最旧项
+- 访问时更新顺序
+- 适合用户频繁切换的 Provider
+
+**所有 Provider 缓存（All Providers Cache）**
+- 缓存所有 Provider 列表
+- 5 分钟 TTL（生存时间）
+- 用于 Provider 列表显示
+- 支持强制刷新
+
+#### 2. **乐观更新（Optimistic Updates）**
+- 所有 CRUD 操作立即更新缓存
+- UI 零延迟响应
+- 后台异步同步到 SQLite
+- 失败时自动回滚所有缓存
+
+#### 3. **智能缓存管理**
+
+```typescript
+// 访问 Provider 的缓存查找顺序
+getProvider(providerId) 流程：
+1. 检查默认 Provider 缓存 → 从 defaultProviderCache 返回（最快）
+2. 检查 LRU 缓存 → 从 providerCache 返回（快）
+3. 检查是否正在加载 → 等待进行中的加载
+4. 从数据库加载 → 加入 LRU 缓存并返回（慢）
+```
+
+```typescript
+// 默认 Provider 的特殊优化
+默认 Provider:
+- 永久驻留内存
+- 访问时无需任何数据库查询
+- 支持高频调用场景（每次 AI 对话）
+- 自动与 preference 同步
+```
+
+#### 4. **订阅系统（Subscription System）**
+
+支持四种订阅类型：
+- **特定 Provider 订阅**：`subscribeProvider(id)` - 监听指定 Provider 的变化
+- **默认 Provider 订阅**：`subscribeDefaultProvider()` - 监听默认 Provider 变化
+- **全局订阅**：`subscribeAllProviders()` - 监听所有 Provider 变化
+- **列表订阅**：支持监听 Provider 列表的增删改
+
+#### 5. **并发控制（Concurrency Control）**
+
+**更新队列（Update Queue）**
+- 序列化同一 Provider 的更新操作
+- 防止竞态条件
+- 保证数据一致性
+
+**加载去重（Load Deduplication）**
+- 跟踪进行中的加载操作
+- 防止重复加载同一 Provider
+- 共享加载 Promise
+
+#### 6. **React 18 深度集成**
+- 基于 `useSyncExternalStore`（单个 Provider）
+- 使用 Drizzle `useLiveQuery`（所有 Provider 列表）
+- 完美支持并发渲染
+- 自动订阅/取消订阅
+- 零 re-render 开销
+
+### 使用方法
+
+#### 单个 Provider 管理
+
+```typescript
+import { useProvider } from '@/hooks/useProviders'
+
+function ProviderDetail({ providerId }: { providerId: string }) {
+  const {
+    provider,           // Provider 对象（使用三层缓存）
+    isLoading,          // 加载状态
+    updateProvider      // 更新 Provider
+  } = useProvider(providerId)
+
+  if (isLoading) return <Loading />
+
+  const handleUpdate = async () => {
+    await updateProvider({ apiKey: 'new-key' })  // 乐观更新
+  }
+
+  return (
+    <div>
+      <h2>{provider.name}</h2>
+      <button onClick={handleUpdate}>更新 API Key</button>
+    </div>
+  )
+}
+```
+
+#### 默认 Provider 管理
+
+```typescript
+import { useDefaultProvider } from '@/hooks/useProviders'
+
+function ChatScreen() {
+  const {
+    provider,               // 默认 Provider（永久缓存）
+    isLoading,              // 加载状态
+    setDefaultProvider,     // 切换默认 Provider
+    updateProvider          // 更新 Provider
+  } = useDefaultProvider()
+
+  const handleSwitchProvider = async (newProviderId: string) => {
+    await setDefaultProvider(newProviderId)  // 乐观更新
+  }
+
+  return (
+    <div>
+      <h1>当前默认: {provider?.name}</h1>
+      <button onClick={() => handleSwitchProvider('openai')}>
+        切换到 OpenAI
+      </button>
+    </div>
+  )
+}
+```
+
+#### 所有 Provider 列表
+
+```typescript
+import { useAllProviders } from '@/hooks/useProviders'
+
+function ProviderList() {
+  const { providers, isLoading } = useAllProviders()
+
+  return (
+    <ul>
+      {providers.map(provider => (
+        <li key={provider.id}>
+          {provider.name} - {provider.enabled ? '已启用' : '已禁用'}
+        </li>
+      ))}
+    </ul>
+  )
+}
+```
+
+#### 非 React 上下文使用
+
+```typescript
+import { providerService } from '@/services/ProviderService'
+
+// 获取 Provider（使用三层缓存）
+const provider = await providerService.getProvider(providerId)
+
+// 获取 Provider（仅从缓存，同步）
+const provider = providerService.getProviderCached(providerId)
+
+// 获取默认 Provider（同步，从缓存）
+const defaultProvider = providerService.getDefaultProvider()
+
+// 获取默认 Provider（异步，懒加载）
+const defaultProvider = await providerService.getDefaultProviderAsync()
+
+// 更新 Provider（乐观更新）
+await providerService.updateProvider(providerId, { enabled: true })
+
+// 设置默认 Provider（乐观更新 + 缓存切换）
+await providerService.setDefaultProvider(providerId)
+
+// 创建新 Provider（乐观更新）
+const newProvider = await providerService.createProvider({
+  id: uuid(),
+  name: 'My LLM',
+  type: 'openai',
+  apiKey: 'sk-...',
+  enabled: true
+})
+
+// 删除 Provider（乐观更新）
+await providerService.deleteProvider(providerId)
+
+// 清理所有缓存（用于数据恢复后）
+providerService.invalidateCache()
+```
+
+### 缓存性能优化
+
+#### 默认 Provider 的极致优化
+
+```typescript
+// 场景：频繁调用默认 Provider（每次 AI 对话）
+await providerService.getDefaultProviderAsync()  // ✅ 从默认缓存，0ms
+await providerService.getDefaultProviderAsync()  // ✅ 从默认缓存，0ms
+
+// 无论调用多少次，都是内存访问，无数据库开销
+for (let i = 0; i < 1000; i++) {
+  const provider = providerService.getDefaultProvider()  // ✅ 永远从缓存
+}
+```
+
+#### LRU 缓存工作原理
+
+```typescript
+// 场景：用户依次访问 10 个 Provider
+访问 Provider A → LRU: [A]
+访问 Provider B → LRU: [A, B]
+...
+访问 Provider J → LRU: [A, B, C, D, E, F, G, H, I, J]  // 缓存已满
+
+// 再次访问 Provider A（从 LRU 缓存获取）
+访问 Provider A → LRU: [B, C, D, E, F, G, H, I, J, A]  // A 移到最后
+                  ✅ LRU cache hit!                        // 无需查询数据库
+
+// 访问新的 Provider K
+访问 Provider K → LRU: [C, D, E, F, G, H, I, J, A, K]  // B 被驱逐
+                  ⚠️ Database load                         // 首次访问需要数据库
+```
+
+### 数据持久化流程
+
+#### 读取流程
+
+```
+1. useProvider(id) / providerService.getProvider(id) 调用
+   ↓
+2. 检查默认 Provider 缓存
+   ↓
+3. 缓存命中？
+   ├─ 是 → 返回缓存值（最快，0ms）
+   └─ 否 → 检查 LRU 缓存
+              ↓
+          缓存命中？
+              ├─ 是 → 返回缓存值（快）
+              └─ 否 → 从 SQLite 加载（慢）
+                         ↓
+                     加入 LRU 缓存
+                         ↓
+                     返回值
+```
+
+#### 写入流程
+
+```
+1. updateProvider(id, data) 调用
+   ↓
+2. 保存所有缓存的旧值（用于回滚）
+   ↓
+3. 立即更新所有缓存（乐观更新）
+   - 默认 Provider 缓存（如果是默认 Provider）
+   - LRU 缓存（如果存在）
+   - 所有 Provider 缓存（如果存在）
+   ↓
+4. 通知所有订阅者（UI 立即更新）
+   ↓
+5. 异步写入 SQLite
+   ├─ 成功 → 完成
+   └─ 失败 → 回滚所有缓存
+              ↓
+          通知订阅者
+              ↓
+          抛出错误
+```
+
+### 架构问题与改进建议
+
+基于代码分析，ProviderService 存在以下潜在问题：
+
+#### ⚠️ 问题 1: **混合数据获取策略导致的不一致**
+
+**问题所在：**
+- `useProvider` 使用 `useSyncExternalStore` + ProviderService 缓存
+- `useAllProviders` 使用 Drizzle 的 `useLiveQuery`，直接查询数据库
+
+**影响：**
+```typescript
+// useProviders.ts:18-19
+const query = db.select().from(providersSchema)
+const { data: rawProviders } = useLiveQuery(query)
+// ❌ 绕过了 ProviderService 的 allProvidersCache
+```
+
+当通过 `providerService.updateProvider()` 更新时：
+1. ProviderService 更新了 `allProvidersCache` ✅
+2. 但 `useLiveQuery` 需要等待 SQLite 写入完成才能响应 ⏱️
+3. 导致 `useAllProviders` 的更新比 `useProvider` **慢一个事务周期**
+
+**建议修复：**
+```typescript
+// 方案 1: 统一使用 ProviderService 缓存
+export function useAllProviders() {
+  const subscribe = useCallback((callback) => {
+    return providerService.subscribeAllProviders(callback)
+  }, [])
+
+  const getSnapshot = useCallback(() => {
+    return providerService.getAllProvidersCached()
+  }, [])
+
+  const providers = useSyncExternalStore(subscribe, getSnapshot, () => [])
+
+  return { providers, isLoading: providers.length === 0 }
+}
+```
+
+#### ⚠️ 问题 2: **缓存一致性风险**
+
+**问题所在：**
+```typescript
+// ProviderService.ts:735-738
+if (this.allProvidersCache.size > 0 || this.allProvidersCacheTimestamp !== null) {
+  this.allProvidersCache.set(provider.id, provider)
+}
+```
+
+**风险场景：**
+1. App 启动后，`allProvidersCache` 为空
+2. 调用 `createProvider()` 创建新 Provider
+3. 由于缓存为空，**不会更新 allProvidersCache**
+4. 之后调用 `getAllProviders()` 时，可能返回过期数据
+
+**建议修复：**
+```typescript
+// 无条件更新缓存，或者在缓存为空时主动初始化
+this.allProvidersCache.set(provider.id, provider)
+if (this.allProvidersCacheTimestamp === null) {
+  this.allProvidersCacheTimestamp = Date.now()
+}
+```
+
+#### ⚠️ 问题 3: **内存泄漏风险 - 异步操作未清理**
+
+**问题所在：**
+```typescript
+// useProviders.ts:121-142
+useEffect(() => {
+  if (!provider) {
+    setIsLoading(true)
+    providerService.getProvider(providerId)
+      .then(() => setIsLoading(false))
+      .catch(error => {
+        logger.error(`Failed to load provider ${providerId}:`, error as Error)
+        setIsLoading(false)
+      })
+  }
+}, [provider, providerId, isValidId])
+// ❌ 缺少 cleanup function
+```
+
+**风险：** 如果组件在 Promise pending 时卸载，`setIsLoading` 会在卸载后调用
+
+**建议修复：**
+```typescript
+useEffect(() => {
+  let cancelled = false
+
+  if (!provider) {
+    setIsLoading(true)
+    providerService.getProvider(providerId)
+      .then(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+      .catch(error => {
+        if (!cancelled) {
+          logger.error(`Failed to load provider:`, error)
+          setIsLoading(false)
+        }
+      })
+  }
+
+  return () => { cancelled = true }
+}, [provider, providerId, isValidId])
+```
+
+#### ⚠️ 问题 4: **TTL 缓存策略可能不适合移动端**
+
+**问题所在：**
+```typescript
+// ProviderService.ts:138
+private readonly CACHE_TTL = 5 * 60 * 1000 // 5 分钟
+```
+
+**移动端特性：**
+- App 可能长时间在后台
+- 恢复时缓存可能已过期但数据库未变
+- 频繁的缓存失效会导致不必要的数据库查询
+
+**建议：**
+```typescript
+// 方案 1: 使用版本号而非时间戳
+private allProvidersCacheVersion: number = 0
+
+// 每次写入时增加版本
+async updateProvider() {
+  // ...
+  this.allProvidersCacheVersion++
+}
+
+// 方案 2: 监听 App 状态，后台时暂停 TTL 计时
+AppState.addEventListener('change', (state) => {
+  if (state === 'background') {
+    this.pauseCacheTTL()
+  }
+})
+```
+
+### 性能优化总结
+
+相比直接查询数据库，ProviderService 提供了以下性能提升：
+
+| 操作 | 直接查询 | ProviderService | 提升 |
+|------|---------|----------------|-----|
+| 访问默认 Provider | 数据库查询 | 默认缓存命中 | ~100x 更快 |
+| 访问最近 Provider | 数据库查询 | LRU 缓存命中 | ~100x 更快 |
+| 更新 Provider | 等待数据库写入 | 乐观更新 | 零延迟 UI |
+| 并发更新 | 可能冲突 | 更新队列 | 无冲突 |
+| 重复加载 | 多次查询 | 去重 | 减少 N-1 次查询 |
+
+### Provider 类型
+
+完整类型定义位于 `src/types/assistant.ts`：
+
+```typescript
+export interface Provider {
+  id: string                          // Provider 唯一 ID
+  name: string                        // Provider 名称
+  type: string                        // openai, anthropic, google, 等
+  apiKey?: string                     // API 密钥
+  apiHost?: string                    // API 地址
+  apiVersion?: string                 // API 版本
+  models?: Model[]                    // 可用模型列表
+  enabled?: boolean                   // 是否启用
+  isSystem?: boolean                  // 系统内置 vs 用户添加
+  isAuthed?: boolean                  // 认证状态
+  rateLimit?: number                  // 速率限制
+  isNotSupportArrayContent?: boolean  // 是否支持数组内容
+  notes?: string                      // 备注
+  createdAt?: number                  // 创建时间戳
+  updatedAt?: number                  // 更新时间戳
+}
+```
+
+### 最佳实践
+
+```typescript
+// ✅ 推荐：使用 React hooks
+const { provider, updateProvider } = useProvider(providerId)
+const { provider: defaultProvider } = useDefaultProvider()
+const { providers } = useAllProviders()
+
+// ✅ 推荐：利用乐观更新
+await updateProvider({ enabled: true })  // UI 立即更新，无需等待
+
+// ✅ 推荐：在非 React 上下文使用 providerService
+const provider = await providerService.getProvider(providerId)
+
+// ✅ 推荐：高频访问默认 Provider 无需担心性能
+for (const message of messages) {
+  const provider = providerService.getDefaultProvider()
+  // ✅ 永远从默认缓存获取，零开销
+}
+
+// ✅ 推荐：使用缓存友好的访问模式
+// 在最近访问的 11 个 Provider 间切换，全部从缓存获取
+for (const providerId of recentProviderIds.slice(0, 11)) {
+  await providerService.getProvider(providerId)  // ✅ LRU cache hit!
+}
+
+// ⚠️ 注意：所有 update/delete 都是异步的
+await updateProvider({ enabled: true })  // 或者
+updateProvider({ enabled: true }).catch(console.error)
+
+// ⚠️ 注意：useAllProviders 使用 useLiveQuery，可能有轻微延迟
+// 如需即时更新，考虑迁移到 useSyncExternalStore
+
+// ❌ 避免：不要在 React 组件外使用 hooks
+// 应该使用 providerService.getProvider()
+
+// ❌ 避免：不要直接操作数据库
+// 应该使用 ProviderService 的方法
+```
+
+---
+
 ## Redux Store 结构
 
 应用状态通过 Redux Toolkit 管理，并通过 AsyncStorage 进行持久化。
@@ -1662,6 +2196,7 @@ Cherry Studio 采用混合存储策略：
 - **Preference System (SQLite)**: 管理所有用户配置和应用状态（10 项）
 - **Topic System (Service + Cache)**: 管理对话话题，提供三层缓存和乐观更新
 - **Assistant System (Service + Cache)**: 管理 AI 助手配置，提供三层缓存和乐观更新
+- **Provider System (Service + Cache)**: 管理 LLM 服务提供商，提供三层缓存和乐观更新
 - **Redux Store**: 遗留的内置助手配置（已废弃，迁移到 AssistantService）
 - **SQLite Database**: 存储所有实体数据和关系数据
 
@@ -1688,9 +2223,18 @@ Cherry Studio 采用混合存储策略：
 - 并发控制，防止竞态
 - 支持高频访问场景（自动命名、翻译）
 
+**Provider System**
+- 三层缓存：默认 Provider(永久) + LRU(10) + 全量缓存(TTL 5min)
+- 默认 Provider 永久驻留内存，极致性能优化
+- 乐观更新，所有 CRUD 操作零延迟
+- 完整的订阅系统
+- 并发控制，防止竞态
+- 支持高频访问场景（每次 AI 对话）
+- ⚠️ 存在架构不一致问题（useAllProviders 使用 useLiveQuery，需要统一）
+
 **性能优势**
 - ✅ 类型安全（TypeScript 全面覆盖）
-- ✅ 高性能（缓存命中率 ~90%+，系统助手 100%）
+- ✅ 高性能（缓存命中率 ~90%+，系统助手/默认 Provider 100%）
 - ✅ 良好的开发体验（hooks + 调试工具）
 - ✅ 数据持久化（SQLite + 乐观更新）
 - ✅ 离线支持（本地优先）
@@ -1700,6 +2244,7 @@ Cherry Studio 采用混合存储策略：
 - 简单配置使用 Preference System
 - 对话相关使用 Topic System
 - AI 助手相关使用 Assistant System
+- LLM 提供商相关使用 Provider System
 - 实体数据直接使用 SQLite + Drizzle ORM
 - 临时状态使用 React State / Memory
 
@@ -1710,4 +2255,5 @@ Cherry Studio 采用混合存储策略：
 | Preference | 懒加载 + 内存缓存 | ~1ms | 用户配置、应用状态 |
 | Topic | 当前主题 + LRU(5) + TTL | ~0ms (当前), ~1ms (LRU) | 对话管理 |
 | Assistant | 系统助手 + LRU(10) + TTL | ~0ms (系统), ~1ms (LRU) | AI 助手管理 |
+| Provider | 默认 Provider + LRU(10) + TTL | ~0ms (默认), ~1ms (LRU) | LLM 提供商管理 |
 | SQLite | 索引查询 | ~10-50ms | 实体数据、关系查询 |
