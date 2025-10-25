@@ -1,9 +1,14 @@
 import 'tsx/cjs'
+import packageJson from './package.json'
+
+// Read version from environment variable (set during build) or fallback to package.json
+const appVersion = process.env.APP_VERSION || packageJson.version
+
 export default {
   expo: {
     name: 'Cherry Studio',
     slug: 'cherry-studio',
-    version: '1.0.0',
+    version: appVersion,
     orientation: 'portrait',
     icon: './src/assets/images/favicon.png',
     scheme: 'cherry-studio',
@@ -146,7 +151,8 @@ export default {
     extra: {
       eas: {
         projectId: '80096eaf-3ad0-4b87-a466-15f04da1bacc'
-      }
+      },
+      appVersion
     }
   }
 }

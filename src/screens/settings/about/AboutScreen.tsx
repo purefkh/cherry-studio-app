@@ -1,4 +1,5 @@
 import * as ExpoLinking from 'expo-linking'
+import Constants from 'expo-constants'
 import React from 'react'
 import {
   Text,
@@ -20,6 +21,7 @@ const logger = loggerService.withContext('AboutScreen')
 
 export default function AboutScreen() {
   const { t } = useTranslation()
+  const appVersion = Constants.expoConfig?.version || 'latest'
 
   const openLink = async (url: string) => {
     try {
@@ -50,7 +52,7 @@ export default function AboutScreen() {
                   {t('common.cherry_studio_description')}
                 </Text>
                 <Text className="text-sm border border-green-20 dark:border-green-dark-20 bg-green-10 dark:bg-green-dark-10 text-green-100 dark:text-green-dark-100 self-start px-2 py-0.5 rounded-[25.37px]">
-                  v0.1.0-beta.1
+                  v{appVersion}
                 </Text>
               </YStack>
             </Row>

@@ -55,22 +55,53 @@ jobs:
             echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
           fi
 
-      # Step 7: Build Android (without auto-submit)
+      # Step 7: Update package.json version
+      - name: Update package.json version
+        run: |
+          VERSION="${{ steps.version.outputs.tag }}"
+          # Remove 'v' prefix if present (e.g., v1.0.0 -> 1.0.0)
+          VERSION_NUMBER="${VERSION#v}"
+          echo "Updating package.json version to $VERSION_NUMBER"
+
+          # Update package.json using Node.js
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = '$VERSION_NUMBER';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+
+          echo "✅ package.json updated to version $VERSION_NUMBER"
+          cat package.json | grep '"version"'
+
+      # Step 8: Set APP_VERSION environment variable
+      - name: Export APP_VERSION for EAS Build
+        run: |
+          VERSION="${{ steps.version.outputs.tag }}"
+          VERSION_NUMBER="${VERSION#v}"
+          echo "APP_VERSION=$VERSION_NUMBER" >> $GITHUB_ENV
+          echo "✅ APP_VERSION set to $VERSION_NUMBER"
+
+      # Step 9: Build Android (without auto-submit)
       - name: Build Android on EAS
         id: build_android
+        env:
+          APP_VERSION: ${{ env.APP_VERSION }}
         run: |
-          echo "Building Android APK..."
+          echo "Building Android APK with version $APP_VERSION..."
           eas build --platform android --profile production --non-interactive --no-wait --json > android_build.json
           BUILD_ID=$(cat android_build.json | jq -r '.[0].id')
           echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
           echo "🤖 Android Build ID: $BUILD_ID"
           echo "🔗 View Android build: https://expo.dev/accounts/[your-account]/projects/cherry-studio/builds/$BUILD_ID"
 
-      # Step 8: Build iOS (with auto-submit)
+      # Step 10: Build and Submit iOS on EAS
       - name: Build and Submit iOS on EAS
         id: build_ios
+        env:
+          APP_VERSION: ${{ env.APP_VERSION }}
         run: |
-          echo "Building and submitting iOS..."
+          echo "Building and submitting iOS with version $APP_VERSION..."
           eas build --platform ios --profile production --auto-submit --non-interactive --no-wait --json > ios_build.json
           BUILD_ID=$(cat ios_build.json | jq -r '.[0].id')
           echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
@@ -78,7 +109,7 @@ jobs:
           echo "📱 iOS build will auto-submit to App Store Connect when complete"
           echo "🔗 View iOS build: https://expo.dev/accounts/[your-account]/projects/cherry-studio/builds/$BUILD_ID"
 
-      # Step 9: Wait for Android build to complete
+      # Step 11: Wait for Android build to complete
       - name: Wait for Android build
         run: |
           echo "Waiting for Android build to complete..."
@@ -109,7 +140,7 @@ jobs:
             sleep 60
           done
 
-      # Step 10: Download Android APK
+      # Step 12: Download Android APK
       - name: Download Android APK
         run: |
           BUILD_ID="${{ steps.build_android.outputs.build_id }}"
@@ -125,7 +156,7 @@ jobs:
           # Verify file exists and size
           ls -lh Cherry-Studio-${{ steps.version.outputs.tag }}.apk
 
-      # Step 11: Create GitHub Release
+      # Step 13: Create GitHub Release
       - name: Create GitHub Release
         id: create_release
         uses: softprops/action-gh-release@v1
@@ -159,7 +190,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Step 12: Summary
+      # Step 14: Build Summary
       - name: Build Summary
         if: success()
         run: |
@@ -189,7 +220,7 @@ jobs:
           echo "---" >> $GITHUB_STEP_SUMMARY
           echo "_Note: Replace [your-account] with your Expo account name in the links above_" >> $GITHUB_STEP_SUMMARY
 
-      # Step 13: Failure Summary
+      # Step 15: Build Failure Summary
       - name: Build Failure Summary
         if: failure()
         run: |
