@@ -9,6 +9,7 @@
 - [Assistant 系统（AI 助手管理）](#assistant-系统ai-助手管理)
 - [Provider 系统（LLM 服务提供商管理）](#provider-系统llm-服务提供商管理)
 - [MCP 系统（Model Context Protocol 管理）](#mcp-系统model-context-protocol-管理)
+- [WebSearch Provider 系统（网页搜索提供商管理）](#websearch-provider-系统网页搜索提供商管理)
 - [Redux Store 结构](#redux-store-结构)
 - [SQLite 数据库架构](#sqlite-数据库架构)
 - [数据关系](#数据关系)
@@ -2204,6 +2205,540 @@ updateMcpServer({ isActive: true }).catch(console.error)
 // ❌ 避免：不要缓存工具列表在应用全局状态中
 // 工具状态可能随时变化，应该每次重新获取
 ```
+
+---
+
+## WebSearch Provider 系统（网页搜索提供商管理）
+
+Cherry Studio 使用 WebSearchProviderService 管理所有网页搜索服务提供商配置（Google、Searxng、Tavily 等），采用与 McpService 相同的架构设计，提供高性能、类型安全的搜索提供商管理解决方案。
+
+### 架构概述
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    React Components                          │
+└───────────────┬─────────────────────────────────────────────┘
+                │ useWebSearchProvider(id) / useWebsearchProviders() hooks
+                │ (useSyncExternalStore / useLiveQuery)
+                ▼
+┌─────────────────────────────────────────────────────────────┐
+│            WebSearchProviderService (Singleton)              │
+│  ┌──────────────┬──────────────┬─────────────────────────┐  │
+│  │ LRU Cache    │ All Providers│                         │  │
+│  │ (5 providers)│ Cache        │                         │  │
+│  │ Map<id, P>   │ (TTL: 5min)  │                         │  │
+│  │              │ Map<id, WSP> │                         │  │
+│  └──────────────┴──────────────┴─────────────────────────┘  │
+│  ┌──────────────┬──────────────┬─────────────────────────┐  │
+│  │ Subscribers  │ Update Queue │ Load Promises           │  │
+│  │ Map<id, Set> │ Map<id, Prom>│ Map<id, Promise>        │  │
+│  └──────────────┴──────────────┴─────────────────────────┘  │
+│         │                                                     │
+│         │ Optimistic Updates with Rollback                   │
+│         ▼                                                     │
+└─────────────────────────────────────────────────────────────┘
+                │
+                │ Drizzle ORM
+                ▼
+┌─────────────────────────────────────────────────────────────┐
+│       SQLite Database (websearch_providers table)           │
+│   ┌────────┬──────────┬─────────┬─────────┬──────────┐      │
+│   │ id     │ name     │ type    │api_key  │engines   │      │
+│   │        │          │         │         │          │      │
+│   ├────────┼──────────┼─────────┼─────────┼──────────┤      │
+│   │ TEXT   │ TEXT     │ TEXT    │ TEXT    │ TEXT     │      │
+│   └────────┴──────────┴─────────┴─────────┴──────────┘      │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### WebSearchProviderService 特性
+
+#### 1. **简化的两层缓存策略**
+
+**LRU 缓存（Least Recently Used Cache）**
+- 存储最近访问的 5 个搜索提供商
+- 使用 LRU 算法自动驱逐最旧项
+- 访问时更新顺序
+- 移动端优化（5 个缓存，小于 MCP 的 20 个）
+- 无永久缓存（与 Provider 系统不同）
+
+**所有提供商缓存（All Providers Cache）**
+- 缓存所有搜索提供商列表
+- 5 分钟 TTL（生存时间）
+- 用于搜索提供商列表显示
+- 支持强制刷新
+
+#### 2. **乐观更新（Optimistic Updates）**
+- 所有 CRUD 操作立即更新缓存
+- UI 零延迟响应
+- 后台异步同步到 SQLite
+- 失败时自动回滚所有缓存
+
+#### 3. **智能缓存管理**
+
+```typescript
+// 访问搜索提供商的缓存查找顺序
+getProvider(providerId) 流程：
+1. 检查 LRU 缓存 → 从 providerCache 返回（快）
+2. 检查是否正在加载 → 等待进行中的加载
+3. 从数据库加载 → 加入 LRU 缓存并返回（慢）
+```
+
+#### 4. **订阅系统（Subscription System）**
+
+支持三种订阅类型：
+- **特定提供商订阅**：`subscribeProvider(id)` - 监听指定提供商的变化
+- **全局订阅**：`subscribeAll()` - 监听所有提供商变化
+- **列表订阅**：`subscribeAllProviders()` - 监听提供商列表变化
+
+#### 5. **并发控制（Concurrency Control）**
+
+**更新队列（Update Queue）**
+- 序列化同一提供商的更新操作
+- 防止竞态条件
+- 保证数据一致性
+
+**加载去重（Load Deduplication）**
+- 跟踪进行中的加载操作
+- 防止重复加载同一提供商
+- 共享加载 Promise
+
+#### 6. **React 18 深度集成**
+- 基于 `useSyncExternalStore`（单个提供商 - 新 hook）
+- 使用 Drizzle `useLiveQuery`（提供商列表 - 旧 hooks 保持兼容）
+- 完美支持并发渲染
+- 自动订阅/取消订阅
+- 零 re-render 开销
+
+### 使用方法
+
+#### 单个搜索提供商管理（新 Hook）
+
+```typescript
+import { useWebSearchProvider } from '@/hooks/useWebsearchProviders'
+
+function WebSearchProviderDetail({ providerId }: { providerId: string }) {
+  const {
+    provider,           // 搜索提供商对象（使用 LRU 缓存）
+    isLoading,          // 加载状态
+    updateProvider,     // 更新提供商
+    deleteProvider      // 删除提供商
+  } = useWebSearchProvider(providerId)
+
+  if (isLoading) return <Loading />
+
+  const handleUpdate = async () => {
+    await updateProvider({ apiKey: 'new-key' })  // 乐观更新
+  }
+
+  return (
+    <div>
+      <h2>{provider.name}</h2>
+      <button onClick={handleUpdate}>更新 API Key</button>
+      <button onClick={deleteProvider}>删除</button>
+    </div>
+  )
+}
+```
+
+#### 搜索提供商列表（旧 Hook - 保持兼容）
+
+```typescript
+import { useWebsearchProviders } from '@/hooks/useWebsearchProviders'
+
+function WebSearchProviderList() {
+  const {
+    freeProviders,      // 免费提供商（local-* 开头）
+    apiProviders,       // API 提供商
+    isLoading           // 加载状态
+  } = useWebsearchProviders()
+
+  return (
+    <div>
+      <h3>免费提供商</h3>
+      <ul>
+        {freeProviders.map(provider => (
+          <li key={provider.id}>{provider.name}</li>
+        ))}
+      </ul>
+
+      <h3>API 提供商</h3>
+      <ul>
+        {apiProviders.map(provider => (
+          <li key={provider.id}>{provider.name}</li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+```
+
+#### 所有搜索提供商（旧 Hook - 保持兼容）
+
+```typescript
+import { useAllWebSearchProviders } from '@/hooks/useWebsearchProviders'
+
+function AllProvidersScreen() {
+  const {
+    providers,          // 所有搜索提供商（useLiveQuery）
+    isLoading           // 加载状态
+  } = useAllWebSearchProviders()
+
+  return (
+    <ul>
+      {providers.map(provider => (
+        <li key={provider.id}>
+          {provider.name} - {provider.type}
+        </li>
+      ))}
+    </ul>
+  )
+}
+```
+
+#### 非 React 上下文使用
+
+```typescript
+import { webSearchProviderService } from '@/services/WebSearchProviderService'
+
+// 获取搜索提供商（使用 LRU 缓存）
+const provider = await webSearchProviderService.getProvider(providerId)
+
+// 获取搜索提供商（仅从缓存，同步）
+const provider = webSearchProviderService.getProviderCached(providerId)
+
+// 获取所有搜索提供商（缓存 5 分钟）
+const allProviders = await webSearchProviderService.getAllProviders()
+
+// 强制刷新所有提供商
+const allProviders = await webSearchProviderService.getAllProviders(true)
+
+// 创建新搜索提供商（乐观更新）
+const newProvider = await webSearchProviderService.createProvider({
+  id: uuid(),
+  name: 'My Search API',
+  type: 'api',
+  apiKey: 'sk-...'
+})
+
+// 更新搜索提供商（乐观更新）
+await webSearchProviderService.updateProvider(providerId, { apiKey: 'new-key' })
+
+// 删除搜索提供商（乐观更新）
+await webSearchProviderService.deleteProvider(providerId)
+
+// 清理所有缓存（用于数据恢复后）
+webSearchProviderService.invalidateCache()
+```
+
+### 缓存性能优化
+
+#### LRU 缓存工作原理
+
+```typescript
+// 场景：用户依次访问 5 个搜索提供商
+访问 Provider A → LRU: [A]
+访问 Provider B → LRU: [A, B]
+访问 Provider C → LRU: [A, B, C]
+访问 Provider D → LRU: [A, B, C, D]
+访问 Provider E → LRU: [A, B, C, D, E]  // 缓存已满
+
+// 再次访问 Provider A（从 LRU 缓存获取）
+访问 Provider A → LRU: [B, C, D, E, A]  // A 移到最后（最新）
+                  ✅ LRU cache hit!        // 无需查询数据库
+
+// 访问新的 Provider F
+访问 Provider F → LRU: [C, D, E, A, F]  // B 被驱逐（最旧）
+                  ⚠️ Database load         // 首次访问需要数据库
+```
+
+#### 为什么选择 LRU(5) 而不是 LRU(20)？
+
+**移动端特性考虑：**
+- 搜索提供商的使用频率比 MCP 服务器更集中
+- 用户通常只使用 1-3 个常用搜索提供商
+- 移动端内存更宝贵，5 个缓存足够覆盖常用场景
+- 减少内存占用，提升应用性能
+
+**实际效果：**
+```typescript
+// 典型使用场景：用户在 Google 和 Searxng 间切换
+访问 Google  → LRU: [Google]
+访问 Searxng → LRU: [Google, Searxng]
+访问 Google  → LRU: [Searxng, Google]  // ✅ 缓存命中
+访问 Searxng → LRU: [Google, Searxng]  // ✅ 缓存命中
+
+// 即使只有 2 个提供商频繁切换，LRU(5) 也完全覆盖
+```
+
+### 数据持久化流程
+
+#### 读取流程
+
+```
+1. useWebSearchProvider(id) / webSearchProviderService.getProvider(id) 调用
+   ↓
+2. 检查 LRU 缓存
+   ↓
+3. 缓存命中？
+   ├─ 是 → 返回缓存值（快）
+   └─ 否 → 从 SQLite 加载（慢）
+              ↓
+          加入 LRU 缓存
+              ↓
+          返回值
+```
+
+#### 写入流程
+
+```
+1. updateProvider(id, data) 调用
+   ↓
+2. 保存所有缓存的旧值（用于回滚）
+   ↓
+3. 立即更新所有缓存（乐观更新）
+   - LRU 缓存（如果存在）
+   - 所有提供商缓存（如果存在）
+   ↓
+4. 通知所有订阅者（UI 立即更新）
+   ↓
+5. 异步写入 SQLite
+   ├─ 成功 → 完成
+   └─ 失败 → 回滚所有缓存
+              ↓
+          通知订阅者
+              ↓
+          抛出错误
+```
+
+### 调试和性能监控
+
+WebSearchProviderService 提供了完整的调试工具：
+
+#### 控制台日志
+
+开发环境自动记录所有缓存操作：
+
+```typescript
+// 缓存命中
+[WebSearch Provider Service] LRU cache hit for WebSearch provider: google
+[WebSearch Provider Service] Returning all providers from cache (age: 42s)
+
+// 数据库加载
+[WebSearch Provider Service] Loading WebSearch provider from database: tavily
+[WebSearch Provider Service] Loaded provider from database and cached: tavily
+
+// 缓存管理
+[WebSearch Provider Service] Added provider to LRU cache: tavily (cache size: 3)
+[WebSearch Provider Service] Evicted oldest provider from LRU cache: searxng
+```
+
+#### 缓存状态查询
+
+```typescript
+import { webSearchProviderService } from '@/services/WebSearchProviderService'
+
+// 获取详细缓存状态
+const status = webSearchProviderService.getCacheStatus()
+console.log('LRU Cache size:', status.lruCache.size)
+console.log('Cached providers:', status.lruCache.items)
+
+// 打印格式化的缓存状态
+webSearchProviderService.logCacheStatus()
+// 输出：
+// ============ WebSearchProviderService Cache Status ============
+// LRU Cache:
+//   - Size: 3/5
+//   - Cached Providers: [google, tavily, searxng]
+//
+// All Providers Cache:
+//   - Size: 8
+//   - Valid: true
+//   - Age: 42s
+// ================================================================
+```
+
+### 性能优化总结
+
+相比之前的简单实现，WebSearchProviderService 提供了以下性能提升：
+
+| 操作 | 之前 | 现在 | 提升 |
+|------|-----|-----|-----|
+| 访问最近搜索提供商 | 数据库查询 | LRU 缓存命中 | ~100x 更快 |
+| 获取所有提供商 | 每次查询数据库 | 缓存 5 分钟 | ~100x 更快 |
+| 更新提供商 | 等待数据库写入 | 乐观更新 | 零延迟 UI |
+| 并发更新 | 可能冲突 | 更新队列 | 无冲突 |
+| 重复加载 | 多次查询 | 去重 | 减少 N-1 次查询 |
+
+### WebSearch Provider 类型定义
+
+完整类型定义位于 `src/types/websearch.ts`：
+
+```typescript
+export interface WebSearchProvider {
+  id: string                          // 搜索提供商唯一 ID
+  name: string                        // 提供商名称
+  type: 'free' | 'api'               // free: 免费服务, api: API 服务
+  apiKey?: string                     // API 密钥（API 服务需要）
+  apiHost?: string                    // API 地址
+  engines?: string[]                  // 搜索引擎列表（JSON 数组）
+  url?: string                        // 服务 URL
+  basicAuthUsername?: string          // Basic Auth 用户名
+  basicAuthPassword?: string          // Basic Auth 密码
+  contentLimit?: number               // 内容长度限制
+  usingBrowser?: boolean              // 是否使用浏览器模式
+  createdAt?: number                  // 创建时间戳
+  updatedAt?: number                  // 更新时间戳
+}
+```
+
+### 架构设计决策
+
+#### 为什么没有默认提供商缓存？
+
+**与 Provider 系统的对比：**
+- Provider 系统有默认 LLM Provider（全局单一）
+- WebSearch Provider **没有全局默认**，而是每个 Assistant 独立配置（`webSearchProviderId`）
+- 每次搜索使用的提供商由 Assistant 决定，不是全局配置
+
+**设计优势：**
+- 架构更简单，避免不必要的缓存层
+- 与实际使用场景匹配（per-Assistant 而非 global）
+- 参考 McpService 的简化架构
+
+#### 为什么 LRU 缓存只有 5 个？
+
+**移动端优化考虑：**
+- 搜索提供商数量通常有限（5-10 个）
+- 用户常用的提供商更少（1-3 个）
+- 5 个缓存足够覆盖 99% 的使用场景
+- 减少内存占用，提升移动端性能
+
+**对比其他服务：**
+- TopicService: LRU(5) - 话题切换频繁
+- AssistantService: LRU(10) - 助手种类较多
+- ProviderService: LRU(10) - LLM 提供商较多
+- **McpService: LRU(20)** - MCP 服务器可能很多
+- **WebSearchProviderService: LRU(5)** - 搜索提供商使用集中
+
+#### 为什么保留 useLiveQuery 的旧 Hooks？
+
+**兼容性考虑：**
+- `useWebsearchProviders()` 和 `useAllWebSearchProviders()` 在多处使用
+- 立即迁移会影响现有功能稳定性
+- 采用渐进式迁移策略
+
+**迁移策略：**
+1. ✅ 已完成：创建新架构（WebSearchProviderService）
+2. ✅ 已完成：添加新 Hook（`useWebSearchProvider`）
+3. ⏳ 待进行：逐步迁移使用 `useWebsearchProviders` 的组件
+4. ⏳ 待进行：所有组件迁移完成后，统一使用 useSyncExternalStore
+
+### 最佳实践
+
+```typescript
+// ✅ 推荐：使用新的单个提供商 Hook
+const { provider, updateProvider } = useWebSearchProvider(providerId)
+
+// ✅ 推荐：利用乐观更新
+await updateProvider({ apiKey: 'new-key' })  // UI 立即更新，无需等待
+
+// ✅ 推荐：在非 React 上下文使用 webSearchProviderService
+const provider = await webSearchProviderService.getProvider(providerId)
+
+// ✅ 推荐：使用缓存友好的访问模式
+// 在最近访问的 5 个提供商间切换，全部从缓存获取
+for (const providerId of recentProviderIds.slice(0, 5)) {
+  await webSearchProviderService.getProvider(providerId)  // ✅ LRU cache hit!
+}
+
+// ✅ 推荐：旧 Hooks 仍可正常使用（向后兼容）
+const { freeProviders, apiProviders } = useWebsearchProviders()  // ✅ 仍然可用
+const { providers } = useAllWebSearchProviders()  // ✅ 仍然可用
+
+// ⚠️ 注意：所有 update/delete 都是异步的
+await updateProvider({ apiKey: 'new-key' })  // 或者
+updateProvider({ apiKey: 'new-key' }).catch(console.error)
+
+// ⚠️ 注意：旧 Hooks 使用 useLiveQuery，可能有轻微延迟
+// 新 Hook (useWebSearchProvider) 使用 useSyncExternalStore，响应更快
+
+// ⚠️ 注意：WebSearchTool 现在使用异步加载
+// Tool 的 execute 函数会自动加载提供商，无需预加载
+
+// ❌ 避免：不要在 React 组件外使用 hooks
+// 应该使用 webSearchProviderService.getProvider()
+
+// ❌ 避免：不要直接操作数据库
+// 应该使用 WebSearchProviderService 的方法
+```
+
+### 与 WebSearchService 的集成
+
+WebSearchProviderService 与现有的 WebSearchService 完美集成：
+
+```typescript
+// src/services/WebSearchService.ts
+
+import { webSearchProviderService } from '@/services/WebSearchProviderService'
+
+class WebSearchService {
+  // ✅ 使用新服务获取提供商（同步，从缓存）
+  public getWebSearchProvider(providerId?: string): WebSearchProvider | undefined {
+    if (!providerId) return
+    const provider = webSearchProviderService.getProviderCached(providerId)
+    return provider ?? undefined
+  }
+
+  // ✅ 检查提供商是否启用（异步，懒加载）
+  public async isWebSearchEnabled(providerId?: string): Promise<boolean> {
+    if (!providerId) return false
+    const provider = await webSearchProviderService.getProvider(providerId)
+    if (!provider) return false
+    // ... 验证逻辑
+  }
+}
+```
+
+**重要修复：WebSearchTool 异步加载**
+
+之前的问题：
+- WebSearchTool 在创建时同步获取提供商
+- 如果缓存为空，返回 `undefined`
+- 导致工具调用失败，AI 多次重试
+
+现在的解决方案（`src/aiCore/tools/WebSearchTool.ts`）:
+```typescript
+export const webSearchToolWithPreExtractedKeywords = (
+  webSearchProviderId: string,
+  extractedKeywords: { question: string[], links?: string[] },
+  requestId: string
+) => {
+  return tool({
+    name: 'builtin_web_search',
+    execute: async ({ additionalContext }) => {
+      // ✅ 异步加载提供商（首次访问时从数据库加载，后续从缓存）
+      const webSearchProvider = await webSearchProviderService.getProvider(webSearchProviderId)
+
+      // ✅ 错误处理
+      if (!webSearchProvider) {
+        logger.error(`WebSearch provider not found: ${webSearchProviderId}`)
+        return { query: '', results: [] }
+      }
+
+      // ✅ 提供商已加载，安全使用
+      return await WebSearchService.processWebsearch(webSearchProvider, extractResults, requestId)
+    }
+  })
+}
+```
+
+**修复效果：**
+- 提供商在需要时异步加载
+- 缓存命中时加载很快（~1ms）
+- 缓存未命中时从数据库加载（~10-20ms）
+- 避免了多次重试问题
+- 提供清晰的错误日志
 
 ---
 

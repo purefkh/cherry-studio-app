@@ -3,6 +3,7 @@ import dayjs from 'dayjs'
 import WebSearchEngineProvider from '@/providers/WebSearchProvider'
 import { loggerService } from '@/services/LoggerService'
 import { preferenceService } from '@/services/PreferenceService'
+import { webSearchProviderService } from '@/services/WebSearchProviderService'
 import {
   WebSearchState,
   WebSearchProvider,
@@ -12,7 +13,6 @@ import {
 import { ExtractResults } from '@/types/extract'
 import { hasObjectKey } from '@/utils'
 
-import { websearchProviderDatabase } from '@database'
 const logger = loggerService.withContext('WebSearch Service')
 
 class WebSearchService {
@@ -48,8 +48,11 @@ class WebSearchService {
    * @returns 如果默认搜索提供商已启用则返回true，否则返回false
    */
   public async isWebSearchEnabled(providerId?: WebSearchProvider['id']): Promise<boolean> {
-    const providers = await websearchProviderDatabase.getAllWebSearchProviders()
-    const provider = providers.find(provider => provider.id === providerId)
+    if (!providerId) {
+      return false
+    }
+
+    const provider = await webSearchProviderService.getProvider(providerId)
 
     if (!provider) {
       return false
@@ -59,12 +62,12 @@ class WebSearchService {
       return true
     }
 
-    if (hasObjectKey(provider, 'api_key')) {
-      return provider.apiKey !== ''
+    if (hasObjectKey(provider, 'apiKey')) {
+      return provider.apiKey !== '' && provider.apiKey !== undefined
     }
 
-    if (hasObjectKey(provider, 'api_host')) {
-      return provider.apiHost !== ''
+    if (hasObjectKey(provider, 'apiHost')) {
+      return provider.apiHost !== '' && provider.apiHost !== undefined
     }
 
     return false
@@ -77,9 +80,9 @@ class WebSearchService {
    */
   public getWebSearchProvider(providerId?: string): WebSearchProvider | undefined {
     if (!providerId) return
-    const provider = websearchProviderDatabase.getWebSearchProviderByIdSync(providerId)
+    const provider = webSearchProviderService.getProviderCached(providerId)
 
-    return provider
+    return provider ?? undefined
   }
 
   /**

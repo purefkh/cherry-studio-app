@@ -57,6 +57,32 @@ export async function getAllWebSearchProviders(): Promise<WebSearchProvider[]> {
 }
 
 /**
+ * 根据 ID 获取指定网络搜索提供商（异步）
+ * @description 异步方式查询网络搜索提供商
+ * @param providerId - 网络搜索提供商的唯一标识符
+ * @returns 如果找到则返回网络搜索提供商对象，否则返回 null
+ * @throws 当查询操作失败时抛出错误
+ */
+export async function getWebSearchProviderById(providerId: string): Promise<WebSearchProvider | null> {
+  try {
+    const result = await db
+      .select()
+      .from(websearch_providers)
+      .where(eq(websearch_providers.id, providerId))
+      .get()
+
+    if (!result) {
+      return null
+    }
+
+    return transformDbToWebSearchProvider(result)
+  } catch (error) {
+    logger.error('Error in getWebSearchProviderById:', error)
+    throw error
+  }
+}
+
+/**
  * 根据 ID 获取指定网络搜索提供商（同步）
  * @description 同步方式查询网络搜索提供商，适用于需要立即获取结果的场景
  * @param providerId - 网络搜索提供商的唯一标识符
@@ -74,6 +100,22 @@ export function getWebSearchProviderByIdSync(providerId: string): WebSearchProvi
     return transformDbToWebSearchProvider(result)
   } catch (error) {
     logger.error('Error in getWebSearchProviderById:', error)
+    throw error
+  }
+}
+
+/**
+ * 根据 ID 删除指定网络搜索提供商
+ * @description 从数据库中删除指定的网络搜索提供商
+ * @param providerId - 网络搜索提供商的唯一标识符
+ * @throws 当删除操作失败时抛出错误
+ */
+export async function deleteWebSearchProvider(providerId: string): Promise<void> {
+  try {
+    await db.delete(websearch_providers).where(eq(websearch_providers.id, providerId))
+    logger.debug(`Deleted WebSearch provider: ${providerId}`)
+  } catch (error) {
+    logger.error('Error in deleteWebSearchProvider:', error)
     throw error
   }
 }

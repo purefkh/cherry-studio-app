@@ -2,9 +2,13 @@ import { InferToolInput, InferToolOutput, tool } from 'ai'
 import { z } from 'zod'
 
 import { REFERENCE_PROMPT } from '@/config/prompts'
+import { loggerService } from '@/services/LoggerService'
 import WebSearchService from '@/services/WebSearchService'
+import { webSearchProviderService } from '@/services/WebSearchProviderService'
 import { ExtractResults } from '@/types/extract'
 import { WebSearchProvider, WebSearchProviderResponse } from '@/types/websearch'
+
+const logger = loggerService.withContext('WebSearchTool')
 
 /**
  * 使用预提取关键词的网络搜索工具
@@ -18,8 +22,6 @@ export const webSearchToolWithPreExtractedKeywords = (
   },
   requestId: string
 ) => {
-  const webSearchProvider = WebSearchService.getWebSearchProvider(webSearchProviderId)
-
   return tool({
     name: 'builtin_web_search',
     description: `Search the web and return citable sources using pre-analyzed search intent.
@@ -41,6 +43,20 @@ Call this tool to execute the search. You can optionally provide additional cont
     }),
 
     execute: async ({ additionalContext }) => {
+      // Load WebSearch provider asynchronously
+      logger.verbose(`Loading WebSearch provider: ${webSearchProviderId}`)
+      const webSearchProvider = await webSearchProviderService.getProvider(webSearchProviderId)
+
+      if (!webSearchProvider) {
+        logger.error(`WebSearch provider not found: ${webSearchProviderId}`)
+        return {
+          query: '',
+          results: []
+        }
+      }
+
+      logger.verbose(`WebSearch provider loaded: ${webSearchProvider.name}`)
+
       let finalQueries = [...extractedKeywords.question]
 
       if (additionalContext?.trim()) {
@@ -69,7 +85,7 @@ Call this tool to execute the search. You can optionally provide additional cont
           links: extractedKeywords.links
         }
       }
-      searchResults = await WebSearchService.processWebsearch(webSearchProvider!, extractResults, requestId)
+      searchResults = await WebSearchService.processWebsearch(webSearchProvider, extractResults, requestId)
 
       return searchResults
     },
