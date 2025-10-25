@@ -105,7 +105,6 @@ export function ModelTabContent({ assistant, updateAssistant }: ModelTabContentP
           <Text>{t('assistants.settings.temperature')}</Text>
           <TextField className="min-w-[60px]">
             <TextField.Input
-              className="h-[25px] text-xs leading-[14.4px] text-center"
               value={temperatureInput}
               onChangeText={setTemperatureInput}
               onEndEditing={() => {
@@ -125,7 +124,6 @@ export function ModelTabContent({ assistant, updateAssistant }: ModelTabContentP
           <Text>{t('assistants.settings.context')}</Text>
           <TextField className="min-w-[60px]">
             <TextField.Input
-              className="h-[25px] text-xs leading-[14.4px] text-center"
               value={contextInput}
               onChangeText={setContextInput}
               onEndEditing={() => {

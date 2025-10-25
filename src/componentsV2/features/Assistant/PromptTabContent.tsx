@@ -56,7 +56,7 @@ export function PromptTabContent({ assistant, updateAssistant }: PromptTabConten
               {t('common.name')}
             </TextField.Label>
             <TextField.Input
-              className="h-12 rounded-lg  px-3 py-3 text-sm"
+              className="h-12 rounded-lg  px-3 py-0 text-sm"
               placeholder={t('assistants.name')}
               value={formData.name}
               onChangeText={name => setFormData(prev => ({ ...prev, name }))}

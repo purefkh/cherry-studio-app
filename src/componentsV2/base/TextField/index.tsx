@@ -20,7 +20,7 @@ TextFieldRoot.displayName = 'TextField'
 const TextFieldInput = forwardRef<TextInput, TextFieldInputProps>(({ className, classNames, ...props }, ref) => {
   const mergedClassNames = {
     ...(classNames ? { ...classNames } : {}),
-    input: cn('text-[14px]', classNames?.input)
+    input: cn('text-[14px] py-0', classNames?.input)
   }
 
   return <HeroUITextField.Input ref={ref} className={cn('h-8', className)} classNames={mergedClassNames} {...props} />
