@@ -27,6 +27,7 @@ export const NewTopicButton: React.FC<NewTopicButtonProps> = ({ assistant }) => 
   const navigation = useNavigation<DrawerNavigationProps>()
   const { switchTopic } = useCurrentTopic()
   const { assistants, isLoading } = useExternalAssistants()
+
   const selectionSheetRef = useRef<BottomSheetModal | null>(null)
   const { isDark } = useTheme()
 
@@ -79,14 +80,14 @@ export const NewTopicButton: React.FC<NewTopicButtonProps> = ({ assistant }) => 
       label: (
         <YStack className="gap-1 flex-1 justify-center">
           <Text className="text-sm font-bold" numberOfLines={1} ellipsizeMode="tail">
-            {assistant.name}
+            {assistantItem.name}
           </Text>
-          {!isEmpty(assistant.prompt) && (
+          {!isEmpty(assistantItem.prompt) && (
             <Text
               ellipsizeMode="tail"
               numberOfLines={1}
               className="text-xs  text-text-secondary dark:text-text-secondary-dark">
-              {assistant.prompt}
+              {assistantItem.prompt}
             </Text>
           )}
         </YStack>
@@ -102,7 +103,7 @@ export const NewTopicButton: React.FC<NewTopicButtonProps> = ({ assistant }) => 
       ),
       onSelect: () => handleSelectAssistant(assistantItem)
     }))
-  }, [isLoading, assistants, assistant.name, assistant.prompt, isDark, handleSelectAssistant])
+  }, [isLoading, assistants, isDark, handleSelectAssistant])
 
   return (
     <>
