@@ -9,8 +9,7 @@ import XStack from '@/componentsV2/layout/XStack'
 import Text from '@/componentsV2/base/Text'
 import { Accordion, Divider, Switch, useTheme } from 'heroui-native'
 import { useTranslation } from 'react-i18next'
-import { MCPTool } from '@/types/tool'
-import { fetchMcpTools } from '@/services/McpService'
+import { useMcpTools } from '@/hooks/useMcp'
 
 interface McpServerItemSheetProps {
   selectedMcp: MCPServer | null
@@ -22,17 +21,12 @@ const McpServerItemSheet = forwardRef<BottomSheetModal, McpServerItemSheetProps>
     const { isDark } = useTheme()
     const { t } = useTranslation()
     const [isVisible, setIsVisible] = useState(false)
-    const [tools, setTools] = useState<MCPTool[]>([])
+    const { tools } = useMcpTools(selectedMcp?.id || '')
     // Keep a local copy so switch updates reflect immediately
     const [localDisabledTools, setLocalDisabledTools] = useState<string[]>([])
 
     useEffect(() => {
       if (!selectedMcp) return
-      const fetchTools = async () => {
-        const tools = await fetchMcpTools(selectedMcp)
-        setTools(tools)
-      }
-      fetchTools()
       // sync local disabled tools with current selected MCP
       setLocalDisabledTools(selectedMcp.disabledTools ?? [])
     }, [selectedMcp])

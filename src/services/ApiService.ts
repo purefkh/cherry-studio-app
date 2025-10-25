@@ -20,10 +20,9 @@ import AiProviderNew from '../aiCore/index_new'
 import { getDefaultModel , assistantService } from './AssistantService'
 import { getAssistantProvider } from './ProviderService'
 import { createStreamProcessor, StreamProcessorCallbacks } from './StreamProcessingService'
-import { getActiveMcps } from './McpService'
+import { mcpService } from './McpService'
 import { topicService } from './TopicService'
 import { MCPServer } from '@/types/mcp'
-import { BUILTIN_TOOLS } from '@/config/mcp'
 import { messageDatabase } from '@database'
 
 const logger = loggerService.withContext('fetchChatCompletion')
@@ -236,24 +235,43 @@ export async function fetchTopicNaming(topicId: string, regenerate: boolean = fa
   }
 }
 
+/**
+ * Fetch MCP tools for an assistant
+ *
+ * Refactored to use McpService for optimized caching and tool fetching.
+ *
+ * @param assistant - The assistant with MCP server configuration
+ * @returns Array of enabled MCP tools
+ */
 export async function fetchAssistantMcpTools(assistant: Assistant) {
   let mcpTools: MCPTool[] = []
-  const activedMcpServers = await getActiveMcps()
+
+  // Get all active MCP servers using McpService (with caching)
+  const activedMcpServers = await mcpService.getActiveMcpServers()
   const assistantMcpServers = assistant.mcpServers || []
 
-  const enabledMCPs = activedMcpServers.filter(server => assistantMcpServers.some(s => s.id === server.id))
+  // Filter to only MCP servers enabled for this assistant
+  const enabledMCPs = activedMcpServers.filter(server =>
+    assistantMcpServers.some(s => s.id === server.id)
+  )
 
   if (enabledMCPs && enabledMCPs.length > 0) {
     try {
+      // Fetch tools for each enabled MCP server using McpService
+      // This automatically handles disabledTools filtering
       const toolPromises = enabledMCPs.map(async (mcpServer: MCPServer) => {
         try {
-          const tools = BUILTIN_TOOLS[mcpServer.id]
-          return tools.filter((tool: MCPTool) => !mcpServer.disabledTools?.includes(tool.name))
+          // Use McpService.getMcpTools() which handles:
+          // - Builtin tools fetching
+          // - Future MCP protocol integration
+          // - Automatic filtering of disabledTools
+          return await mcpService.getMcpTools(mcpServer.id)
         } catch (error) {
           logger.error(`Error fetching tools from MCP server ${mcpServer.name}:`, error as Error)
           return []
         }
       })
+
       const results = await Promise.allSettled(toolPromises)
       mcpTools = results
         .filter((result): result is PromiseFulfilledResult<MCPTool[]> => result.status === 'fulfilled')
@@ -263,5 +281,6 @@ export async function fetchAssistantMcpTools(assistant: Assistant) {
       logger.error('Error fetching MCP tools:', toolError as Error)
     }
   }
+
   return mcpTools
 }

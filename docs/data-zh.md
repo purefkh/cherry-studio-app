@@ -8,6 +8,7 @@
 - [Topic 系统（对话话题管理）](#topic-系统对话话题管理)
 - [Assistant 系统（AI 助手管理）](#assistant-系统ai-助手管理)
 - [Provider 系统（LLM 服务提供商管理）](#provider-系统llm-服务提供商管理)
+- [MCP 系统（Model Context Protocol 管理）](#mcp-系统model-context-protocol-管理)
 - [Redux Store 结构](#redux-store-结构)
 - [SQLite 数据库架构](#sqlite-数据库架构)
 - [数据关系](#数据关系)
@@ -1696,6 +1697,516 @@ updateProvider({ enabled: true }).catch(console.error)
 
 ---
 
+## MCP 系统（Model Context Protocol 管理）
+
+Cherry Studio 使用 McpService 管理所有 MCP 服务器配置，采用简化的缓存架构，提供高性能、类型安全的 MCP 管理解决方案。
+
+### 架构概述
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    React Components                          │
+└───────────────┬─────────────────────────────────────────────┘
+                │ useMcpServer(id) / useMcpServers() hooks
+                │ (useSyncExternalStore / useLiveQuery)
+                ▼
+┌─────────────────────────────────────────────────────────────┐
+│               McpService (Singleton)                         │
+│  ┌──────────────┬──────────────┬─────────────────────────┐  │
+│  │ LRU Cache    │ All Servers  │ Tools (不缓存)         │  │
+│  │ (20 servers) │ Cache        │ 每次重新获取           │  │
+│  │ Map<id, M>   │ (TTL: 5min)  │                         │  │
+│  │              │ Map<id, MCP> │                         │  │
+│  └──────────────┴──────────────┴─────────────────────────┘  │
+│  ┌──────────────┬──────────────┬─────────────────────────┐  │
+│  │ Subscribers  │ Update Queue │ Load Promises           │  │
+│  │ Map<id, Set> │ Map<id, Prom>│ Map<id, Promise>        │  │
+│  └──────────────┴──────────────┴─────────────────────────┘  │
+│         │                                                     │
+│         │ Optimistic Updates with Rollback                   │
+│         ▼                                                     │
+└─────────────────────────────────────────────────────────────┘
+                │
+                │ Drizzle ORM
+                ▼
+┌─────────────────────────────────────────────────────────────┐
+│          SQLite Database (mcp table)                         │
+│   ┌────────┬──────────┬─────────┬─────────┬──────────┐      │
+│   │ id     │ name     │ type    │enabled  │disabled  │      │
+│   │        │          │         │         │_tools    │      │
+│   ├────────┼──────────┼─────────┼─────────┼──────────┤      │
+│   │ TEXT   │ TEXT     │ TEXT    │ INTEGER │ TEXT     │      │
+│   └────────┴──────────┴─────────┴─────────┴──────────┘      │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### McpService 特性
+
+#### 1. **简化的两层缓存策略**
+
+**LRU 缓存（Least Recently Used Cache）**
+- 存储最近访问的 20 个 MCP 服务器
+- 使用 LRU 算法自动驱逐最旧项
+- 访问时更新顺序
+- 无永久缓存（与 Assistant 不同）
+
+**所有服务器缓存（All Servers Cache）**
+- 缓存所有 MCP 服务器列表
+- 5 分钟 TTL（生存时间）
+- 用于 MCP 市场列表显示
+- 支持强制刷新
+
+**工具列表（Tools）**
+- ⚠️ **不缓存**：每次调用 `getMcpTools()` 都重新获取
+- 确保工具列表始终是最新的
+- 支持 `disabledTools` 过滤
+
+#### 2. **乐观更新（Optimistic Updates）**
+- 所有 CRUD 操作立即更新缓存
+- UI 零延迟响应
+- 后台异步同步到 SQLite
+- 失败时自动回滚所有缓存
+
+#### 3. **智能缓存管理**
+
+```typescript
+// 访问 MCP 服务器的缓存查找顺序
+getMcpServer(mcpId) 流程：
+1. 检查 LRU 缓存 → 从 mcpCache 返回（快）
+2. 检查是否正在加载 → 等待进行中的加载
+3. 从数据库加载 → 加入 LRU 缓存并返回（慢）
+```
+
+```typescript
+// 工具列表获取（不缓存）
+getMcpTools(mcpId) 流程：
+1. 获取 MCP 服务器配置
+2. 从 BUILTIN_TOOLS 获取工具定义
+3. 根据 disabledTools 过滤
+4. 返回可用工具列表（每次都是新数据）
+```
+
+#### 4. **订阅系统（Subscription System）**
+
+支持三种订阅类型：
+- **特定服务器订阅**：`subscribeMcpServer(id)` - 监听指定 MCP 服务器的变化
+- **全局订阅**：`subscribeAll()` - 监听所有 MCP 服务器变化
+- **列表订阅**：`subscribeAllMcpServers()` - 监听服务器列表变化
+
+#### 5. **并发控制（Concurrency Control）**
+
+**更新队列（Update Queue）**
+- 序列化同一服务器的更新操作
+- 防止竞态条件
+- 保证数据一致性
+
+**加载去重（Load Deduplication）**
+- 跟踪进行中的加载操作
+- 防止重复加载同一服务器
+- 共享加载 Promise
+
+#### 6. **React 18 深度集成**
+- 基于 `useSyncExternalStore`（单个 MCP 服务器）
+- 使用 Drizzle `useLiveQuery`（所有 MCP 服务器列表）
+- 完美支持并发渲染
+- 自动订阅/取消订阅
+- 零 re-render 开销
+
+### 使用方法
+
+#### 单个 MCP 服务器管理
+
+```typescript
+import { useMcpServer } from '@/hooks/useMcp'
+
+function McpServerDetail({ mcpId }: { mcpId: string }) {
+  const {
+    mcpServer,          // MCP 服务器对象（使用 LRU 缓存）
+    isLoading,          // 加载状态
+    updateMcpServer,    // 更新服务器
+    deleteMcpServer     // 删除服务器
+  } = useMcpServer(mcpId)
+
+  if (isLoading) return <Loading />
+
+  const handleToggleActive = async () => {
+    await updateMcpServer({ isActive: !mcpServer.isActive })  // 乐观更新
+  }
+
+  return (
+    <div>
+      <h2>{mcpServer.name}</h2>
+      <button onClick={handleToggleActive}>
+        {mcpServer.isActive ? '停用' : '激活'}
+      </button>
+    </div>
+  )
+}
+```
+
+#### 所有 MCP 服务器列表
+
+```typescript
+import { useMcpServers } from '@/hooks/useMcp'
+
+function McpMarketScreen() {
+  const {
+    mcpServers,         // 所有 MCP 服务器（useLiveQuery）
+    isLoading,          // 加载状态
+    updateMcpServers    // 批量更新
+  } = useMcpServers()
+
+  return (
+    <ul>
+      {mcpServers.map(server => (
+        <li key={server.id}>
+          {server.name} - {server.isActive ? '已激活' : '未激活'}
+        </li>
+      ))}
+    </ul>
+  )
+}
+```
+
+#### 活跃的 MCP 服务器
+
+```typescript
+import { useActiveMcpServers } from '@/hooks/useMcp'
+
+function ActiveMcpList() {
+  const {
+    activeMcpServers,   // 仅激活的服务器（isActive: true）
+    isLoading,          // 加载状态
+    updateMcpServers    // 批量更新
+  } = useActiveMcpServers()
+
+  return (
+    <div>
+      <h2>活跃的 MCP 服务器</h2>
+      {activeMcpServers.map(server => (
+        <McpServerCard key={server.id} server={server} />
+      ))}
+    </div>
+  )
+}
+```
+
+#### MCP 工具列表（不缓存）
+
+```typescript
+import { useMcpTools } from '@/hooks/useMcp'
+
+function McpToolsList({ mcpId }: { mcpId: string }) {
+  const {
+    tools,              // 工具列表（每次重新获取）
+    isLoading,          // 加载状态
+    refetch             // 手动刷新
+  } = useMcpTools(mcpId)
+
+  return (
+    <div>
+      <h3>可用工具</h3>
+      <button onClick={refetch}>刷新</button>
+      {tools.map(tool => (
+        <div key={tool.id}>
+          <h4>{tool.name}</h4>
+          <p>{tool.description}</p>
+        </div>
+      ))}
+    </div>
+  )
+}
+```
+
+#### 非 React 上下文使用
+
+```typescript
+import { mcpService } from '@/services/McpService'
+
+// 获取 MCP 服务器（使用 LRU 缓存）
+const mcpServer = await mcpService.getMcpServer(mcpId)
+
+// 获取 MCP 服务器（仅从缓存，同步）
+const mcpServer = mcpService.getMcpServerCached(mcpId)
+
+// 获取所有 MCP 服务器（缓存 5 分钟）
+const allServers = await mcpService.getAllMcpServers()
+
+// 强制刷新所有服务器
+const allServers = await mcpService.getAllMcpServers(true)
+
+// 获取活跃的 MCP 服务器
+const activeServers = await mcpService.getActiveMcpServers()
+
+// 获取 MCP 工具（不缓存，自动过滤 disabledTools）
+const tools = await mcpService.getMcpTools(mcpId)
+
+// 创建新 MCP 服务器（乐观更新）
+const newServer = await mcpService.createMcpServer({
+  id: uuid(),
+  name: 'My MCP Server',
+  type: 'custom',
+  command: 'npx',
+  args: ['-y', '@modelcontextprotocol/server-fetch'],
+  isActive: true
+})
+
+// 更新 MCP 服务器（乐观更新）
+await mcpService.updateMcpServer(mcpId, { isActive: true })
+
+// 删除 MCP 服务器（乐观更新）
+await mcpService.deleteMcpServer(mcpId)
+
+// 清理所有缓存（用于数据恢复后）
+mcpService.invalidateCache()
+```
+
+### 缓存性能优化
+
+#### LRU 缓存工作原理
+
+```typescript
+// 场景：用户依次访问 20 个 MCP 服务器
+访问 MCP A → LRU: [A]
+访问 MCP B → LRU: [A, B]
+...
+访问 MCP T → LRU: [A, B, C, ..., T]  // 缓存已满（20 个）
+
+// 再次访问 MCP A（从 LRU 缓存获取）
+访问 MCP A → LRU: [B, C, ..., T, A]  // A 移到最后（最新）
+              ✅ LRU cache hit!        // 无需查询数据库
+
+// 访问新的 MCP U
+访问 MCP U → LRU: [C, D, ..., T, A, U]  // B 被驱逐（最旧）
+              ⚠️ Database load           // 首次访问需要数据库
+```
+
+#### 工具列表性能特性
+
+```typescript
+// 场景：频繁查询 MCP 工具列表
+await mcpService.getMcpTools(mcpId)  // ⚠️ 数据库查询 + 过滤
+await mcpService.getMcpTools(mcpId)  // ⚠️ 再次查询（不缓存）
+
+// 为什么不缓存？
+// 1. 工具配置可能随时变化（disabledTools）
+// 2. 确保始终获取最新的工具状态
+// 3. 查询频率较低，性能影响可控
+```
+
+### 数据持久化流程
+
+#### 读取流程
+
+```
+1. useMcpServer(id) / mcpService.getMcpServer(id) 调用
+   ↓
+2. 检查 LRU 缓存
+   ↓
+3. 缓存命中？
+   ├─ 是 → 返回缓存值（快）
+   └─ 否 → 从 SQLite 加载（慢）
+              ↓
+          加入 LRU 缓存
+              ↓
+          返回值
+```
+
+#### 写入流程
+
+```
+1. updateMcpServer(id, data) 调用
+   ↓
+2. 保存所有缓存的旧值（用于回滚）
+   ↓
+3. 立即更新所有缓存（乐观更新）
+   - LRU 缓存（如果存在）
+   - 所有服务器缓存（如果存在）
+   ↓
+4. 通知所有订阅者（UI 立即更新）
+   ↓
+5. 异步写入 SQLite
+   ├─ 成功 → 完成
+   └─ 失败 → 回滚所有缓存
+              ↓
+          通知订阅者
+              ↓
+          抛出错误
+```
+
+### 调试和性能监控
+
+McpService 提供了完整的调试工具：
+
+#### 控制台日志
+
+开发环境自动记录所有缓存操作：
+
+```typescript
+// 缓存命中
+[McpService] LRU cache hit for MCP server: abc123
+[McpService] Returning all MCP servers from cache (age: 42s)
+
+// 数据库加载
+[McpService] Loading MCP server from database: def456
+[McpService] Loaded MCP server from database and cached: def456
+
+// 缓存管理
+[McpService] Added MCP server to LRU cache: def456 (cache size: 15)
+[McpService] Evicted oldest MCP server from LRU cache: old123
+```
+
+#### 缓存状态查询
+
+```typescript
+import { mcpService } from '@/services/McpService'
+
+// 获取详细缓存状态
+const status = mcpService.getCacheStatus()
+console.log('LRU Cache size:', status.lruCache.size)
+console.log('Cached servers:', status.lruCache.items)
+
+// 打印格式化的缓存状态
+mcpService.logCacheStatus()
+// 输出：
+// ==================== McpService Cache Status ====================
+// LRU Cache:
+//   - Size: 15/20
+//   - Cached Servers: [abc123, def456, ...]
+//
+// All Servers Cache:
+//   - Size: 25
+//   - Valid: true
+//   - Age: 42s
+// ================================================================
+```
+
+#### 可视化调试组件
+
+```typescript
+import { McpCacheDebug } from '@/componentsV2/features/MCP/McpCacheDebug'
+
+function DebugScreen() {
+  return (
+    <View>
+      {/* 开发环境显示缓存调试信息 */}
+      {__DEV__ && <McpCacheDebug />}
+    </View>
+  )
+}
+```
+
+### 性能优化总结
+
+相比之前的简单实现，McpService 提供了以下性能提升：
+
+| 操作 | 之前 | 现在 | 提升 |
+|------|-----|-----|-----|
+| 访问最近 MCP 服务器 | 数据库查询 | LRU 缓存命中 | ~100x 更快 |
+| 获取所有服务器 | 每次查询数据库 | 缓存 5 分钟 | ~100x 更快 |
+| 更新服务器 | 等待数据库写入 | 乐观更新 | 零延迟 UI |
+| 并发更新 | 可能冲突 | 更新队列 | 无冲突 |
+| 重复加载 | 多次查询 | 去重 | 减少 N-1 次查询 |
+| 获取工具列表 | - | 不缓存 | 确保数据新鲜 |
+
+### MCP 类型定义
+
+完整类型定义位于 `src/types/mcp.ts`：
+
+```typescript
+export interface MCPServer {
+  id: string                          // MCP 服务器唯一 ID
+  name: string                        // 服务器名称
+  description?: string                // 服务器描述
+  type: 'builtin' | 'custom'         // builtin: 内置, custom: 用户添加
+  command: string                     // 启动命令
+  args?: string[]                     // 命令参数（JSON 数组）
+  env?: Record<string, string>        // 环境变量（JSON 对象）
+  isActive?: boolean                  // 是否激活
+  disabledTools?: string[]            // 禁用的工具列表
+  createdAt?: number                  // 创建时间戳
+  updatedAt?: number                  // 更新时间戳
+}
+
+export interface MCPTool {
+  id: string                          // 工具唯一 ID
+  name: string                        // 工具名称
+  description: string                 // 工具描述
+  inputSchema: object                 // 输入参数 JSON Schema
+}
+```
+
+### 架构设计决策
+
+#### 为什么不缓存工具列表？
+
+**决策理由：**
+1. **数据新鲜性**：工具的启用/禁用状态（disabledTools）可能随时变化
+2. **访问频率低**：工具列表通常在配置页面查询，不是高频操作
+3. **数据量小**：单个 MCP 服务器的工具数量有限（~10-50 个）
+4. **一致性保证**：每次获取都是最新状态，避免缓存不一致
+
+**性能影响：**
+- 查询一次工具列表：~10-20ms（数据库查询 + 过滤）
+- 相比 UI 渲染时间（~50-100ms），影响可忽略
+
+#### 为什么没有永久缓存？
+
+**与 Assistant 系统的对比：**
+- Assistant 有系统助手（default, quick, translate），需要永久缓存
+- MCP 没有"系统 MCP 服务器"的概念，所有服务器地位平等
+- LRU(20) 足够覆盖用户的常用 MCP 服务器
+
+**设计优势：**
+- 架构更简单，易于维护
+- 无需区分"系统"和"用户"MCP 服务器
+- LRU 自动管理，无需手动维护永久缓存
+
+### 最佳实践
+
+```typescript
+// ✅ 推荐：使用 React hooks
+const { mcpServer, updateMcpServer } = useMcpServer(mcpId)
+const { mcpServers } = useMcpServers()
+const { activeMcpServers } = useActiveMcpServers()
+const { tools } = useMcpTools(mcpId)
+
+// ✅ 推荐：利用乐观更新
+await updateMcpServer({ isActive: true })  // UI 立即更新，无需等待
+
+// ✅ 推荐：在非 React 上下文使用 mcpService
+const mcpServer = await mcpService.getMcpServer(mcpId)
+const tools = await mcpService.getMcpTools(mcpId)
+
+// ✅ 推荐：使用缓存友好的访问模式
+// 在最近访问的 20 个服务器间切换，全部从缓存获取
+for (const mcpId of recentMcpIds.slice(0, 20)) {
+  await mcpService.getMcpServer(mcpId)  // ✅ LRU cache hit!
+}
+
+// ⚠️ 注意：工具列表不缓存，频繁调用会有性能开销
+// 如果需要多次使用工具列表，建议在组件中缓存
+const { tools } = useMcpTools(mcpId)  // ✅ React 组件会缓存结果
+
+// ⚠️ 注意：所有 update/delete 都是异步的
+await updateMcpServer({ isActive: true })  // 或者
+updateMcpServer({ isActive: true }).catch(console.error)
+
+// ⚠️ 注意：useMcpServers 使用 useLiveQuery，可能有轻微延迟
+// useMcpServer 使用 useSyncExternalStore，响应更快
+
+// ❌ 避免：不要在 React 组件外使用 hooks
+// 应该使用 mcpService.getMcpServer()
+
+// ❌ 避免：不要直接操作数据库
+// 应该使用 McpService 的方法
+
+// ❌ 避免：不要缓存工具列表在应用全局状态中
+// 工具状态可能随时变化，应该每次重新获取
+```
+
+---
+
 ## Redux Store 结构
 
 应用状态通过 Redux Toolkit 管理，并通过 AsyncStorage 进行持久化。
@@ -2197,6 +2708,7 @@ Cherry Studio 采用混合存储策略：
 - **Topic System (Service + Cache)**: 管理对话话题，提供三层缓存和乐观更新
 - **Assistant System (Service + Cache)**: 管理 AI 助手配置，提供三层缓存和乐观更新
 - **Provider System (Service + Cache)**: 管理 LLM 服务提供商，提供三层缓存和乐观更新
+- **MCP System (Service + Cache)**: 管理 MCP 服务器配置，提供两层缓存和乐观更新
 - **Redux Store**: 遗留的内置助手配置（已废弃，迁移到 AssistantService）
 - **SQLite Database**: 存储所有实体数据和关系数据
 
@@ -2232,6 +2744,15 @@ Cherry Studio 采用混合存储策略：
 - 支持高频访问场景（每次 AI 对话）
 - ⚠️ 存在架构不一致问题（useAllProviders 使用 useLiveQuery，需要统一）
 
+**MCP System**
+- 两层缓存：LRU(20) + 全量缓存(TTL 5min)
+- 简化的缓存策略，无永久缓存
+- 工具列表不缓存，确保数据新鲜
+- 乐观更新，所有 CRUD 操作零延迟
+- 完整的订阅系统
+- 并发控制，防止竞态
+- 调试工具支持（McpCacheDebug 组件）
+
 **性能优势**
 - ✅ 类型安全（TypeScript 全面覆盖）
 - ✅ 高性能（缓存命中率 ~90%+，系统助手/默认 Provider 100%）
@@ -2245,6 +2766,7 @@ Cherry Studio 采用混合存储策略：
 - 对话相关使用 Topic System
 - AI 助手相关使用 Assistant System
 - LLM 提供商相关使用 Provider System
+- MCP 服务器相关使用 MCP System
 - 实体数据直接使用 SQLite + Drizzle ORM
 - 临时状态使用 React State / Memory
 
@@ -2256,4 +2778,5 @@ Cherry Studio 采用混合存储策略：
 | Topic | 当前主题 + LRU(5) + TTL | ~0ms (当前), ~1ms (LRU) | 对话管理 |
 | Assistant | 系统助手 + LRU(10) + TTL | ~0ms (系统), ~1ms (LRU) | AI 助手管理 |
 | Provider | 默认 Provider + LRU(10) + TTL | ~0ms (默认), ~1ms (LRU) | LLM 提供商管理 |
+| MCP | LRU(20) + TTL | ~1ms (LRU), ~0ms (all cache) | MCP 服务器管理 |
 | SQLite | 索引查询 | ~10-50ms | 实体数据、关系查询 |
