@@ -17,7 +17,7 @@ import { isPromptToolUse, isSupportedToolUse } from '@/utils/mcpTool'
 import { filterMainTextMessages } from '@/utils/messageUtils/filters'
 
 import AiProviderNew from '../aiCore/index_new'
-import { getDefaultModel , assistantService } from './AssistantService'
+import { getDefaultModel, assistantService } from './AssistantService'
 import { getAssistantProvider } from './ProviderService'
 import { createStreamProcessor, StreamProcessorCallbacks } from './StreamProcessingService'
 import { mcpService } from './McpService'
@@ -180,7 +180,7 @@ export async function fetchTopicNaming(topicId: string, regenerate: boolean = fa
 
   callbacks = {
     onTextComplete: async finalText => {
-      await topicService.updateTopic(topicId, { name: finalText })
+      await topicService.updateTopic(topicId, { name: finalText.trim() })
     }
   }
   const streamProcessorCallbacks = createStreamProcessor(callbacks)
@@ -227,10 +227,10 @@ export async function fetchTopicNaming(topicId: string, regenerate: boolean = fa
           topicId,
           callType: 'summary'
         })
-      ).getText() || ''
+      ).getText() || t('topics.new_topic')
     )
-  } catch (error: any) {
-    logger.error('Error during translation:', error)
+  } catch (error) {
+    logger.error('Error during topic naming:', error)
     return ''
   }
 }
@@ -251,9 +251,7 @@ export async function fetchAssistantMcpTools(assistant: Assistant) {
   const assistantMcpServers = assistant.mcpServers || []
 
   // Filter to only MCP servers enabled for this assistant
-  const enabledMCPs = activedMcpServers.filter(server =>
-    assistantMcpServers.some(s => s.id === server.id)
-  )
+  const enabledMCPs = activedMcpServers.filter(server => assistantMcpServers.some(s => s.id === server.id))
 
   if (enabledMCPs && enabledMCPs.length > 0) {
     try {
