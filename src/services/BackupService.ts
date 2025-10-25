@@ -102,10 +102,11 @@ export async function restore(
   let unzipPath: string | undefined
 
   try {
-    const dataDir = Paths.join(DEFAULT_DOCUMENTS_STORAGE, backupFile.name.replace('.zip', ''))
-    unzipPath = await unzip(backupFile.path, dataDir)
+    const extractedDirPath = Paths.join(DEFAULT_DOCUMENTS_STORAGE, backupFile.name.replace('.zip', ''))
+    await unzip(backupFile.path, extractedDirPath)
+    unzipPath = extractedDirPath
 
-    const dataFile = new File(unzipPath, 'data.json')
+    const dataFile = new File(extractedDirPath, 'data.json')
 
     const { reduxData, indexedData } = transformBackupData(dataFile.textSync())
 
