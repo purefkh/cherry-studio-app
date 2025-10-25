@@ -23,10 +23,9 @@ export const useMessageInputLogic = (topic: Topic, assistant: Assistant) => {
 
   const isReasoning = isReasoningModel(assistant.model)
 
-  // topic切换时渲染
   useEffect(() => {
     setMentions(assistant.defaultModel ? [assistant.defaultModel] : [])
-  }, [topic.id])
+  }, [assistant.defaultModel])
 
   const sendMessage = async () => {
     if (isEmpty(text.trim())) {

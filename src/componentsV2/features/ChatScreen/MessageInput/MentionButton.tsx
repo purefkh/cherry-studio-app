@@ -52,13 +52,13 @@ export const MentionButton: React.FC<MentionButtonProps> = ({ mentions, setMenti
   const handleModelChange = async (models: Model[]) => {
     setMentions(models)
 
-    let updatedAssistant = { ...assistant }
-    if (assistant.defaultModel) {
-      updatedAssistant.model = models[0]
-    } else {
-      updatedAssistant.defaultModel = models[0]
-      updatedAssistant.model = models[0]
-    }
+    let updatedAssistant: Assistant = { ...assistant, defaultModel: models[0], model: models[0] }
+    // if (assistant.defaultModel) {
+    //   updatedAssistant.model = models[0]
+    // } else {
+    //   updatedAssistant.defaultModel = models[0]
+    //   updatedAssistant.model = models[0]
+    // }
 
     await updateAssistant(updatedAssistant)
   }
