@@ -14,7 +14,6 @@ import XStack from '@/componentsV2/layout/XStack'
 import Text from '@/componentsV2/base/Text'
 import RowRightArrow from '@/componentsV2/layout/Row/RowRightArrow'
 import { isWebSearchModel } from '@/config/models'
-import { cn } from 'heroui-native'
 import { delay } from 'lodash'
 
 interface WebsearchSheetProps {
@@ -32,8 +31,7 @@ export const WebsearchSheet: FC<WebsearchSheetProps> = ({ providers, assistant, 
     const newProviderId = id === assistant.webSearchProviderId ? undefined : id
     await updateAssistant({
       ...assistant,
-      webSearchProviderId: newProviderId,
-      enableWebSearch: false
+      webSearchProviderId: newProviderId
     })
     delay(() => ref.current?.dismiss(), 50)
   }
@@ -41,9 +39,9 @@ export const WebsearchSheet: FC<WebsearchSheetProps> = ({ providers, assistant, 
   const handleBuiltinSelect = async () => {
     await updateAssistant({
       ...assistant,
-      webSearchProviderId: undefined,
-      enableWebSearch: !assistant.enableWebSearch
+      webSearchProviderId: 'builtin'
     })
+    delay(() => ref.current?.dismiss(), 50)
   }
 
   const handleNavigateToWebSearhPage = () => {
@@ -59,10 +57,8 @@ export const WebsearchSheet: FC<WebsearchSheetProps> = ({ providers, assistant, 
           {
             id: 'builtin',
             label: t('settings.websearch.builtin'),
-            icon: (
-              <Globe size={20} className={cn(assistant.enableWebSearch && 'text-green-100 dark:text-green-dark-100')} />
-            ),
-            isSelected: assistant.enableWebSearch,
+            icon: <Globe size={20} />,
+            isSelected: assistant.webSearchProviderId === 'builtin',
             onSelect: () => handleBuiltinSelect()
           }
         ]

@@ -16,7 +16,7 @@ export interface WebSearchState {
 export type WebSearchProvider = {
   id: string
   name: string
-  type: 'free' | 'api'
+  type: 'builtin' | 'free' | 'api'
   apiKey?: string
   apiHost?: string
   engines?: string[]

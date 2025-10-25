@@ -54,29 +54,13 @@ const LATEST_APP_DATA_VERSION = APP_DATA_MIGRATIONS[APP_DATA_MIGRATIONS.length -
 export async function runAppDataMigrations(): Promise<void> {
   const currentVersion = await preferenceService.get('app.initialization_version')
 
-  if (LATEST_APP_DATA_VERSION === 0) {
-    logger.info('No app data migrations defined. Skipping initialization step.')
-    await preferenceService.set('app.initialized', true)
-    return
-  }
-
   if (currentVersion >= LATEST_APP_DATA_VERSION) {
     logger.info(`App data already up to date at version ${currentVersion}`)
-
-    const isInitialized = await preferenceService.get('app.initialized')
-    if (!isInitialized) {
-      await preferenceService.set('app.initialized', true)
-    }
 
     // Initialize ProviderService cache (loads default provider)
     await providerService.initialize()
 
     return
-  }
-
-  const wasInitialized = await preferenceService.get('app.initialized')
-  if (wasInitialized) {
-    await preferenceService.set('app.initialized', false)
   }
 
   const pendingMigrations = APP_DATA_MIGRATIONS.filter(migration => migration.version > currentVersion).sort(
@@ -100,7 +84,6 @@ export async function runAppDataMigrations(): Promise<void> {
     }
   }
 
-  await preferenceService.set('app.initialized', true)
   logger.info(`App data migrations completed. Current version: ${LATEST_APP_DATA_VERSION}`)
 
   // Initialize ProviderService cache (loads default provider)

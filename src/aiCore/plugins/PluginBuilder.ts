@@ -18,15 +18,16 @@ export function buildPlugins(
 ): AiPlugin[] {
   const plugins: AiPlugin[] = []
 
-  // 1. 模型内置搜索
   if (middlewareConfig.enableWebSearch) {
-    // 内置了默认搜索参数，如果改的话可以传config进去
-    plugins.push(webSearchPlugin())
-  }
-
-  // 2. 支持工具调用时添加搜索插件
-  if (middlewareConfig.isSupportedToolUse || middlewareConfig.isPromptToolUse) {
-    plugins.push(searchOrchestrationPlugin(middlewareConfig.assistant, middlewareConfig.topicId || ''))
+    // 1. 模型内置搜索
+    if (middlewareConfig.assistant.webSearchProviderId === 'builtin') {
+      // 内置了默认搜索参数，如果改的话可以传config进去
+      plugins.push(webSearchPlugin())
+    }
+    // 2. 支持工具调用时添加搜索插件
+    else if (middlewareConfig.isSupportedToolUse || middlewareConfig.isPromptToolUse) {
+      plugins.push(searchOrchestrationPlugin(middlewareConfig.assistant, middlewareConfig.topicId || ''))
+    }
   }
 
   // 3. 推理模型时添加推理插件
