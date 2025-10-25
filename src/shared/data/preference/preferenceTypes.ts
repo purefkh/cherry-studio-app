@@ -1,17 +1,10 @@
+import { ThemeMode } from '@/types'
+
 export type PreferenceDefaultScopeType = PreferenceSchemas['default']
 export type PreferenceKeyType = keyof PreferenceDefaultScopeType
 
 export type PreferenceUpdateOptions = {
   optimistic: boolean
-}
-
-/**
- * Theme mode options for UI appearance
- */
-export enum ThemeMode {
-  light = 'light',
-  dark = 'dark',
-  system = 'system'
 }
 
 /**
@@ -38,7 +31,6 @@ export interface PreferenceSchemas {
     'websearch.content_limit': number | undefined
 
     // App State
-    'app.initialized': boolean
     'app.initialization_version': number
   }
 }

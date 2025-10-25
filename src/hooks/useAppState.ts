@@ -29,8 +29,6 @@ import { useCallback } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { setWelcomeShown as setWelcomeShownAction } from '@/store/app'
 
-import { usePreference } from './usePreference'
-
 /**
  * Hook for managing application state
  *
@@ -43,16 +41,16 @@ import { usePreference } from './usePreference'
 export function useAppState() {
   const dispatch = useAppDispatch()
   const welcomeShown = useAppSelector(state => state.app.welcomeShown)
-  const [initialized, setInitialized] = usePreference('app.initialized')
 
-  const setWelcomeShown = useCallback(async (value: boolean) => {
-    dispatch(setWelcomeShownAction(value))
-  }, [dispatch])
+  const setWelcomeShown = useCallback(
+    async (value: boolean) => {
+      dispatch(setWelcomeShownAction(value))
+    },
+    [dispatch]
+  )
 
   return {
-    initialized,
     welcomeShown,
-    setInitialized,
     setWelcomeShown
   }
 }

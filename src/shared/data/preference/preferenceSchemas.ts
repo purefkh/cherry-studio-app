@@ -12,8 +12,8 @@
  * - App state: 2
  */
 
+import { ThemeMode } from '@/types'
 import type { PreferenceSchemas } from './preferenceTypes'
-import { ThemeMode } from './preferenceTypes'
 
 /**
  * Default preference values
@@ -61,11 +61,6 @@ export const DefaultPreferences: PreferenceSchemas = {
     // undefined means no limit
     'websearch.content_limit': 2000,
 
-    // === App State ===
-    // Whether the application has completed first-time initialization
-    // Includes seeding default data and setting up user environment
-    'app.initialized': false,
-
     // Current version of the app data initialization
     // Used to run incremental initialization migrations when new data is added
     'app.initialization_version': 0
@@ -86,6 +81,5 @@ export const PreferenceDescriptions: Record<keyof PreferenceSchemas['default'], 
   'websearch.max_results': 'Maximum number of search results (1-20)',
   'websearch.override_search_service': 'Use custom search service configuration',
   'websearch.content_limit': 'Content length limit for search results (characters)',
-  'app.initialized': 'Whether the app has completed first-time initialization',
   'app.initialization_version': 'Current version of app data initialization migrations'
 }
