@@ -84,7 +84,7 @@ export function RestoreProgressModal({ isOpen, steps, overallStatus, onClose }: 
             <Text className="text-lg text-text-secondary dark:text-text-secondary-dark">{description}</Text>
           </YStack>
 
-          <XStack className="gap-3 justify-center items-center">
+          <YStack className="gap-3 justify-start items-start">
             {steps.map(step => (
               <ErrorView key={step.id} isInvalid={true}>
                 <View className="flex-row items-center gap-2">
@@ -93,7 +93,7 @@ export function RestoreProgressModal({ isOpen, steps, overallStatus, onClose }: 
                 </View>
               </ErrorView>
             ))}
-          </XStack>
+          </YStack>
 
           <XStack className="justify-center items-center">
             <Button
