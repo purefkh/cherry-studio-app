@@ -1,4 +1,13 @@
-import { AudioLines, CirclePause, Copy, RefreshCw, TextSelect, ThumbsUp, Trash2 } from '@/componentsV2/icons/LucideIcon'
+import {
+  AudioLines,
+  CirclePause,
+  Copy,
+  RefreshCw,
+  Share,
+  TextSelect,
+  ThumbsUp,
+  Trash2
+} from '@/componentsV2/icons/LucideIcon'
 import React, { FC, memo, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -32,7 +41,8 @@ const MessageContextMenu: FC<MessageItemProps> = ({ children, message, assistant
     handleDeleteTranslation,
     getMessageContent,
     handleBestAnswer,
-    isUseful
+    isUseful,
+    handleShare
   } = useMessageActions({ message, assistant })
 
   const handleSelectText = async () => {
@@ -106,6 +116,12 @@ const MessageContextMenu: FC<MessageItemProps> = ({ children, message, assistant
       color: isTranslated ? 'red' : undefined,
       backgroundColor: isTranslated ? 'rgba(239, 68, 68, 0.1)' : undefined,
       onSelect: isTranslated ? handleDeleteTranslation : handleTranslate
+    },
+    {
+      title: t('message.share_message'),
+      androidIcon: <Share size={18} />,
+      iOSIcon: 'square.and.arrow.up',
+      onSelect: handleShare
     },
     {
       title: t('message.delete_message'),

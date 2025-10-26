@@ -61,12 +61,6 @@ const MessageFooter = ({ message, assistant, isMultiModel = false }: MessageFoot
       onSelect: isTranslated ? handleDeleteTranslation : handleTranslate
     },
     {
-      id: 'share',
-      label: t('message.share_message'),
-      icon: <Share size={18} />,
-      onSelect: handleShare
-    },
-    {
       id: 'delete',
       label: t('message.delete_message'),
       icon: <Trash2 size={18} className="text-red-100 dark:text-red-100" />,
