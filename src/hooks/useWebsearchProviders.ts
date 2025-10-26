@@ -187,11 +187,15 @@ export function useWebsearchProviders() {
   }, [rawProviders])
 
   const freeProviders = useMemo(() => {
-    return processedProviders.filter(provider => provider.id.startsWith('local-'))
+    return processedProviders
+      .filter(provider => provider.id.startsWith('local-'))
+      .filter(provider => provider.id !== 'builtin')
   }, [processedProviders])
 
   const apiProviders = useMemo(() => {
-    return processedProviders.filter(provider => !provider.id.startsWith('local-') && provider.id !== 'searxng')
+    return processedProviders
+      .filter(provider => !provider.id.startsWith('local-') && provider.id !== 'searxng')
+      .filter(provider => provider.id !== 'builtin')
   }, [processedProviders])
 
   if (!updatedAt || !rawProviders || rawProviders.length === 0) {
