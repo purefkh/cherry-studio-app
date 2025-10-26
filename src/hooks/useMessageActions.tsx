@@ -3,6 +3,7 @@ import * as Clipboard from 'expo-clipboard'
 import * as Speech from 'expo-speech'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import Share from 'react-native-share'
 
 import { loggerService } from '@/services/LoggerService'
 import { deleteMessageById, fetchTranslateThunk, regenerateAssistantMessage } from '@/services/MessagesService'
@@ -226,6 +227,22 @@ export const useMessageActions = ({ message, assistant }: UseMessageActionsProps
       toast.show(t('common.error_occurred'))
     }
   }
+  const handleShare = async () => {
+    try {
+      // Get message content
+      const filteredMessages = await filterMessages([message])
+      logger.info('Filtered Messages:', filteredMessages)
+      const mainContent = await getMainTextContent(filteredMessages[0])
+      await Share.open({
+        title: 'Cherry Studio',
+        message: mainContent,
+        failOnCancel: false
+      })
+    } catch (error) {
+      logger.error('Error sharing message:', error)
+      toast.show(t('common.error_occurred'))
+    }
+  }
 
   return {
     playState,
@@ -239,6 +256,7 @@ export const useMessageActions = ({ message, assistant }: UseMessageActionsProps
     handleDeleteTranslation,
     getMessageContent,
     handleBestAnswer,
-    isUseful: message.useful
+    isUseful: message.useful,
+    handleShare
   }
 }

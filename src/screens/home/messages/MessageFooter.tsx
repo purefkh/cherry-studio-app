@@ -12,6 +12,7 @@ import {
   Copy,
   MoreHorizontal,
   RefreshCw,
+  Share,
   ThumbsUp,
   Trash2
 } from '@/componentsV2/icons/LucideIcon'
@@ -37,7 +38,8 @@ const MessageFooter = ({ message, assistant, isMultiModel = false }: MessageFoot
     handleBestAnswer,
     handleDeleteTranslation,
     handleTranslate,
-    handleDelete
+    handleDelete,
+    handleShare
   } = useMessageActions({
     message,
     assistant
@@ -57,6 +59,12 @@ const MessageFooter = ({ message, assistant, isMultiModel = false }: MessageFoot
       color: isTranslated ? 'text-red-100 dark:text-red-100' : undefined,
       backgroundColor: isTranslated ? 'bg-red-20 dark:bg-red-20' : undefined,
       onSelect: isTranslated ? handleDeleteTranslation : handleTranslate
+    },
+    {
+      id: 'share',
+      label: t('message.share_message'),
+      icon: <Share size={18} />,
+      onSelect: handleShare
     },
     {
       id: 'delete',
@@ -88,6 +96,7 @@ const MessageFooter = ({ message, assistant, isMultiModel = false }: MessageFoot
           icon={<RefreshCw size={18} className="text-text-secondary dark:text-text-secondary-dark" />}
           onPress={handleRegenerate}
         />
+
         <IconButton icon={getAudioIcon()} onPress={handlePlay} />
         {message.role === 'assistant' && isMultiModel && (
           <IconButton
@@ -101,6 +110,10 @@ const MessageFooter = ({ message, assistant, isMultiModel = false }: MessageFoot
             onPress={handleBestAnswer}
           />
         )}
+        <IconButton
+          icon={<Share size={18} className="text-text-secondary dark:text-text-secondary-dark" />}
+          onPress={handleShare}
+        />
         <IconButton
           icon={<MoreHorizontal size={18} className="text-text-secondary dark:text-text-secondary-dark" />}
           onPress={() => {
