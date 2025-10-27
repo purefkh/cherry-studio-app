@@ -357,13 +357,13 @@
       "delete_translation": "删除翻译",
       "marked_as_best_answer": "已标记为最佳回复",
       "searching": "正在搜索...",
+      "share_message": "分享消息",
       "topic_deleted": "话题已删除",
       "translate_message": "翻译消息",
       "unmarked_as_best_answer": "已取消最佳回复标记",
       "websearch": {
         "fetch_complete": "已完成 {{count}} 次搜索..."
-      },
-      "share_message": "分享消息"
+      }
     },
     "models": {
       "no_models": "暂无可用模型",
