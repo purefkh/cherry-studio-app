@@ -37,13 +37,13 @@ export default function LandropSettingsScreen() {
     }
   }, [isFocused, disconnect])
 
-  // 组件卸载时确保断开连接
-  useEffect(() => {
-    return () => {
-      logger.info('Component unmounting, disconnecting WebSocket')
-      disconnect()
-    }
-  }, [disconnect])
+  // // 组件卸载时确保断开连接
+  // useEffect(() => {
+  //   return () => {
+  //     logger.info('Component unmounting, disconnecting WebSocket')
+  //     disconnect()
+  //   }
+  // }, [disconnect])
 
   useEffect(() => {
     if (status === WebSocketStatus.DISCONNECTED) {
