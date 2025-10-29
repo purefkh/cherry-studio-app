@@ -519,6 +519,7 @@
             "description": "Cherry StudioからQRコードをスキャン",
             "grant_permission": "権限を付与する",
             "permission_denied": "カメラの権限が許可されていません。QRコードをスキャンするには、デバイスの設定でカメラの権限を有効にしてください。",
+            "processing": "[to be translated]:正在处理二维码...",
             "requesting_permission": "カメラの権限をリクエスト中...",
             "success": "接続に成功しました 🎉",
             "success_description": "今すぐ送信ボタンをクリックしてデータを復元できます！",

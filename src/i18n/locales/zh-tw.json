@@ -519,6 +519,7 @@
             "description": "從Cherry Studio掃描QR碼",
             "grant_permission": "授與權限",
             "permission_denied": "未取得相機權限。請在裝置設定中啟用相機權限以掃描QR碼。",
+            "processing": "[to be translated]:正在处理二维码...",
             "requesting_permission": "正在請求相機權限...",
             "success": "連接成功 🎉",
             "success_description": "您現在可以點擊發送按鈕來恢復資料！",

@@ -519,6 +519,7 @@
             "description": "Scan QR Code from Cherry Studio",
             "grant_permission": "Grant Permission",
             "permission_denied": "Camera permission not granted. Please enable it in your device settings to scan QR codes.",
+            "processing": "Processing QR code...",
             "requesting_permission": "Requesting camera permission...",
             "success": "Connection Successful 🎉",
             "success_description": "You can now Click Send Button to Restore Data!",

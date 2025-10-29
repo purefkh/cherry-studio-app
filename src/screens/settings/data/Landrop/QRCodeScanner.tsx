@@ -24,6 +24,7 @@ export function QRCodeScanner({ onQRCodeScanned }: QRCodeScannerProps) {
   const dialog = useDialog()
   const [permission, requestPermission] = useCameraPermissions()
   const [isRequestingPermission, setIsRequestingPermission] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
 
   useEffect(() => {
     if (permission?.status === PermissionStatus.DENIED) {
@@ -51,16 +52,24 @@ export function QRCodeScanner({ onQRCodeScanned }: QRCodeScannerProps) {
   }, [permission, requestPermission, isRequestingPermission, dialog, t, navigation])
 
   const handleBarcodeScanned = ({ data }: { data: string }) => {
+    if (isProcessing) {
+      return // 防止重复扫描
+    }
+
     try {
+      setIsProcessing(true)
       const qrData = JSON.parse(data)
 
       // Handle new format with multiple IP candidates
       if (qrData && qrData.type === 'cherry-studio-app' && qrData.candidates && qrData.selectedHost && qrData.port) {
         logger.info(`QR code parsed: ${qrData.candidates.length} candidates, selected: ${qrData.selectedHost}`)
         onQRCodeScanned(qrData as ConnectionInfo)
+      } else {
+        setIsProcessing(false)
       }
     } catch (error) {
       logger.error('Failed to parse QR code data:', error)
+      setIsProcessing(false)
     }
   }
 
@@ -99,12 +108,30 @@ export function QRCodeScanner({ onQRCodeScanned }: QRCodeScannerProps) {
           // maxHeight: '70%'
         }}
         facing="back"
-        onBarcodeScanned={handleBarcodeScanned}
+        onBarcodeScanned={isProcessing ? undefined : handleBarcodeScanned}
         barcodeScannerSettings={{
           barcodeTypes: ['qr']
         }}
       />
       <Overlay />
+      {isProcessing && (
+        <YStack
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}>
+          <Spinner />
+          <Text className="mt-4 text-white text-lg">
+            {t('settings.data.landrop.scan_qr_code.processing') || 'Processing QR code...'}
+          </Text>
+        </YStack>
+      )}
     </Container>
   )
 }
