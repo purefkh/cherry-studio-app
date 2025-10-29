@@ -195,6 +195,7 @@ const ModelSheet = forwardRef<BottomSheetModal, ModelSheetProps>(({ mentions, se
       onChange={index => setIsVisible(index >= 0)}>
       <LegendList
         data={listData}
+        extraData={{ selectedModels, isMultiSelectActive }}
         renderItem={({ item, index }: { item: ListItem; index: number }) => {
           if (item.type === 'header') {
             return (

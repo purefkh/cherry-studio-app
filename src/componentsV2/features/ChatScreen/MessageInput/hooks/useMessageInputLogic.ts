@@ -23,7 +23,7 @@ export const useMessageInputLogic = (topic: Topic, assistant: Assistant) => {
 
   useEffect(() => {
     setMentions(assistant.defaultModel ? [assistant.defaultModel] : [])
-  }, [assistant.defaultModel])
+  }, [topic.id])
 
   const sendMessage = async () => {
     if (isEmpty(text.trim())) {
