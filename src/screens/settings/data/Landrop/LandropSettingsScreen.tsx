@@ -1,3 +1,5 @@
+
+import { loggerService } from '@/services/LoggerService'
 import { useNavigation } from '@react-navigation/native'
 import { File, Paths } from 'expo-file-system'
 import React, { useEffect, useRef, useState } from 'react'
@@ -10,6 +12,8 @@ import { useWebSocket, WebSocketStatus } from '@/hooks/useWebSocket'
 import { DataSourcesNavigationProps } from '@/types/naviagate'
 
 import { QRCodeScanner } from './QRCodeScanner'
+
+const logger = loggerService.withContext('landropSettingsScreen')
 
 export default function LandropSettingsScreen() {
   const { t } = useTranslation()
@@ -46,7 +50,7 @@ export default function LandropSettingsScreen() {
     handleRestore()
   }, [filename, startRestore, status])
 
-  const handleQRCodeScanned = (ip: string) => {
+  const handleQRCodeScanned = async (ip: string) => {
     if (hasScannedRef.current) {
       return
     }
@@ -54,7 +58,8 @@ export default function LandropSettingsScreen() {
     hasScannedRef.current = true
 
     setScannedIP(ip)
-    connect(ip)
+    await connect(ip)
+    logger.info(`Connecting to Landrop sender at ${ip}`)
     dialog.open({
       type: 'info',
       title: t('settings.data.landrop.scan_qr_code.success'),
