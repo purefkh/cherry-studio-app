@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { io, Socket } from 'socket.io-client'
 
 import { loggerService } from '@/services/LoggerService'
+import type { ConnectionInfo } from '@/types/network'
 const logger = loggerService.withContext('useWebSocket')
 
 // 定义 WebSocket 连接状态的枚举
@@ -70,15 +71,80 @@ export function useWebSocket() {
     }
   }
 
-  const connect = async (ip: string) => {
+  const connect = async (connectionInfo: ConnectionInfo | string) => {
     if (socket.current) {
       return
     }
 
     try {
       setStatus(WebSocketStatus.CONNECTING)
-      logger.info('ip', ip)
-      socket.current = io(`http://${ip}`, { timeout: 5000, reconnection: true })
+
+      // Handle legacy string format for backward compatibility
+      if (typeof connectionInfo === 'string') {
+        logger.info('Connecting to legacy IP:', connectionInfo)
+        socket.current = io(`http://${connectionInfo}`, { timeout: 5000, reconnection: true })
+      }
+      // Handle new ConnectionInfo format with multiple candidates
+      else {
+        logger.info('Attempting connection with candidates:', connectionInfo.candidates.length)
+
+        // Sort candidates by priority (lower number = higher priority)
+        const sortedCandidates = [...connectionInfo.candidates].sort((a, b) => a.priority - b.priority)
+
+        // Try each candidate until one succeeds
+        for (const candidate of sortedCandidates) {
+          try {
+            const connectionUrl = `http://${candidate.host}:${connectionInfo.port}`
+            logger.info(`Trying candidate ${candidate.interface} (${candidate.host})...`)
+
+            await new Promise<void>((resolve, reject) => {
+              const testSocket = io(connectionUrl, {
+                timeout: 3000,
+                reconnection: false,
+                transports: ['polling']  // Use polling for initial test
+              })
+
+              const timeout = setTimeout(() => {
+                testSocket.disconnect()
+                reject(new Error('Connection timeout'))
+              }, 3000)
+
+              testSocket.on('connect', () => {
+                clearTimeout(timeout)
+                testSocket.disconnect()
+                logger.info(`Successfully connected to ${candidate.host} via ${candidate.interface}`)
+                resolve()
+              })
+
+              testSocket.on('connect_error', (error) => {
+                clearTimeout(timeout)
+                testSocket.disconnect()
+                reject(error)
+              })
+
+              testSocket.connect()
+            })
+
+            // If we reach here, this candidate worked, use it for the actual connection
+            socket.current = io(`http://${candidate.host}:${connectionInfo.port}`, {
+              timeout: 5000,
+              reconnection: true,
+              transports: ['websocket', 'polling']  // Try both transports
+            })
+
+            break // Exit the loop when we find a working candidate
+
+          } catch (error) {
+            logger.warn(`Failed to connect to ${candidate.host} via ${candidate.interface}:`, error)
+            continue // Try next candidate
+          }
+        }
+
+        // If no candidates worked
+        if (!socket.current) {
+          throw new Error('Failed to connect to any IP candidate')
+        }
+      }
 
       // 连接客户端
       socket.current.on('connect', () => {

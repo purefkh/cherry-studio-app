@@ -11,10 +11,11 @@ import { Overlay } from './Overlay'
 import { Spinner } from 'heroui-native'
 import { useDialog } from '@/hooks/useDialog'
 import { useNavigation } from '@react-navigation/native'
+import { ConnectionInfo } from '@/types/network'
 const logger = loggerService.withContext('QRCodeScanner')
 
 interface QRCodeScannerProps {
-  onQRCodeScanned: (ip: string) => void
+  onQRCodeScanned: (connectionInfo: ConnectionInfo) => void
 }
 
 export function QRCodeScanner({ onQRCodeScanned }: QRCodeScannerProps) {
@@ -53,9 +54,21 @@ export function QRCodeScanner({ onQRCodeScanned }: QRCodeScannerProps) {
     try {
       const qrData = JSON.parse(data)
 
-      if (qrData && qrData.host && qrData.port) {
-        const ip = `${qrData.host}:${qrData.port}`
-        onQRCodeScanned(ip)
+      // Handle new format with multiple IP candidates
+      if (qrData && qrData.type === 'cherry-studio-app' && qrData.candidates && qrData.selectedHost && qrData.port) {
+        logger.info(`QR code parsed: ${qrData.candidates.length} candidates, selected: ${qrData.selectedHost}`)
+        onQRCodeScanned(qrData as ConnectionInfo)
+      }
+      // Handle legacy format for backward compatibility
+      else if (qrData && qrData.host && qrData.port) {
+        const legacyConnectionInfo: ConnectionInfo = {
+          type: 'legacy',
+          candidates: [{ host: qrData.host, interface: 'unknown', priority: 0 }],
+          selectedHost: qrData.host,
+          port: qrData.port,
+          timestamp: Date.now()
+        }
+        onQRCodeScanned(legacyConnectionInfo)
       }
     } catch (error) {
       logger.error('Failed to parse QR code data:', error)

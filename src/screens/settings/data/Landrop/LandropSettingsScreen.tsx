@@ -1,6 +1,7 @@
 
 import { loggerService } from '@/services/LoggerService'
 import { useNavigation } from '@react-navigation/native'
+import { ConnectionInfo } from '@/types/network'
 import { File, Paths } from 'expo-file-system'
 import React, { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -50,16 +51,23 @@ export default function LandropSettingsScreen() {
     handleRestore()
   }, [filename, startRestore, status])
 
-  const handleQRCodeScanned = async (ip: string) => {
+  const handleQRCodeScanned = async (connectionInfo: ConnectionInfo) => {
     if (hasScannedRef.current) {
       return
     }
 
     hasScannedRef.current = true
 
-    setScannedIP(ip)
-    await connect(ip)
-    logger.info(`Connecting to Landrop sender at ${ip}`)
+    setScannedIP(`Connection attempt: ${connectionInfo.candidates.length} candidates`)
+    await connect(connectionInfo)
+
+    // Log connection attempt details
+    if (typeof connectionInfo === 'string') {
+      logger.info(`Connecting to Landrop sender at ${connectionInfo} (legacy format)`)
+    } else {
+      logger.info(`Connecting to Landrop sender with ${connectionInfo.candidates.length} IP candidates, selected: ${connectionInfo.selectedHost}`)
+    }
+
     dialog.open({
       type: 'info',
       title: t('settings.data.landrop.scan_qr_code.success'),
