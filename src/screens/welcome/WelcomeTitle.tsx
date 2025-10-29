@@ -93,7 +93,7 @@ const useTypewriter = ({ text, speed = 60, onComplete }: UseTypewriterOptions): 
       const tick = () => {
         indexRef.current += 1
         setDisplayedText(currentMessage.slice(0, indexRef.current))
-        haptic(ImpactFeedbackStyle.Light)
+        haptic(ImpactFeedbackStyle.Soft)
 
         if (indexRef.current >= currentMessage.length) {
           timeoutRef.current = setTimeout(() => {
