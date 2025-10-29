@@ -1,8 +1,8 @@
 import { MotiView } from 'moti'
 import React, { FC, useState } from 'react'
-import { ScrollView, View } from 'react-native'
-import { Tabs } from 'tamagui'
-import { Text, XStack } from '@/componentsV2'
+import { View } from 'react-native'
+import { XStack } from '@/componentsV2'
+import { cn, Tabs } from 'heroui-native'
 
 import { Assistant } from '@/types/assistant'
 import { AssistantMessageStatus, GroupedMessage, MessageBlock } from '@/types/message'
@@ -25,48 +25,36 @@ const MultiModelTab: FC<MultiModelTabProps> = ({ assistant, messages, messageBlo
 
   return (
     <View className="flex-1">
-      <Tabs
-        value={currentTab}
-        onValueChange={setCurrentTab}
-        orientation="horizontal"
-        flexDirection="column"
-        flex={1}
-        gap={5}>
-        <Tabs.List>
-          <XStack className="flex-1 gap-2 justify-center items-center">
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <XStack className="gap-[5px]">
-                {messages.map((_message, index) => {
-                  const tabValue = index.toString()
-                  return (
-                    <Tabs.Tab
-                      key={tabValue}
-                      value={tabValue}
-                      gap={4}
-                      paddingHorizontal={10}
-                      paddingVertical={3}
-                      borderRadius={48}
-                      justifyContent="center"
-                      alignItems="center"
-                      style={{ backgroundColor: 'transparent' }}
-                      height={26}>
+      <Tabs value={currentTab} onValueChange={setCurrentTab}>
+        <Tabs.ScrollView>
+          <Tabs.List aria-label="Model tabs" className="bg-transparent">
+            <Tabs.Indicator />
+            <XStack className="gap-[5px]">
+              {messages.map((_message, index) => {
+                const tabValue = index.toString()
+                return (
+                  <Tabs.Trigger key={tabValue} value={tabValue}>
+                    <XStack className="gap-1 items-center justify-center">
                       {_message.useful && <MultiModalIcon size={14} />}
-                      <Text
-                        className={`text-xs ${
+                      <Tabs.Label
+                        className={cn(
+                          'text-xs',
                           currentTab === tabValue ? 'text-green-100 dark:text-green-dark-100' : undefined
-                        }`}>
+                        )}>
                         @{_message.model?.name}({_message.model?.provider})
-                      </Text>
-                    </Tabs.Tab>
-                  )
-                })}
-              </XStack>
-            </ScrollView>
-          </XStack>
-        </Tabs.List>
+                      </Tabs.Label>
+                    </XStack>
+                  </Tabs.Trigger>
+                )
+              })}
+            </XStack>
+          </Tabs.List>
+        </Tabs.ScrollView>
+      </Tabs>
 
+      <View className="flex-1">
         {messages.map((message, index) => (
-          <Tabs.Content key={index} value={index.toString()}>
+          <View key={index} className={currentTab === index.toString() ? 'flex-1' : 'hidden'}>
             <MotiView
               from={{ opacity: 0, translateY: 10 }}
               animate={{
@@ -83,9 +71,9 @@ const MultiModelTab: FC<MultiModelTabProps> = ({ assistant, messages, messageBlo
                 <MessageFooter assistant={assistant} message={message} isMultiModel={true} />
               )}
             </MotiView>
-          </Tabs.Content>
+          </View>
         ))}
-      </Tabs>
+      </View>
     </View>
   )
 }
