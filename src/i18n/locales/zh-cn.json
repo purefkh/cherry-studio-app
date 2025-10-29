@@ -552,6 +552,7 @@
             "success_description": "恢复成功，祝您使用愉快！"
           },
           "steps": {
+            "receive_file": "接收文件",
             "restore_messages": "恢复消息",
             "restore_settings": "恢复配置"
           },

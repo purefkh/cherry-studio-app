@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useDispatch } from 'react-redux'
 
 import { useDialog } from '@/hooks/useDialog'
-import { ProgressUpdate, restore, RestoreStepId } from '@/services/BackupService'
+import { ProgressUpdate, restore, RestoreStepId, StepStatus } from '@/services/BackupService'
 import { loggerService } from '@/services/LoggerService'
 import { FileMetadata } from '@/types/file'
 import { uuid } from '@/utils'
@@ -19,6 +19,10 @@ export interface StepConfig {
 
 // 预定义的步骤配置
 export const RESTORE_STEP_CONFIGS = {
+  RECEIVE_FILE: {
+    id: 'receive_file' as RestoreStepId,
+    titleKey: 'settings.data.restore.steps.receive_file'
+  },
   RESTORE_SETTINGS: {
     id: 'restore_settings' as RestoreStepId,
     titleKey: 'settings.data.restore.steps.restore_settings'
@@ -31,6 +35,13 @@ export const RESTORE_STEP_CONFIGS = {
 
 // 预定义的步骤组合
 export const DEFAULT_RESTORE_STEPS: StepConfig[] = [
+  RESTORE_STEP_CONFIGS.RESTORE_SETTINGS,
+  RESTORE_STEP_CONFIGS.RESTORE_MESSAGES
+]
+
+// Landrop 的步骤组合（包含文件接收）
+export const LANDROP_RESTORE_STEPS: StepConfig[] = [
+  RESTORE_STEP_CONFIGS.RECEIVE_FILE,
   RESTORE_STEP_CONFIGS.RESTORE_SETTINGS,
   RESTORE_STEP_CONFIGS.RESTORE_MESSAGES
 ]
@@ -121,13 +132,18 @@ export function useRestore(options: UseRestoreOptions = {}) {
     })
   }
 
-  const startRestore = async (file: { name: string; uri: string; size?: number; mimeType?: string }) => {
+  const startRestore = async (
+    file: { name: string; uri: string; size?: number; mimeType?: string },
+    skipModalSetup = false
+  ) => {
     if (!validateFile(file)) return
 
-    // 重置状态并打开模态框
-    setRestoreSteps(createStepsFromConfig(stepConfigs, t))
-    setOverallStatus('running')
-    setModalOpen(true)
+    // 重置状态并打开模态框（除非 skipModalSetup 为 true）
+    if (!skipModalSetup) {
+      setRestoreSteps(createStepsFromConfig(stepConfigs, t))
+      setOverallStatus('running')
+      setModalOpen(true)
+    }
 
     // Use setTimeout to ensure the modal renders before starting the restore process
     setTimeout(async () => {
@@ -142,11 +158,25 @@ export function useRestore(options: UseRestoreOptions = {}) {
     }, 400)
   }
 
+  const updateStepStatus = (stepId: RestoreStepId, status: StepStatus, error?: string) => {
+    setRestoreSteps(prevSteps =>
+      prevSteps.map(step => (step.id === stepId ? { ...step, status, error } : step))
+    )
+  }
+
+  const openModal = () => {
+    setRestoreSteps(createStepsFromConfig(stepConfigs, t))
+    setOverallStatus('running')
+    setModalOpen(true)
+  }
+
   return {
     isModalOpen,
     restoreSteps,
     overallStatus,
     startRestore,
-    closeModal: () => setModalOpen(false)
+    closeModal: () => setModalOpen(false),
+    updateStepStatus,
+    openModal
   }
 }
