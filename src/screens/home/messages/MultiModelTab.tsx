@@ -9,6 +9,9 @@ import { AssistantMessageStatus, GroupedMessage, MessageBlock } from '@/types/me
 import { MultiModalIcon } from '@/componentsV2/icons'
 import MessageItem from './Message'
 import MessageFooter from './MessageFooter'
+import { useTranslation } from 'react-i18next'
+import { storage } from '@/utils'
+import MessageHeader from './MessageHeader'
 
 interface MultiModelTabProps {
   assistant: Assistant
@@ -17,7 +20,10 @@ interface MultiModelTabProps {
 }
 
 const MultiModelTab: FC<MultiModelTabProps> = ({ assistant, messages, messageBlocks }) => {
+  const { t } = useTranslation()
+
   const [currentTab, setCurrentTab] = useState('0')
+  const currentLanguage = storage.getString('language')
 
   if (!messages || messages.length === 0) {
     return null
@@ -25,7 +31,7 @@ const MultiModelTab: FC<MultiModelTabProps> = ({ assistant, messages, messageBlo
 
   return (
     <View className="flex-1">
-      <Tabs value={currentTab} onValueChange={setCurrentTab}>
+      <Tabs className="px-4" value={currentTab} onValueChange={setCurrentTab}>
         <Tabs.ScrollView>
           <Tabs.List aria-label="Model tabs" className="bg-transparent">
             <Tabs.Indicator />
@@ -33,18 +39,19 @@ const MultiModelTab: FC<MultiModelTabProps> = ({ assistant, messages, messageBlo
               {messages.map((_message, index) => {
                 const tabValue = index.toString()
                 return (
-                  <Tabs.Trigger key={tabValue} value={tabValue}>
-                    <XStack className="gap-1 items-center justify-center">
-                      {_message.useful && <MultiModalIcon size={14} />}
-                      <Tabs.Label
-                        className={cn(
-                          'text-xs',
-                          currentTab === tabValue ? 'text-green-100 dark:text-green-dark-100' : undefined
-                        )}>
-                        @{_message.model?.name}({_message.model?.provider})
-                      </Tabs.Label>
-                    </XStack>
-                  </Tabs.Trigger>
+                  _message.model && (
+                    <Tabs.Trigger key={tabValue} value={tabValue}>
+                      <XStack className="gap-1 items-center justify-center">
+                        {_message.useful && <MultiModalIcon size={14} />}
+                        <Tabs.Label
+                          className={cn(
+                            currentTab === tabValue ? 'text-green-100 dark:text-green-dark-100' : undefined
+                          )}>
+                          <MessageHeader message={_message} />
+                        </Tabs.Label>
+                      </XStack>
+                    </Tabs.Trigger>
+                  )
                 )
               })}
             </XStack>

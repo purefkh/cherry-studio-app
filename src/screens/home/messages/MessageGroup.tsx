@@ -5,9 +5,9 @@ import { Assistant } from '@/types/assistant'
 import { AssistantMessageStatus, GroupedMessage, MessageBlock } from '@/types/message'
 
 import MessageItem from './Message'
-import MultiModelTab from './MultiModelTab'
 import MessageHeader from './MessageHeader'
 import MessageFooter from './MessageFooter'
+import MultiModelTab from './MultiModelTab'
 
 interface MessageGroupProps {
   assistant: Assistant
@@ -26,7 +26,9 @@ const MessageGroup: FC<MessageGroupProps> = ({ assistant, item, messageBlocks })
     if (messagesInGroup.length === 1) {
       return (
         <View className="gap-2">
-          <MessageHeader message={messagesInGroup[0]} />
+          <View className="px-4">
+            <MessageHeader message={messagesInGroup[0]} />
+          </View>
           <MessageItem message={messagesInGroup[0]} assistant={assistant} messageBlocks={messageBlocks} />
           {/* 输出过程中不显示footer */}
           {messagesInGroup[0].status !== AssistantMessageStatus.PROCESSING && (
