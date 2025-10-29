@@ -1,12 +1,10 @@
 import { BottomSheetModal } from '@gorhom/bottom-sheet'
-import { ImpactFeedbackStyle } from 'expo-haptics'
 import React, { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { TouchableOpacity, View } from 'react-native'
 
 import { FallbackFavicon } from '@/componentsV2/icons'
 import { Citation } from '@/types/websearch'
-import { haptic } from '@/utils/haptic'
 import { CitationSheet, Text, YStack } from '@/componentsV2'
 
 interface PreviewIconProps {
@@ -36,7 +34,6 @@ const CitationsList: React.FC<CitationsListProps> = ({ citations }) => {
   if (!count) return null
 
   const handlePress = () => {
-    haptic(ImpactFeedbackStyle.Medium)
     bottomSheetModalRef.current?.present()
   }
 

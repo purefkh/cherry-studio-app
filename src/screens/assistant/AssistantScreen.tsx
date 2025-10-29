@@ -1,6 +1,5 @@
 import { BottomSheetModal } from '@gorhom/bottom-sheet'
 import { DrawerActions, useNavigation } from '@react-navigation/native'
-import { ImpactFeedbackStyle } from 'expo-haptics'
 import React, { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, View } from 'react-native'
@@ -20,7 +19,6 @@ import { useSearch } from '@/hooks/useSearch'
 import { createAssistant } from '@/services/AssistantService'
 import { Assistant } from '@/types/assistant'
 import { DrawerNavigationProps } from '@/types/naviagate'
-import { haptic } from '@/utils/haptic'
 import AssistantItem from '@/componentsV2/features/Assistant/AssistantItem'
 import AssistantItemSheet from '@/componentsV2/features/Assistant/AssistantItemSheet'
 import { FlashList } from '@shopify/flash-list'
@@ -45,24 +43,20 @@ export default function AssistantScreen() {
   const [selectedAssistant, setSelectedAssistant] = useState<Assistant | null>(null)
 
   const handleAssistantItemPress = (assistant: Assistant) => {
-    haptic(ImpactFeedbackStyle.Medium)
     setSelectedAssistant(assistant)
     bottomSheetRef.current?.present()
   }
 
   const onNavigateToMarketScreen = () => {
-    haptic(ImpactFeedbackStyle.Medium)
     navigation.navigate('Assistant', { screen: 'AssistantMarketScreen' })
   }
 
   const onAddAssistant = async () => {
-    haptic(ImpactFeedbackStyle.Medium)
     const newAssistant = await createAssistant()
     navigation.navigate('Assistant', { screen: 'AssistantDetailScreen', params: { assistantId: newAssistant.id } })
   }
 
   const handleMenuPress = () => {
-    haptic(ImpactFeedbackStyle.Medium)
     navigation.dispatch(DrawerActions.openDrawer())
   }
 

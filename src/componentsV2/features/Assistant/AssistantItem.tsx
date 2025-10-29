@@ -11,7 +11,6 @@ import { getCurrentTopicId } from '@/hooks/useTopic'
 import { loggerService } from '@/services/LoggerService'
 import { Assistant } from '@/types/assistant'
 import { HomeNavigationProps } from '@/types/naviagate'
-import { haptic } from '@/utils/haptic'
 import EmojiAvatar from './EmojiAvatar'
 import XStack from '@/componentsV2/layout/XStack'
 import YStack from '@/componentsV2/layout/YStack'
@@ -34,7 +33,6 @@ const AssistantItem: FC<AssistantItemProps> = ({ assistant, onAssistantPress }) 
   const { isDark } = useTheme()
 
   const handlePress = () => {
-    haptic()
     onAssistantPress(assistant)
   }
 

@@ -1,5 +1,4 @@
 import { BottomSheetModal } from '@gorhom/bottom-sheet'
-import { ImpactFeedbackStyle } from 'expo-haptics'
 import React, { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Keyboard, TouchableOpacity } from 'react-native'
@@ -7,7 +6,6 @@ import { Keyboard, TouchableOpacity } from 'react-native'
 import { AtSign } from '@/componentsV2/icons/LucideIcon'
 import { ModelIcon } from '@/componentsV2/icons'
 import { Assistant, Model } from '@/types/assistant'
-import { haptic } from '@/utils/haptic'
 import { getBaseModelName } from '@/utils/naming'
 import XStack from '@/componentsV2/layout/XStack'
 import Text from '@/componentsV2/base/Text'
@@ -39,7 +37,6 @@ export const MentionButton: React.FC<MentionButtonProps> = ({ mentions, setMenti
 
   const handlePress = () => {
     Keyboard.dismiss()
-    haptic(ImpactFeedbackStyle.Medium)
     bottomSheetModalRef.current?.present()
   }
   /**

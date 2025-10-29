@@ -1,11 +1,9 @@
 import { DrawerContentComponentProps } from '@react-navigation/drawer'
-import { ImpactFeedbackStyle } from 'expo-haptics'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useSettings } from '@/hooks/useSettings'
 import { useTopics } from '@/hooks/useTopic'
-import { haptic } from '@/utils/haptic'
 
 import { MCPIcon, Settings, UnionIcon } from '@/componentsV2/icons'
 import { Divider, useTheme } from 'heroui-native'
@@ -30,32 +28,26 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
   const { topics } = useTopics()
 
   const handleNavigateTopicScreen = () => {
-    haptic(ImpactFeedbackStyle.Medium)
     props.navigation.navigate('Home', { screen: 'TopicScreen' })
   }
 
   const handleNavigateAssistantScreen = () => {
-    haptic(ImpactFeedbackStyle.Medium)
     props.navigation.navigate('Assistant', { screen: 'AssistantScreen' })
   }
 
   const handleNavigateMcpMarketScreen = () => {
-    haptic(ImpactFeedbackStyle.Medium)
     props.navigation.navigate('Mcp', { screen: 'McpMarketScreen' })
   }
 
   const handleNavigateSettingsScreen = () => {
-    haptic(ImpactFeedbackStyle.Medium)
     props.navigation.navigate('Home', { screen: 'SettingsScreen' })
   }
 
   const handleNavigatePersonalScreen = () => {
-    haptic(ImpactFeedbackStyle.Medium)
     props.navigation.navigate('Home', { screen: 'AboutSettings', params: { screen: 'PersonalScreen' } })
   }
 
   const handleNavigateChatScreen = (topicId: string) => {
-    haptic(ImpactFeedbackStyle.Medium)
     props.navigation.navigate('Home', { screen: 'ChatScreen', params: { topicId: topicId } })
   }
 

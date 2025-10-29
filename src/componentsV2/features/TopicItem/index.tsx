@@ -1,5 +1,4 @@
 import { useNavigation } from '@react-navigation/native'
-import { ImpactFeedbackStyle } from 'expo-haptics'
 import React, { FC, useEffect, useRef, useState } from 'react'
 import ContentLoader, { Rect } from 'react-content-loader/native'
 import { useTranslation } from 'react-i18next'
@@ -15,7 +14,6 @@ import { fetchTopicNaming } from '@/services/ApiService'
 import { Topic } from '@/types/assistant'
 import { DrawerNavigationProps } from '@/types/naviagate'
 import { storage } from '@/utils'
-import { haptic } from '@/utils/haptic'
 import EmojiAvatar from '@/componentsV2/features/Assistant/EmojiAvatar'
 import { useDialog } from '@/hooks/useDialog'
 import XStack from '@/componentsV2/layout/XStack'
@@ -77,7 +75,6 @@ export const TopicItem: FC<TopicItemProps> = ({
     if (handleNavigateChatScreen) {
       handleNavigateChatScreen(topic.id)
     } else {
-      haptic(ImpactFeedbackStyle.Medium)
       navigation.navigate('Home', { screen: 'ChatScreen', params: { topicId: topic.id } })
     }
     switchTopic(topic.id).catch(console.error)
@@ -138,7 +135,6 @@ export const TopicItem: FC<TopicItemProps> = ({
     try {
       setIsGeneratingName(true)
       await fetchTopicNaming(topic.id, true)
-      haptic(ImpactFeedbackStyle.Medium)
     } catch (error) {
       toast.show(t('common.error_occurred' + '\n' + (error as Error)?.message), { color: '$red100', duration: 2500 })
     } finally {

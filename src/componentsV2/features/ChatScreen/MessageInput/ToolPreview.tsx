@@ -1,11 +1,9 @@
-import { ImpactFeedbackStyle } from 'expo-haptics'
 import React, { useCallback, useMemo } from 'react'
 import { Pressable } from 'react-native'
 
 import { Globe, Palette, X } from '@/componentsV2/icons/LucideIcon'
 import { loggerService } from '@/services/LoggerService'
 import { Assistant } from '@/types/assistant'
-import { haptic } from '@/utils/haptic'
 import XStack from '@/componentsV2/layout/XStack'
 
 const logger = loggerService.withContext('ToolPreview')
@@ -47,7 +45,6 @@ export const ToolPreview: React.FC<ToolPreviewProps> = ({ assistant, updateAssis
   const handleToggleTool = useCallback(
     async (toolKey: keyof Assistant) => {
       try {
-        haptic(ImpactFeedbackStyle.Medium)
         await updateAssistant({
           ...assistant,
           [toolKey]: !assistant[toolKey]

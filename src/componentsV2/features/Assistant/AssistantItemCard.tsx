@@ -6,7 +6,6 @@ import { Text, XStack, YStack } from '@/componentsV2'
 import { useTheme } from 'heroui-native'
 import { Assistant } from '@/types/assistant'
 import { formateEmoji } from '@/utils/formats'
-import { haptic } from '@/utils/haptic'
 import EmojiAvatar from './EmojiAvatar'
 import GroupTag from './GroupTag'
 
@@ -21,7 +20,6 @@ const AssistantItemCard = ({ assistant, onAssistantPress }: AssistantItemCardPro
   const emojiOpacity = Platform.OS === 'android' ? (isDark ? 0.1 : 0.9) : isDark ? 0.2 : 0.4
 
   const handlePress = () => {
-    haptic()
     onAssistantPress(assistant)
   }
 

@@ -1,5 +1,4 @@
 import { BottomSheetModal } from '@gorhom/bottom-sheet'
-import { ImpactFeedbackStyle } from 'expo-haptics'
 import React, { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
@@ -19,7 +18,6 @@ import {
 import { useMessageActions } from '@/hooks/useMessageActions'
 import { Assistant } from '@/types/assistant'
 import { Message } from '@/types/message'
-import { haptic } from '@/utils/haptic'
 
 interface MessageFooterProps {
   assistant: Assistant
@@ -111,7 +109,6 @@ const MessageFooter = ({ message, assistant, isMultiModel = false }: MessageFoot
         <IconButton
           icon={<MoreHorizontal size={18} className="text-text-secondary dark:text-text-secondary-dark" />}
           onPress={() => {
-            haptic(ImpactFeedbackStyle.Medium)
             bottomSheetModalRef.current?.present()
           }}
         />

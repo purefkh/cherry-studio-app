@@ -1,6 +1,5 @@
 import { DrawerNavigationProp } from '@react-navigation/drawer'
 import { DrawerActions, useNavigation } from '@react-navigation/native'
-import { ImpactFeedbackStyle } from 'expo-haptics'
 import { ActivityIndicator, Platform, View } from 'react-native'
 import { PanGestureHandler, State } from 'react-native-gesture-handler'
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller'
@@ -11,7 +10,6 @@ import { useAssistant } from '@/hooks/useAssistant'
 import { useBottom } from '@/hooks/useBottom'
 import { usePreference } from '@/hooks/usePreference'
 import { useCurrentTopic } from '@/hooks/useTopic'
-import { haptic } from '@/utils/haptic'
 
 import ChatContent from './ChatContent'
 import { ChatScreenHeader } from '@/componentsV2/features/ChatScreen/Header'
@@ -40,7 +38,6 @@ const ChatScreen = () => {
       const hasExcellentDistance = translationX > 80
 
       if ((hasGoodDistance && hasGoodVelocity) || hasExcellentDistance) {
-        haptic(ImpactFeedbackStyle.Medium)
         navigation.dispatch(DrawerActions.openDrawer())
       }
     }
