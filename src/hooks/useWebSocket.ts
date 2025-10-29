@@ -71,7 +71,7 @@ export function useWebSocket() {
     }
   }
 
-  const connect = async (connectionInfo: ConnectionInfo | string) => {
+  const connect = async (connectionInfo: ConnectionInfo) => {
     if (socket.current) {
       return
     }
@@ -80,14 +80,6 @@ export function useWebSocket() {
       setStatus(WebSocketStatus.CONNECTING)
 
       // Handle legacy string format for backward compatibility
-      if (typeof connectionInfo === 'string') {
-        logger.info('Connecting to legacy IP:', connectionInfo)
-        socket.current = io(`http://${connectionInfo}`, { timeout: 5000, reconnection: true })
-      }
-      // Handle new ConnectionInfo format with multiple candidates
-      else {
-        logger.info('Attempting connection with candidates:', connectionInfo.candidates.length)
-
         // Sort candidates by priority (lower number = higher priority)
         const sortedCandidates = [...connectionInfo.candidates].sort((a, b) => a.priority - b.priority)
 
@@ -95,38 +87,9 @@ export function useWebSocket() {
         for (const candidate of sortedCandidates) {
           try {
             const connectionUrl = `http://${candidate.host}:${connectionInfo.port}`
-            logger.info(`Trying candidate ${candidate.interface} (${candidate.host})...`)
-
-            await new Promise<void>((resolve, reject) => {
-              const testSocket = io(connectionUrl, {
-                timeout: 3000,
-                reconnection: false,
-                transports: ['polling']  // Use polling for initial test
-              })
-
-              const timeout = setTimeout(() => {
-                testSocket.disconnect()
-                reject(new Error('Connection timeout'))
-              }, 3000)
-
-              testSocket.on('connect', () => {
-                clearTimeout(timeout)
-                testSocket.disconnect()
-                logger.info(`Successfully connected to ${candidate.host} via ${candidate.interface}`)
-                resolve()
-              })
-
-              testSocket.on('connect_error', (error) => {
-                clearTimeout(timeout)
-                testSocket.disconnect()
-                reject(error)
-              })
-
-              testSocket.connect()
-            })
 
             // If we reach here, this candidate worked, use it for the actual connection
-            socket.current = io(`http://${candidate.host}:${connectionInfo.port}`, {
+            socket.current = io(connectionUrl, {
               timeout: 5000,
               reconnection: true,
               transports: ['websocket', 'polling']  // Try both transports
@@ -144,7 +107,6 @@ export function useWebSocket() {
         if (!socket.current) {
           throw new Error('Failed to connect to any IP candidate')
         }
-      }
 
       // 连接客户端
       socket.current.on('connect', () => {

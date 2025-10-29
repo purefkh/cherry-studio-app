@@ -59,17 +59,6 @@ export function QRCodeScanner({ onQRCodeScanned }: QRCodeScannerProps) {
         logger.info(`QR code parsed: ${qrData.candidates.length} candidates, selected: ${qrData.selectedHost}`)
         onQRCodeScanned(qrData as ConnectionInfo)
       }
-      // Handle legacy format for backward compatibility
-      else if (qrData && qrData.host && qrData.port) {
-        const legacyConnectionInfo: ConnectionInfo = {
-          type: 'legacy',
-          candidates: [{ host: qrData.host, interface: 'unknown', priority: 0 }],
-          selectedHost: qrData.host,
-          port: qrData.port,
-          timestamp: Date.now()
-        }
-        onQRCodeScanned(legacyConnectionInfo)
-      }
     } catch (error) {
       logger.error('Failed to parse QR code data:', error)
     }
