@@ -2,17 +2,18 @@
 import { loggerService } from '@/services/LoggerService'
 import { useNavigation, useIsFocused } from '@react-navigation/native'
 import { ConnectionInfo } from '@/types/network'
-import { File, Paths } from 'expo-file-system'
+import { File } from 'expo-file-system'
 import React, { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { SafeAreaContainer, HeaderBar, RestoreProgressModal } from '@/componentsV2'
 import { useDialog } from '@/hooks/useDialog'
-import { useRestore } from '@/hooks/useRestore'
+import { useRestore, LANDROP_RESTORE_STEPS, RESTORE_STEP_CONFIGS } from '@/hooks/useRestore'
 import { useWebSocket, WebSocketStatus } from '@/hooks/useWebSocket'
 import { DataSourcesNavigationProps } from '@/types/naviagate'
 
 import { QRCodeScanner } from './QRCodeScanner'
+import { DEFAULT_BACKUP_STORAGE } from '@/constants/storage'
 
 const logger = loggerService.withContext('landropSettingsScreen')
 
@@ -23,7 +24,10 @@ export default function LandropSettingsScreen() {
   const isFocused = useIsFocused()
   const { status, filename, connect, disconnect } = useWebSocket()
   const [scannedIP, setScannedIP] = useState<string | null>(null)
-  const { isModalOpen, restoreSteps, overallStatus, startRestore, closeModal } = useRestore()
+  const { isModalOpen, restoreSteps, overallStatus, startRestore, closeModal, updateStepStatus, openModal } =
+    useRestore({
+      stepConfigs: LANDROP_RESTORE_STEPS
+    })
 
   const hasScannedRef = useRef(false)
 
@@ -53,17 +57,36 @@ export default function LandropSettingsScreen() {
     }
   }, [status])
 
+  // 监听 WebSocket 状态，更新文件接收步骤
+  useEffect(() => {
+    if (status === WebSocketStatus.ZIP_FILE_START) {
+      // 文件开始接收时，打开模态框并设置接收文件步骤为进行中
+      openModal()
+      updateStepStatus(RESTORE_STEP_CONFIGS.RECEIVE_FILE.id, 'in_progress')
+    } else if (status === WebSocketStatus.ZIP_FILE_END) {
+      // 文件接收完成，更新步骤状态为完成
+      updateStepStatus(RESTORE_STEP_CONFIGS.RECEIVE_FILE.id, 'completed')
+    } else if (status === WebSocketStatus.ERROR) {
+      // 接收文件时出错
+      updateStepStatus(RESTORE_STEP_CONFIGS.RECEIVE_FILE.id, 'error')
+    }
+  }, [status, openModal, updateStepStatus])
+
   // 文件发送完毕后开始恢复
   useEffect(() => {
     const handleRestore = async () => {
       if (status === WebSocketStatus.ZIP_FILE_END) {
-        const zip = new File(Paths.join(Paths.cache, 'Files'), filename)
-        await startRestore({
-          name: zip.name,
-          uri: zip.uri,
-          size: zip.size || 0,
-          mimeType: zip.type || ''
-        })
+        const zip = new File(DEFAULT_BACKUP_STORAGE, filename)
+        console.log('zip', zip)
+        await startRestore(
+          {
+            name: zip.name,
+            uri: zip.uri,
+            size: zip.size || 0,
+            mimeType: zip.type || ''
+          },
+          true // skipModalSetup - 不重置步骤，因为 RECEIVE_FILE 已经完成
+        )
       }
     }
 

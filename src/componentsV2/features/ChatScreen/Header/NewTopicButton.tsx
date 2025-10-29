@@ -1,6 +1,5 @@
 import { BottomSheetModal } from '@gorhom/bottom-sheet'
 import { useNavigation } from '@react-navigation/native'
-import { ImpactFeedbackStyle } from 'expo-haptics'
 import React, { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Pressable } from 'react-native'
@@ -14,7 +13,6 @@ import { useTheme } from 'heroui-native'
 import { topicService } from '@/services/TopicService'
 import type { Assistant } from '@/types/assistant'
 import { DrawerNavigationProps } from '@/types/naviagate'
-import { haptic } from '@/utils/haptic'
 import { isEmpty } from 'lodash'
 import { messageDatabase } from '@database'
 
@@ -32,7 +30,6 @@ export const NewTopicButton: React.FC<NewTopicButtonProps> = ({ assistant }) => 
   const { isDark } = useTheme()
 
   const handleAddNewTopic = async (selectedAssistant?: Assistant) => {
-    haptic(ImpactFeedbackStyle.Medium)
     const targetAssistant = selectedAssistant || assistant
 
     // Check if the newest topic has messages
@@ -57,7 +54,6 @@ export const NewTopicButton: React.FC<NewTopicButtonProps> = ({ assistant }) => 
   }
 
   const openAssistantSelection = () => {
-    haptic(ImpactFeedbackStyle.Medium)
     selectionSheetRef.current?.present()
   }
 

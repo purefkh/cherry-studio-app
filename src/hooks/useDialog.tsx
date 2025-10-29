@@ -1,11 +1,9 @@
-import { ImpactFeedbackStyle } from 'expo-haptics'
 import { MotiView } from 'moti'
 import React, { createContext, useContext, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Modal, Pressable } from 'react-native'
 
 import { useTheme, Button, cn } from 'heroui-native'
-import { haptic } from '@/utils/haptic'
 import YStack from '@/componentsV2/layout/YStack'
 import Text from '@/componentsV2/base/Text'
 import XStack from '@/componentsV2/layout/XStack'
@@ -47,19 +45,16 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
   }
 
   const cancel = () => {
-    haptic(ImpactFeedbackStyle.Medium)
     options?.onCancel?.()
     close()
   }
 
   const confirm = () => {
-    haptic(ImpactFeedbackStyle.Medium)
     options?.onConFirm?.()
     close()
   }
 
   const open = (newOptions: DialogOptions) => {
-    haptic(ImpactFeedbackStyle.Medium)
     setOptions(newOptions)
     setOpen(true)
   }

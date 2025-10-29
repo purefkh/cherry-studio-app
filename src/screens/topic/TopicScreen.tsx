@@ -1,5 +1,4 @@
 import { DrawerActions, useNavigation } from '@react-navigation/native'
-import { ImpactFeedbackStyle } from 'expo-haptics'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, View } from 'react-native'
@@ -12,7 +11,6 @@ import { useTopics } from '@/hooks/useTopic'
 import { getDefaultAssistant } from '@/services/AssistantService'
 import { createNewTopic } from '@/services/TopicService'
 import { DrawerNavigationProps } from '@/types/naviagate'
-import { haptic } from '@/utils/haptic'
 
 export default function TopicScreen() {
   const { t } = useTranslation()
@@ -36,7 +34,6 @@ export default function TopicScreen() {
   }
 
   const handleMenuPress = () => {
-    haptic(ImpactFeedbackStyle.Medium)
     navigation.dispatch(DrawerActions.openDrawer())
   }
 

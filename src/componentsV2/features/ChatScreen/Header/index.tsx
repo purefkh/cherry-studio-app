@@ -1,13 +1,11 @@
 import { DrawerNavigationProp } from '@react-navigation/drawer'
 import { DrawerActions, ParamListBase, useNavigation } from '@react-navigation/native'
-import { ImpactFeedbackStyle } from 'expo-haptics'
 import React from 'react'
 
 import { XStack, IconButton } from '@/componentsV2'
 import { Menu } from '@/componentsV2/icons/LucideIcon'
 import { useAssistant } from '@/hooks/useAssistant'
 import { Topic } from '@/types/assistant'
-import { haptic } from '@/utils/haptic'
 
 import { NewTopicButton } from './NewTopicButton'
 import { AssistantSelection } from './AssistantSelection'
@@ -21,7 +19,6 @@ export const ChatScreenHeader = ({ topic }: HeaderBarProps) => {
   const { assistant, isLoading } = useAssistant(topic.assistantId)
 
   const handleMenuPress = () => {
-    haptic(ImpactFeedbackStyle.Medium)
     navigation.dispatch(DrawerActions.openDrawer())
   }
 

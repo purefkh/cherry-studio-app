@@ -1,5 +1,4 @@
 import { BottomSheetModal } from '@gorhom/bottom-sheet'
-import { ImpactFeedbackStyle } from 'expo-haptics'
 import React, { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Keyboard, TouchableOpacity } from 'react-native'
@@ -7,7 +6,6 @@ import { Keyboard, TouchableOpacity } from 'react-native'
 import { AtSign } from '@/componentsV2/icons/LucideIcon'
 import { ModelIcon } from '@/componentsV2/icons'
 import { Assistant, Model } from '@/types/assistant'
-import { haptic } from '@/utils/haptic'
 import { getBaseModelName } from '@/utils/naming'
 import XStack from '@/componentsV2/layout/XStack'
 import Text from '@/componentsV2/base/Text'
@@ -39,7 +37,6 @@ export const MentionButton: React.FC<MentionButtonProps> = ({ mentions, setMenti
 
   const handlePress = () => {
     Keyboard.dismiss()
-    haptic(ImpactFeedbackStyle.Medium)
     bottomSheetModalRef.current?.present()
   }
   /**
@@ -52,13 +49,13 @@ export const MentionButton: React.FC<MentionButtonProps> = ({ mentions, setMenti
   const handleModelChange = async (models: Model[]) => {
     setMentions(models)
 
-    let updatedAssistant: Assistant = { ...assistant, defaultModel: models[0], model: models[0] }
-    // if (assistant.defaultModel) {
-    //   updatedAssistant.model = models[0]
-    // } else {
-    //   updatedAssistant.defaultModel = models[0]
-    //   updatedAssistant.model = models[0]
-    // }
+    let updatedAssistant: Assistant = assistant
+    if (assistant.defaultModel) {
+      updatedAssistant.model = models[0]
+    } else {
+      updatedAssistant.defaultModel = models[0]
+      updatedAssistant.model = models[0]
+    }
 
     await updateAssistant(updatedAssistant)
   }

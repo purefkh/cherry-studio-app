@@ -16,7 +16,7 @@ const MessageHeader: React.FC<MessageHeaderProps> = ({ message }) => {
   const { t } = useTranslation()
   const currentLanguage = storage.getString('language')
   return (
-    <View className="px-4">
+    <View>
       {message.model && (
         <XStack className="gap-2 items-center">
           <ModelIcon model={message.model} />

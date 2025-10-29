@@ -552,6 +552,7 @@
             "success_description": "復元が成功しました、お楽しみください！"
           },
           "steps": {
+            "receive_file": "ファイルを受信",
             "restore_messages": "復元メッセージ",
             "restore_settings": "設定を復元する"
           },

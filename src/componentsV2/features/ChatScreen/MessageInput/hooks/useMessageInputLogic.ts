@@ -1,4 +1,3 @@
-import { ImpactFeedbackStyle } from 'expo-haptics'
 import { isEmpty } from 'lodash'
 import { useEffect, useState } from 'react'
 import { Keyboard } from 'react-native'
@@ -11,7 +10,6 @@ import { topicService } from '@/services/TopicService'
 import { Assistant, Model, Topic } from '@/types/assistant'
 import { FileMetadata } from '@/types/file'
 import { MessageInputBaseParams } from '@/types/message'
-import { haptic } from '@/utils/haptic'
 
 const logger = loggerService.withContext('Message Input')
 
@@ -25,15 +23,12 @@ export const useMessageInputLogic = (topic: Topic, assistant: Assistant) => {
 
   useEffect(() => {
     setMentions(assistant.defaultModel ? [assistant.defaultModel] : [])
-  }, [assistant.defaultModel])
+  }, [topic.id])
 
   const sendMessage = async () => {
     if (isEmpty(text.trim())) {
-      haptic(ImpactFeedbackStyle.Rigid)
       return
     }
-
-    haptic(ImpactFeedbackStyle.Medium)
 
     setText('')
     setFiles([])
@@ -60,8 +55,6 @@ export const useMessageInputLogic = (topic: Topic, assistant: Assistant) => {
   }
 
   const onPause = async () => {
-    haptic(ImpactFeedbackStyle.Medium)
-
     try {
       await pauseMessages()
     } catch (error) {

@@ -3,8 +3,6 @@ import 'react-native-reanimated'
 import '../global.css'
 
 import { HeroUINativeProvider, useTheme as useHerouiTheme } from 'heroui-native'
-import { createTamagui, TamaguiProvider } from 'tamagui'
-import { defaultConfig } from '@tamagui/config/v4'
 
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
 import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native'
@@ -91,28 +89,24 @@ function DatabaseInitializer({ children }: { children: React.ReactNode }) {
 
 // 主题和导航组件
 function ThemedApp() {
-  const { themeSetting, activeTheme } = useTheme()
+  const { themeSetting } = useTheme()
   const { isDark } = useHerouiTheme()
 
-  const config = createTamagui(defaultConfig)
-
   return (
-    <TamaguiProvider config={config} defaultTheme={activeTheme}>
-      <HeroUINativeProvider config={{ colorScheme: themeSetting }}>
-        <KeyboardProvider>
-          <NavigationContainer theme={isDark ? DarkTheme : DefaultTheme}>
-            <SystemBars style={isDark ? 'dark' : 'light'} />
-            <DialogProvider>
-              <ToastProvider>
-                <BottomSheetModalProvider>
-                  <MainStackNavigator />
-                </BottomSheetModalProvider>
-              </ToastProvider>
-            </DialogProvider>
-          </NavigationContainer>
-        </KeyboardProvider>
-      </HeroUINativeProvider>
-    </TamaguiProvider>
+    <HeroUINativeProvider config={{ colorScheme: themeSetting }}>
+      <KeyboardProvider>
+        <NavigationContainer theme={isDark ? DarkTheme : DefaultTheme}>
+          <SystemBars style={isDark ? 'dark' : 'light'} />
+          <DialogProvider>
+            <ToastProvider>
+              <BottomSheetModalProvider>
+                <MainStackNavigator />
+              </BottomSheetModalProvider>
+            </ToastProvider>
+          </DialogProvider>
+        </NavigationContainer>
+      </KeyboardProvider>
+    </HeroUINativeProvider>
   )
 }
 

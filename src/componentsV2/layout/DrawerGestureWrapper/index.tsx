@@ -1,10 +1,7 @@
 import { DrawerNavigationProp } from '@react-navigation/drawer'
 import { DrawerActions, useNavigation } from '@react-navigation/native'
-import { ImpactFeedbackStyle } from 'expo-haptics'
 import React, { PropsWithChildren } from 'react'
 import { PanGestureHandler, State } from 'react-native-gesture-handler'
-
-import { haptic } from '@/utils/haptic'
 
 interface DrawerGestureWrapperProps extends PropsWithChildren {
   enabled?: boolean
@@ -30,7 +27,6 @@ export const DrawerGestureWrapper = ({ children, enabled = true }: DrawerGesture
       const hasExcellentDistance = translationX > 80
 
       if ((hasGoodDistance && hasGoodVelocity) || hasExcellentDistance) {
-        haptic(ImpactFeedbackStyle.Medium)
         navigation.dispatch(DrawerActions.openDrawer())
       }
     }

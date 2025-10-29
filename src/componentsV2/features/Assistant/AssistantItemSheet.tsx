@@ -1,6 +1,5 @@
 import { BottomSheetBackdrop, BottomSheetModal, BottomSheetScrollView } from '@gorhom/bottom-sheet'
 import { BlurView } from 'expo-blur'
-import { ImpactFeedbackStyle } from 'expo-haptics'
 import React, { forwardRef, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BackHandler, Platform, TouchableOpacity, View } from 'react-native'
@@ -16,7 +15,6 @@ import { topicService } from '@/services/TopicService'
 import type { Assistant } from '@/types/assistant'
 import { uuid } from '@/utils'
 import { formateEmoji } from '@/utils/formats'
-import { haptic } from '@/utils/haptic'
 import { assistantService } from '@/services/AssistantService'
 
 import EmojiAvatar from './EmojiAvatar'
@@ -90,7 +88,6 @@ const AssistantItemSheet = forwardRef<BottomSheetModal, AssistantItemSheetProps>
           type: 'external'
         })
         ;(ref as React.RefObject<BottomSheetModal>)?.current?.dismiss()
-        haptic(ImpactFeedbackStyle.Medium)
         toast.show(t('assistants.market.add.success', { assistant_name: assistant.name }))
       }
     }

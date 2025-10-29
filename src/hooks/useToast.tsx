@@ -1,11 +1,9 @@
-import { ImpactFeedbackStyle } from 'expo-haptics'
 import { AnimatePresence, MotiView } from 'moti'
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { View } from 'react-native'
 
 import { useTheme, cn } from 'heroui-native'
 import { uuid } from '@/utils'
-import { haptic } from '@/utils/haptic'
 import Text from '@/componentsV2/base/Text'
 
 export type ToastOptions = {
@@ -33,7 +31,6 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     : 'absolute max-w-[80%] px-4 py-3.5 rounded-lg gap-2.5 justify-center items-center bg-[#19191c] shadow-lg'
 
   const show = (content: React.ReactNode | string, newOptions?: ToastOptions) => {
-    haptic(ImpactFeedbackStyle.Medium)
     const key = uuid()
     const now = Date.now()
     const duration = newOptions?.duration ?? DEFAULT_DURATION

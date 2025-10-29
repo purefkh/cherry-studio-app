@@ -22,7 +22,7 @@ const LEVEL_MAP: Record<LogLevel, number> = {
 
 // Default levels are adjusted slightly. In production, we'll log to a file by default.
 const DEFAULT_CONSOLE_LEVEL = IS_DEV ? 'silly' : 'info'
-const DEFAULT_FILE_LOG_LEVEL = 'info' // In mobile, it's useful to log info level to file even in prod
+const DEFAULT_FILE_LOG_LEVEL = 'warn' // Only log warnings and errors to file
 
 export class LoggerService {
   private static instance: LoggerService

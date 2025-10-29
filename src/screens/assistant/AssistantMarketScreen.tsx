@@ -1,6 +1,5 @@
 import { BottomSheetModal } from '@gorhom/bottom-sheet'
 import { useNavigation } from '@react-navigation/native'
-import { ImpactFeedbackStyle } from 'expo-haptics'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, View } from 'react-native'
@@ -10,7 +9,6 @@ import { useBuiltInAssistants } from '@/hooks/useAssistant'
 import { useSearch } from '@/hooks/useSearch'
 import { Assistant } from '@/types/assistant'
 import { DrawerNavigationProps } from '@/types/naviagate'
-import { haptic } from '@/utils/haptic'
 import AssistantsTabContent from '@/componentsV2/features/Assistant/AssistantsTabContent'
 import AssistantItemSheet from '@/componentsV2/features/Assistant/AssistantItemSheet'
 
@@ -33,7 +31,6 @@ export default function AssistantMarketScreen() {
   )
 
   const handleAssistantItemPress = (assistant: Assistant) => {
-    haptic(ImpactFeedbackStyle.Medium)
     setSelectedAssistant(assistant)
     bottomSheetRef.current?.present()
   }

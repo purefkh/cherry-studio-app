@@ -1,5 +1,4 @@
 import { RouteProp, useRoute } from '@react-navigation/native'
-import { ImpactFeedbackStyle } from 'expo-haptics'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator } from 'react-native'
@@ -24,7 +23,6 @@ import { ProvidersStackParamList } from '@/navigators/settings/ProvidersStackNav
 import { checkApi } from '@/services/ApiService'
 import { loggerService } from '@/services/LoggerService'
 import { ApiStatus, Model } from '@/types/assistant'
-import { haptic } from '@/utils/haptic'
 import { ModelSelect } from '@/componentsV2/features/SettingsScreen/ModelSelect'
 const logger = loggerService.withContext('ApiServiceScreen')
 
@@ -74,7 +72,6 @@ export default function ApiServiceScreen() {
   }
 
   const handleOpenBottomSheet = () => {
-    haptic(ImpactFeedbackStyle.Medium)
     let selectedModel: Model | undefined
 
     dialog.open({

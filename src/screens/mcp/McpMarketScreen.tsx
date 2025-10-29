@@ -1,7 +1,5 @@
 import { Container, DrawerGestureWrapper, HeaderBar, SafeAreaContainer, SearchInput } from '@/componentsV2'
 import { Menu } from '@/componentsV2/icons'
-import { haptic } from '@/utils/haptic'
-import { ImpactFeedbackStyle } from 'expo-haptics'
 import React, { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, View } from 'react-native'
@@ -30,7 +28,6 @@ export function McpMarketScreen() {
   )
 
   const handleMenuPress = () => {
-    haptic(ImpactFeedbackStyle.Medium)
     navigation.dispatch(DrawerActions.openDrawer())
   }
 
