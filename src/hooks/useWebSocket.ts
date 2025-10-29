@@ -1,9 +1,9 @@
-import * as FileSystem from 'expo-file-system'
-import { File, Paths } from 'expo-file-system'
 import { useEffect, useRef, useState } from 'react'
 import { io, Socket } from 'socket.io-client'
+import { File } from 'expo-file-system'
 
 import { loggerService } from '@/services/LoggerService'
+import { DEFAULT_BACKUP_STORAGE } from '@/constants/storage'
 const logger = loggerService.withContext('useWebSocket')
 
 // 定义 WebSocket 连接状态的枚举
@@ -36,9 +36,13 @@ export function useWebSocket() {
   // 写入文件的函数
   const writeZipFile = async () => {
     try {
-      await FileSystem.makeDirectoryAsync(Paths.join(Paths.cache, 'Files'), { intermediates: true })
+      // 确保父目录存在
+      if (!DEFAULT_BACKUP_STORAGE.exists) {
+        DEFAULT_BACKUP_STORAGE.create({ intermediates: true })
+      }
+
       // 文件路径 Paths.cache + zipFileInfo.current.filename
-      const file = new File(Paths.join(Paths.cache, 'Files'), zipFileInfo.current.filename)
+      const file = new File(DEFAULT_BACKUP_STORAGE, zipFileInfo.current.filename)
 
       if (file.exists) {
         file.delete()

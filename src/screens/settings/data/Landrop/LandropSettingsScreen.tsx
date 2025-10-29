@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native'
-import { File, Paths } from 'expo-file-system'
+import { File } from 'expo-file-system'
 import React, { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -10,6 +10,7 @@ import { useWebSocket, WebSocketStatus } from '@/hooks/useWebSocket'
 import { DataSourcesNavigationProps } from '@/types/naviagate'
 
 import { QRCodeScanner } from './QRCodeScanner'
+import { DEFAULT_BACKUP_STORAGE } from '@/constants/storage'
 
 export default function LandropSettingsScreen() {
   const { t } = useTranslation()
@@ -33,7 +34,8 @@ export default function LandropSettingsScreen() {
   useEffect(() => {
     const handleRestore = async () => {
       if (status === WebSocketStatus.ZIP_FILE_END) {
-        const zip = new File(Paths.join(Paths.cache, 'Files'), filename)
+        const zip = new File(DEFAULT_BACKUP_STORAGE, filename)
+        console.log('zip', zip)
         await startRestore({
           name: zip.name,
           uri: zip.uri,
