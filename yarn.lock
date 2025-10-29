@@ -8022,6 +8022,7 @@ __metadata:
     expo-haptics: "npm:~15.0.7"
     expo-image: "npm:~3.0.8"
     expo-image-picker: "npm:~17.0.8"
+    expo-insights: "npm:~0.10.7"
     expo-intent-launcher: "npm:~13.0.7"
     expo-linear-gradient: "npm:~15.0.7"
     expo-linking: "npm:~8.0.8"
@@ -11475,6 +11476,17 @@ __metadata:
     react-native-web:
       optional: true
   checksum: 10c0/a4ddd89ec63932c095fc03814a11e29ceab7e9d92351253ac00fe3974fbe167354aa23620d813c9aaf33fb0f12e4451292f501dd0559070c863e2ea8470905ca
+  languageName: node
+  linkType: hard
+
+"expo-insights@npm:~0.10.7":
+  version: 0.10.7
+  resolution: "expo-insights@npm:0.10.7"
+  dependencies:
+    expo-eas-client: "npm:~1.0.7"
+  peerDependencies:
+    expo: "*"
+  checksum: 10c0/31b595a57990ebb729d24be15a97ee2b38d7ec1b45a358f489e0ad3bdde40d8da20ab1c06beebc85067a1c343e308d9afc1d176ae1d2cd3addabe98f12cc4d6e
   languageName: node
   linkType: hard
 
