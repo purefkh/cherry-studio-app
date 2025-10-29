@@ -55,40 +55,38 @@ jobs:
             echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
           fi
 
-      # Step 7: Update package.json version
-      - name: Update package.json version
-        run: |
-          VERSION="${{ steps.version.outputs.tag }}"
-          # Remove 'v' prefix if present (e.g., v1.0.0 -> 1.0.0)
-          VERSION_NUMBER="${VERSION#v}"
-          echo "Updating package.json version to $VERSION_NUMBER"
+      # Step 7: Update package.json version (DISABLED - using manual version from package.json)
+      # - name: Update package.json version
+      #   run: |
+      #     VERSION="${{ steps.version.outputs.tag }}"
+      #     # Remove 'v' prefix if present (e.g., v1.0.0 -> 1.0.0)
+      #     VERSION_NUMBER="${VERSION#v}"
+      #     echo "Updating package.json version to $VERSION_NUMBER"
+      #
+      #     # Update package.json using Node.js
+      #     node -e "
+      #       const fs = require('fs');
+      #       const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+      #       pkg.version = '$VERSION_NUMBER';
+      #       fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+      #     "
+      #
+      #     echo "✅ package.json updated to version $VERSION_NUMBER"
+      #     cat package.json | grep '"version"'
 
-          # Update package.json using Node.js
-          node -e "
-            const fs = require('fs');
-            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-            pkg.version = '$VERSION_NUMBER';
-            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-          "
-
-          echo "✅ package.json updated to version $VERSION_NUMBER"
-          cat package.json | grep '"version"'
-
-      # Step 8: Set APP_VERSION environment variable
-      - name: Export APP_VERSION for EAS Build
-        run: |
-          VERSION="${{ steps.version.outputs.tag }}"
-          VERSION_NUMBER="${VERSION#v}"
-          echo "APP_VERSION=$VERSION_NUMBER" >> $GITHUB_ENV
-          echo "✅ APP_VERSION set to $VERSION_NUMBER"
+      # Step 8: Set APP_VERSION environment variable (DISABLED - using manual version from package.json)
+      # - name: Export APP_VERSION for EAS Build
+      #   run: |
+      #     VERSION="${{ steps.version.outputs.tag }}"
+      #     VERSION_NUMBER="${VERSION#v}"
+      #     echo "APP_VERSION=$VERSION_NUMBER" >> $GITHUB_ENV
+      #     echo "✅ APP_VERSION set to $VERSION_NUMBER"
 
       # Step 9: Build Android on EAS
       - name: Build Android on EAS
         id: build_android
-        env:
-          APP_VERSION: ${{ env.APP_VERSION }}
         run: |
-          echo "Building Android APK on EAS with version $APP_VERSION..."
+          echo "Building Android APK on EAS (version from package.json)..."
           eas build --platform android --profile production --non-interactive --no-wait --json > android_build.json
           BUILD_ID=$(cat android_build.json | jq -r '.[0].id')
           echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
