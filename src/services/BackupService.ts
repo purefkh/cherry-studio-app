@@ -21,6 +21,7 @@ import {
   websearchProviderDatabase
 } from '@database'
 import { assistantService } from './AssistantService'
+import { providerService } from './ProviderService'
 import { topicService } from './TopicService'
 const logger = loggerService.withContext('Backup Service')
 
@@ -72,6 +73,8 @@ async function restoreIndexedDbData(data: ExportIndexedData, onProgress: OnProgr
 async function restoreReduxData(data: ExportReduxData, onProgress: OnProgressCallback, dispatch: Dispatch) {
   onProgress({ step: 'restore_settings', status: 'in_progress' })
   await providerDatabase.upsertProviders(data.llm.providers)
+  providerService.invalidateCache()
+  await providerService.refreshAllProvidersCache()
   const allSourceAssistants = [data.assistants.defaultAssistant, ...data.assistants.assistants]
 
   // default assistant为built_in, 其余为external
