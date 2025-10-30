@@ -19,6 +19,12 @@ export const createTextCallbacks = (deps: TextCallbacksDependencies) => {
 
   // 内部维护的状态
   let mainTextBlockId: string | null = null
+  let cachedCitationMeta:
+    | {
+        blockId: string
+        source: WebSearchSource
+      }
+    | null = null
 
   return {
     onTextStart: async () => {
@@ -44,9 +50,23 @@ export const createTextCallbacks = (deps: TextCallbacksDependencies) => {
 
     onTextChunk: async (text: string) => {
       const citationBlockId = getCitationBlockId()
-      const citationBlockSource = citationBlockId
-        ? ((await messageBlockDatabase.getBlockById(citationBlockId)) as CitationMessageBlock).response?.source
-        : WebSearchSource.WEBSEARCH
+      let citationBlockSource = WebSearchSource.WEBSEARCH
+
+      if (citationBlockId) {
+        if (cachedCitationMeta?.blockId === citationBlockId) {
+          citationBlockSource = cachedCitationMeta.source
+        } else {
+          const citationBlock = (await messageBlockDatabase.getBlockById(citationBlockId)) as CitationMessageBlock | null
+
+          citationBlockSource = citationBlock?.response?.source ?? WebSearchSource.WEBSEARCH
+          cachedCitationMeta = {
+            blockId: citationBlockId,
+            source: citationBlockSource
+          }
+        }
+      } else {
+        cachedCitationMeta = null
+      }
 
       if (text) {
         const blockChanges: Partial<MessageBlock> = {
