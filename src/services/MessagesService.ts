@@ -221,7 +221,7 @@ export async function regenerateAssistantMessage(assistantMessage: Message, assi
   }
 }
 
-const BLOCK_UPDATE_BATCH_INTERVAL = 800
+const BLOCK_UPDATE_BATCH_INTERVAL = 180
 type BlockUpdatePayload = Partial<MessageBlock>
 
 const pendingBlockUpdates = new Map<string, BlockUpdatePayload>()
@@ -383,23 +383,15 @@ const updateExistingMessageAndBlocksInDB = async (
 }
 
 // 新增: 辅助函数，用于获取并保存单个更新后的 Block 到数据库
-export const saveUpdatedBlockToDB = async (
-  blockId: string | null,
-  messageId: string,
-  topicId: string,
-  blockSnapshot?: MessageBlock | null
-) => {
+export const saveUpdatedBlockToDB = async (blockId: string | null, messageId: string, topicId: string) => {
   if (!blockId) {
     console.warn('[DB Save Single Block] Received null/undefined blockId. Skipping save.')
     return
   }
 
-  let blockToSave = blockSnapshot ?? null
+  await flushSpecificBlocks([blockId])
 
-  if (!blockToSave) {
-    await flushSpecificBlocks([blockId])
-    blockToSave = await messageBlockDatabase.getBlockById(blockId)
-  }
+  const blockToSave = await messageBlockDatabase.getBlockById(blockId)
 
   if (blockToSave) {
     await saveUpdatesToDB(messageId, topicId, {}, [blockToSave]) // Pass messageId, topicId, empty message updates, and the block

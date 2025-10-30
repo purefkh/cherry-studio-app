@@ -11,12 +11,7 @@ interface ActiveBlockInfo {
 }
 
 interface BlockManagerDependencies {
-  saveUpdatedBlockToDB: (
-    blockId: string | null,
-    messageId: string,
-    topicId: string,
-    blockSnapshot?: MessageBlock | null
-  ) => Promise<void>
+  saveUpdatedBlockToDB: (blockId: string | null, messageId: string, topicId: string) => Promise<void>
   saveUpdatesToDB: (
     messageId: string,
     topicId: string,
@@ -36,7 +31,6 @@ export class BlockManager {
   // 简化后的状态管理
   private _activeBlockInfo: ActiveBlockInfo | null = null
   private _lastBlockType: MessageBlockType | null = null // 保留用于错误处理
-  private blockCache = new Map<string, MessageBlock>()
 
   constructor(dependencies: BlockManagerDependencies) {
     this.deps = dependencies
@@ -68,26 +62,6 @@ export class BlockManager {
     this._activeBlockInfo = value
   }
 
-  private async mergeBlockChanges(blockId: string, changes: Partial<MessageBlock>): Promise<MessageBlock | null> {
-    const existing = this.blockCache.get(blockId) ?? (await messageBlockDatabase.getBlockById(blockId))
-
-    if (!existing) {
-      logger.warn(`[BlockCache] Block ${blockId} not found when applying changes.`)
-      return null
-    }
-
-    const merged = {
-      ...existing,
-      ...changes,
-      id: existing.id,
-      messageId: existing.messageId,
-      updatedAt: changes.updatedAt ?? Date.now()
-    } as MessageBlock
-
-    this.blockCache.set(blockId, merged)
-    return merged
-  }
-
   /**
    * 智能更新策略：根据块类型连续性自动判断使用节流还是立即更新
    */
@@ -98,13 +72,6 @@ export class BlockManager {
     isComplete: boolean = false
   ) {
     const isBlockTypeChanged = this._lastBlockType !== null && this._lastBlockType !== blockType
-
-    const enrichedChanges: Partial<MessageBlock> = {
-      ...changes,
-      updatedAt: changes.updatedAt ?? Date.now()
-    }
-
-    const blockSnapshot = await this.mergeBlockChanges(blockId, enrichedChanges)
 
     if (isBlockTypeChanged || isComplete) {
       // 如果块类型改变，则取消上一个块的节流更新
@@ -120,12 +87,12 @@ export class BlockManager {
         this._activeBlockInfo = { id: blockId, type: blockType } // 更新活跃块信息
       }
 
-      await messageBlockDatabase.updateOneBlock({ id: blockId, changes: enrichedChanges })
-      await this.deps.saveUpdatedBlockToDB(blockId, this.deps.assistantMsgId, this.deps.topicId, blockSnapshot)
+      await messageBlockDatabase.updateOneBlock({ id: blockId, changes })
+      this.deps.saveUpdatedBlockToDB(blockId, this.deps.assistantMsgId, this.deps.topicId)
       this._lastBlockType = blockType
     } else {
       this._activeBlockInfo = { id: blockId, type: blockType } // 更新活跃块信息
-      await this.deps.throttledBlockUpdate(blockId, enrichedChanges)
+      await this.deps.throttledBlockUpdate(blockId, changes)
     }
   }
 
@@ -136,7 +103,6 @@ export class BlockManager {
     logger.info('handleBlockTransition', newBlock, newBlockType)
     this._lastBlockType = newBlockType
     this._activeBlockInfo = { id: newBlock.id, type: newBlockType } // 设置新的活跃块信息
-    this.blockCache.set(newBlock.id, newBlock)
 
     await messageBlockDatabase.upsertBlocks(newBlock)
     // change message status
