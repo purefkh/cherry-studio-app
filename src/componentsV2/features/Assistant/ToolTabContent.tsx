@@ -50,7 +50,7 @@ export function ToolTabContent({ assistant, updateAssistant }: ToolTabContentPro
       }
     }
 
-    if (assistant.enableWebSearch) {
+    if (assistant.webSearchProviderId === 'builtin') {
       return {
         icon: <Globe size={20} />,
         text: t('settings.websearch.builtin'),
