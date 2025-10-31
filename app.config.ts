@@ -34,7 +34,7 @@ export default {
       edgeToEdgeEnabled: true,
       package: 'com.cherry_ai.cherry_studio_app',
       userInterfaceStyle: 'automatic',
-      predictiveBackGestureEnabled: false
+      predictiveBackGestureEnabled: false,
     },
     plugins: [
       [
@@ -49,9 +49,6 @@ export default {
             gradleVersion: '8.13',
             androidGradlePluginVersion: '8.13.0',
             buildArchs: ['arm64-v8a'],
-            // TODO: 临时方案 - 处理大备份文件（>100MB）
-            // 长期应重构为分文件备份格式
-            largeHeap: true
           }
         }
       ],
@@ -152,7 +149,8 @@ export default {
           android: ['com.facebook.katana', 'com.instagram.android', 'com.twitter.android', 'com.zhiliaoapp.musically'],
           enableBase64ShareAndroid: true
         }
-      ]
+      ],
+      './plugins/heapSize'
     ],
     experiments: {
       typedRoutes: true,

@@ -218,9 +218,11 @@ function transformBackupData(data: string): { reduxData: ExportReduxData; indexe
 
   // 提取 Redux 数据
   logger.info('Extracting Redux data...')
-  const localStorage = orginalData.localStorage
-  const persistDataString = localStorage['persist:cherry-studio']
-  const rawReduxData = JSON.parse(persistDataString)
+  let localStorageData = orginalData.localStorage
+  let persistDataString = localStorageData['persist:cherry-studio']
+  localStorageData = null
+  let rawReduxData = JSON.parse(persistDataString)
+  persistDataString = null
 
   const reduxData: ImportReduxData = {
     assistants: JSON.parse(rawReduxData.assistants),
@@ -229,20 +231,25 @@ function transformBackupData(data: string): { reduxData: ExportReduxData; indexe
     settings: JSON.parse(rawReduxData.settings)
   }
 
-  // 提取 topics（不需要立即处理所有数据）
+  // 从 IndexedDB 提取 topics（这是数据的真实来源，包含所有 topics）
   logger.info('Processing topics...')
+  const indexedDb: ImportIndexedData = orginalData.indexedDB
+
+  // 从 Redux 构建 topic 的 assistantId 映射
   const topicsFromRedux = reduxData.assistants.assistants
     .flatMap(a => a.topics)
     .concat(reduxData.assistants.defaultAssistant.topics)
 
-  const indexedDb: ImportIndexedData = orginalData.indexedDB
+  const topicToAssistantMap = new Map<string, string>()
+  for (const topic of topicsFromRedux) {
+    topicToAssistantMap.set(topic.id, topic.assistantId)
+  }
 
-  // 优化：直接从 indexedDb.topics 提取 messages，避免重复遍历
   logger.info('Extracting messages from topics...')
   const allMessages: Message[] = []
   const messagesByTopicId: Record<string, Message[]> = {}
 
-  // 单次遍历完成消息提取和分组
+  // 从 IndexedDB 提取所有 topics 和 messages
   for (const topic of indexedDb.topics) {
     if (topic.messages && topic.messages.length > 0) {
       messagesByTopicId[topic.id] = topic.messages
@@ -252,24 +259,28 @@ function transformBackupData(data: string): { reduxData: ExportReduxData; indexe
 
   logger.info(`Extracted ${allMessages.length} messages from ${indexedDb.topics.length} topics`)
 
-  // 合并 topics 和 messages
-  logger.info('Merging topics with messages...')
-  const topicsWithMessages = topicsFromRedux.map(topic => {
-    const correspondingMessages = messagesByTopicId[topic.id] || []
+  // 合并 topics：使用 IndexedDB 的 topics，补充 Redux 的元数据
+  logger.info('Merging topics with metadata...')
+  const topicsWithMessages = indexedDb.topics.map(indexedTopic => {
+    // 尝试从 Redux 中获取对应的 topic 元数据
+    const reduxTopic = topicsFromRedux.find(t => t.id === indexedTopic.id)
+    const correspondingMessages = messagesByTopicId[indexedTopic.id] || []
 
     return {
-      ...topic,
+      // 使用 Redux 的完整数据（如果存在），否则使用 IndexedDB 的数据
+      ...(reduxTopic || {
+        id: indexedTopic.id,
+        assistantId: topicToAssistantMap.get(indexedTopic.id) || 'default',
+        messages: []
+      }),
       messages: correspondingMessages
     }
   })
 
   // 清理不再需要的大对象引用，帮助 GC
+  topicToAssistantMap.clear()
   // @ts-ignore
   orginalData = null
-  // @ts-ignore
-  localStorage = null
-  // @ts-ignore
-  rawReduxData = null
 
   logger.info('Backup data transformation completed')
 
