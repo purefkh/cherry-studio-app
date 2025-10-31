@@ -6504,9 +6504,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"Cherry Studio@workspace:.":
+"Cherry Studio Dev@workspace:.":
   version: 0.0.0-use.local
-  resolution: "Cherry Studio@workspace:."
+  resolution: "Cherry Studio Dev@workspace:."
   dependencies:
     "@ai-sdk/amazon-bedrock": "npm:^3.0.0"
     "@ai-sdk/anthropic": "npm:^1.2.12"
