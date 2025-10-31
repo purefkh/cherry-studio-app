@@ -21,7 +21,7 @@ export default function LandropSettingsScreen() {
   const { t } = useTranslation()
   const dialog = useDialog()
   const navigation = useNavigation<DataSourcesNavigationProps>()
-  const { status, filename, connect } = useWebSocket()
+  const { status, filename, connect, disconnect } = useWebSocket()
   const [scannedIP, setScannedIP] = useState<string | null>(null)
   const { isModalOpen, restoreSteps, overallStatus, startRestore, closeModal, updateStepStatus, openModal } =
     useRestore({
@@ -30,14 +30,12 @@ export default function LandropSettingsScreen() {
 
   const hasScannedRef = useRef(false)
 
-
-  // // 组件卸载时确保断开连接
-  // useEffect(() => {
-  //   return () => {
-  //     logger.info('Component unmounting, disconnecting WebSocket')
-  //     disconnect()
-  //   }
-  // }, [disconnect])
+  useEffect(() => {
+    return () => {
+      logger.debug('Component unmounting, disconnecting WebSocket')
+      disconnect()
+    }
+  }, [disconnect])
 
   useEffect(() => {
     if (status === WebSocketStatus.DISCONNECTED) {
