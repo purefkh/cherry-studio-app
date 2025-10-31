@@ -232,6 +232,8 @@ function transformBackupData(data: string): { reduxData: ExportReduxData; indexe
     settings: JSON.parse(rawReduxData.settings)
   }
 
+  rawReduxData = null
+
   // 从 IndexedDB 提取 topics（这是数据的真实来源，包含所有 topics）
   logger.info('Processing topics...')
   const indexedDb: ImportIndexedData = orginalData.indexedDB
