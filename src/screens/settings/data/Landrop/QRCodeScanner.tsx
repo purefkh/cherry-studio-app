@@ -79,6 +79,7 @@ export function QRCodeScanner({ onQRCodeScanned }: QRCodeScannerProps) {
 
   const handleBarcodeScanned = ({ data }: { data: string }) => {
     if (isProcessing) {
+      logger.warn('Already processing, ignoring scan')
       return // 防止重复扫描
     }
 
@@ -86,7 +87,6 @@ export function QRCodeScanner({ onQRCodeScanned }: QRCodeScannerProps) {
       setIsProcessing(true)
       const qrData = JSON.parse(data)
 
-      // Handle compressed format (CSA - Cherry Studio App)
       if (qrData && qrData.length === 5 && qrData[0] === 'CSA') {
         logger.info(`Compressed QR code detected with ${qrData[2].length} candidates`)
         const connectionInfo = decompressConnectionInfo(qrData as CompressedConnectionInfo)
@@ -97,15 +97,6 @@ export function QRCodeScanner({ onQRCodeScanned }: QRCodeScannerProps) {
         return
       }
 
-      // Handle legacy format with multiple IP candidates
-      if (qrData && qrData.type === 'cherry-studio-app' && qrData.candidates && qrData.selectedHost && qrData.port) {
-        logger.info(`Legacy QR code parsed: ${qrData.candidates.length} candidates, selected: ${qrData.selectedHost}`)
-        onQRCodeScanned(qrData as ConnectionInfo)
-        return
-      }
-
-      // Unknown format
-      logger.warn('Unknown QR code format:', qrData)
       setIsProcessing(false)
     } catch (error) {
       logger.error('Failed to parse QR code data:', error)
@@ -140,15 +131,17 @@ export function QRCodeScanner({ onQRCodeScanned }: QRCodeScannerProps) {
         <ScanQrCode />
         <Text>{t('settings.data.landrop.scan_qr_code.description')}</Text>
       </XStack>
+
       <CameraView
         style={{
           width: '100%',
-          height: '100%'
-          // aspectRatio: 1,
-          // maxHeight: '70%'
+          height: '60%',
+          minHeight: 300
         }}
         facing="back"
-        onBarcodeScanned={isProcessing ? undefined : handleBarcodeScanned}
+        onBarcodeScanned={isProcessing ? undefined : (data) => {
+          handleBarcodeScanned(data)
+        }}
         barcodeScannerSettings={{
           barcodeTypes: ['qr']
         }}
