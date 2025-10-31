@@ -95,7 +95,7 @@ export function useWebSocket() {
             // If we reach here, this candidate worked, use it for the actual connection
             socket.current = io(connectionUrl, {
               timeout: 5000,
-              reconnection: true,
+              reconnection: false,  // 禁用自动重连，因为这是一次性文件传输
               transports: ['websocket', 'polling']  // Try both transports
             })
 
@@ -165,6 +165,11 @@ export function useWebSocket() {
         await writeZipFile()
         setStatus(WebSocketStatus.ZIP_FILE_END)
         setProgress(100)
+
+        // 主动断开连接，避免服务端关闭后客户端持续重连
+        socket.current?.disconnect()
+        socket.current = null
+        logger.info('WebSocket connection closed after file transfer completed')
       })
     } catch (error) {
       logger.error('Failed to get IP address:', error)
