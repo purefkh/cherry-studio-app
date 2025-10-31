@@ -1,6 +1,6 @@
 
 import { loggerService } from '@/services/LoggerService'
-import { useNavigation, useIsFocused } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 import { ConnectionInfo } from '@/types/network'
 import { File } from 'expo-file-system'
 import React, { useEffect, useRef, useState } from 'react'
@@ -21,8 +21,7 @@ export default function LandropSettingsScreen() {
   const { t } = useTranslation()
   const dialog = useDialog()
   const navigation = useNavigation<DataSourcesNavigationProps>()
-  const isFocused = useIsFocused()
-  const { status, filename, connect, disconnect } = useWebSocket()
+  const { status, filename, connect } = useWebSocket()
   const [scannedIP, setScannedIP] = useState<string | null>(null)
   const { isModalOpen, restoreSteps, overallStatus, startRestore, closeModal, updateStepStatus, openModal } =
     useRestore({
@@ -31,15 +30,6 @@ export default function LandropSettingsScreen() {
 
   const hasScannedRef = useRef(false)
 
-  // 当页面失去焦点时断开 WebSocket 连接
-  useEffect(() => {
-    if (!isFocused) {
-      logger.info('Screen lost focus, disconnecting WebSocket')
-      disconnect()
-      setScannedIP(null)
-      hasScannedRef.current = false
-    }
-  }, [isFocused, disconnect])
 
   // // 组件卸载时确保断开连接
   // useEffect(() => {
