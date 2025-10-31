@@ -265,17 +265,19 @@ function transformBackupData(data: string): { reduxData: ExportReduxData; indexe
 
   // 合并 topics：使用 IndexedDB 的 topics，补充 Redux 的元数据
   logger.info('Merging topics with metadata...')
+
   const topicsWithMessages = indexedDb.topics.map(indexedTopic => {
     // 尝试从 Redux 中获取对应的 topic 元数据
     const reduxTopic = topicsFromRedux.find(t => t.id === indexedTopic.id)
-    const correspondingMessages = messagesByTopicId[indexedTopic.id] || []
 
-    // 确保返回的 topic 一定包含有效的 id（使用 IndexedDB 中的 id 作为优先）
     return {
-      ...reduxTopic,
       id: indexedTopic.id,
-      messages: correspondingMessages
-    } as Topic
+      assistantId: reduxTopic?.assistantId ?? 'default',
+      name: reduxTopic?.name ?? 'Untitled Topic',
+      createdAt: reduxTopic?.createdAt ?? Date.now(),
+      updatedAt: reduxTopic?.updatedAt ?? Date.now(),
+      isLoading: reduxTopic?.isLoading ?? false
+    } satisfies Topic
   })
 
   topicToAssistantMap.clear()
