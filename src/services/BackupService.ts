@@ -219,6 +219,10 @@ function transformBackupData(data: string): { reduxData: ExportReduxData; indexe
   // 提取 Redux 数据
   logger.info('Extracting Redux data...')
   let localStorageData = orginalData.localStorage
+
+  // 从 IndexedDB 提取 topics（这是数据的真实来源，包含所有 topics）
+  const indexedDb: ImportIndexedData = orginalData.indexedDB
+
   orginalData = null
   let persistDataString = localStorageData['persist:cherry-studio']
   localStorageData = null
@@ -234,10 +238,7 @@ function transformBackupData(data: string): { reduxData: ExportReduxData; indexe
 
   rawReduxData = null
 
-  // 从 IndexedDB 提取 topics（这是数据的真实来源，包含所有 topics）
   logger.info('Processing topics...')
-  const indexedDb: ImportIndexedData = orginalData.indexedDB
-
   // 从 Redux 构建 topic 的 assistantId 映射
   const topicsFromRedux = reduxData.assistants.assistants
     .flatMap(a => a.topics)
