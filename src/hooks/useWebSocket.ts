@@ -130,7 +130,7 @@ export function useWebSocket() {
         // 如果是文件传输完成后的断开，不要改变状态
         setStatus(prevStatus => {
           if (prevStatus === WebSocketStatus.ZIP_FILE_END) {
-            logger.info('File transfer completed, keeping ZIP_FILE_END status')
+            logger.debug('File transfer completed, keeping ZIP_FILE_END status')
             return prevStatus
           }
           return WebSocketStatus.DISCONNECTED

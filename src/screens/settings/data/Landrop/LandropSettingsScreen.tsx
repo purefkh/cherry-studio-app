@@ -29,13 +29,18 @@ export default function LandropSettingsScreen() {
     })
 
   const hasScannedRef = useRef(false)
+  const disconnectRef = useRef(disconnect)
+
+  useEffect(() => {
+    disconnectRef.current = disconnect
+  }, [disconnect])
 
   useEffect(() => {
     return () => {
       logger.debug('Component unmounting, disconnecting WebSocket')
-      disconnect()
+      disconnectRef.current()
     }
-  }, [disconnect])
+  }, [])
 
   useEffect(() => {
     if (status === WebSocketStatus.DISCONNECTED) {
