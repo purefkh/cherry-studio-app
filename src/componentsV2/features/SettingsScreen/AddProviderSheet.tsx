@@ -16,7 +16,7 @@ import { uuid } from '@/utils'
 import { YStack, XStack, Text } from '@/componentsV2'
 import { ProviderIconButton } from './ProviderIconButton'
 import { ProviderSelect } from './ProviderSelect'
-import { saveProvider } from '@/services/ProviderService'
+import { providerService } from '@/services/ProviderService'
 
 const logger = loggerService.withContext('ProviderSheet')
 
@@ -104,7 +104,13 @@ export const AddProviderSheet = forwardRef<BottomSheetModal, ProviderSheetProps>
       try {
         await uploadProviderImage(selectedImageFile)
         const providerData = createProviderData()
-        await saveProvider(providerData)
+
+        if (mode === 'add') {
+          await providerService.createProvider(providerData)
+        } else {
+          await providerService.updateProvider(providerData.id, providerData)
+        }
+
         ;(ref as React.RefObject<BottomSheetModal>)?.current?.dismiss()
       } catch (error) {
         logger.error('handleSaveProvider', error as Error)
@@ -163,7 +169,7 @@ export const AddProviderSheet = forwardRef<BottomSheetModal, ProviderSheetProps>
                     <Text className="text-red-500 dark:text-red-500">*</Text>
                   </XStack>
                   <BottomSheetTextInput
-                    className="h-10 px-3 py-3 rounded-md bg-ui-card-background dark:bg-ui-card-background-dark border border-gray-20"
+                    className="h-10 px-3 py-3 rounded-md bg-ui-card-background dark:bg-ui-card-background-dark border border-gray-20 text-text-secondary dark:text-text-secondary-dark"
                     placeholder={t('settings.provider.add.name.placeholder')}
                     value={providerName}
                     onChangeText={setProviderName}

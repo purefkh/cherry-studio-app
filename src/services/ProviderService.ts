@@ -514,6 +514,20 @@ export class ProviderService {
    * Invalidate all providers cache
    */
   public invalidateCache(): void {
+    // Clear default provider cache so it reloads on next access
+    if (this.defaultProviderCache) {
+      this.defaultProviderCache = null
+      logger.verbose('Default provider cache cleared during invalidation')
+      this.notifyDefaultProviderSubscribers()
+    }
+
+    // Clear LRU cache and access order
+    if (this.providerCache.size > 0) {
+      this.providerCache.clear()
+      this.accessOrder = []
+      logger.verbose('LRU provider cache cleared during invalidation')
+    }
+
     this.allProvidersCache.clear()
     this.allProvidersCacheTimestamp = null
     logger.info('All providers cache invalidated')

@@ -8,6 +8,7 @@ import YStack from '@/componentsV2/layout/YStack'
 import Text from '@/componentsV2/base/Text'
 import PressableRow from '@/componentsV2/layout/PressableRow'
 import XStack from '@/componentsV2/layout/XStack'
+import { isGenerateImageModels, isWebSearchModel } from '@/config/models'
 
 interface ExternalTool {
   key: string
@@ -43,8 +44,10 @@ export const ExternalTools: React.FC<ExternalToolsProps> = ({
       onPress: onWebSearchToggle,
       isActive: !!assistant.enableWebSearch,
       // 网络搜索模型 && 设置了工具调用 && 设置了网络搜索服务商 才能开启网络搜索
-      // shouldShow: !!firstMention && isWebSearchModel(firstMention) && !!assistant.settings?.toolUseMode && !!assistant.webSearchProviderId
-      shouldShow: true
+      shouldShow:
+        !!firstMention &&
+        (isWebSearchModel(firstMention) || (!!assistant.settings?.toolUseMode && !!assistant.webSearchProviderId))
+      // shouldShow: true
     },
     {
       key: 'generateImage',
@@ -52,8 +55,8 @@ export const ExternalTools: React.FC<ExternalToolsProps> = ({
       icon: <Palette size={20} />,
       onPress: onGenerateImageToggle,
       isActive: !!assistant.enableGenerateImage,
-      // shouldShow: isGenerateImageModels(mentions)
-      shouldShow: true
+      shouldShow: isGenerateImageModels(mentions)
+      // shouldShow: true
     }
   ]
 

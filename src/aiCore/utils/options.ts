@@ -1,5 +1,4 @@
 import { baseProviderIdSchema, customProviderIdSchema } from '@cherrystudio/ai-core/provider'
-
 import { isOpenAIModel, isSupportFlexServiceTierModel } from '@/config/models'
 import { isSupportServiceTierProvider } from '@/config/providers'
 import {
@@ -81,13 +80,17 @@ export function buildProviderOptions(
     // 应该覆盖所有类型
     switch (baseProviderId) {
       case 'openai':
+      case 'openai-chat':
       case 'azure':
+      case 'azure-responses':
         providerSpecificOptions = {
           ...buildOpenAIProviderOptions(assistant, model, capabilities),
           serviceTier: serviceTierSetting
         }
         break
-
+      // case 'huggingface':
+      //   providerSpecificOptions = buildOpenAIProviderOptions(assistant, model, capabilities)
+      //   break
       case 'anthropic':
         providerSpecificOptions = buildAnthropicProviderOptions(assistant, model, capabilities)
         break
@@ -100,25 +103,29 @@ export function buildProviderOptions(
         providerSpecificOptions = buildXAIProviderOptions(assistant, model, capabilities)
         break
       case 'deepseek':
-      case 'openai-compatible':
+      case 'openrouter':
+      case 'openai-compatible': {
         // 对于其他 provider，使用通用的构建逻辑
         providerSpecificOptions = {
           ...buildGenericProviderOptions(assistant, model, capabilities),
           serviceTier: serviceTierSetting
         }
         break
+      }
       default:
         throw new Error(`Unsupported base provider ${baseProviderId}`)
     }
   } else {
     // 处理自定义 provider
     const { data: providerId, success, error } = customProviderIdSchema.safeParse(rawProviderId)
-
     if (success) {
       switch (providerId) {
         // 非 base provider 的单独处理逻辑
         case 'google-vertex':
           providerSpecificOptions = buildGeminiProviderOptions(assistant, model, capabilities)
+          break
+        case 'google-vertex-anthropic':
+          providerSpecificOptions = buildAnthropicProviderOptions(assistant, model, capabilities)
           break
         default:
           // 对于其他 provider，使用通用的构建逻辑
@@ -138,9 +145,16 @@ export function buildProviderOptions(
     ...getCustomParameters(assistant)
   }
 
+  // vertex需要映射到google或anthropic
+  const rawProviderKey =
+    {
+      'google-vertex': 'google',
+      'google-vertex-anthropic': 'anthropic'
+    }[rawProviderId] || rawProviderId
+
   // 返回 AI Core SDK 要求的格式：{ 'providerId': providerOptions }
   return {
-    [rawProviderId]: providerSpecificOptions
+    [rawProviderKey]: providerSpecificOptions
   }
 }
 

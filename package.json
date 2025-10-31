@@ -1,7 +1,7 @@
 {
   "name": "Cherry Studio",
   "main": "index.js",
-  "version": "0.1.0-beta.1",
+  "version": "0.1.0",
   "scripts": {
     "start": "npx expo start",
     "prebuild": "expo prebuild",
@@ -164,7 +164,7 @@
     "tailwind-variants": "^3.1.0",
     "temml": "^0.11.9",
     "tokenx": "^1.0.1",
-    "turndown": "7.2.0",
+    "turndown": "7.2.2",
     "vitest": "^3.2.4",
     "webdav": "^5.8.0",
     "zeego": "^3.0.6"
