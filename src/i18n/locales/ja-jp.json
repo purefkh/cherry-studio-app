@@ -516,6 +516,7 @@
         "landrop": {
           "filename": "ファイル名",
           "scan_qr_code": {
+            "connecting": "接続中...",
             "description": "Cherry StudioからQRコードをスキャン",
             "grant_permission": "権限を付与する",
             "permission_denied": "カメラの権限が許可されていません。QRコードをスキャンするには、デバイスの設定でカメラの権限を有効にしてください。",
@@ -523,7 +524,8 @@
             "requesting_permission": "カメラの権限をリクエスト中...",
             "success": "接続に成功しました 🎉",
             "success_description": "今すぐ送信ボタンをクリックしてデータを復元できます！",
-            "title": "QRコードをスキャン"
+            "title": "QRコードをスキャン",
+            "waiting_for_file": "ファイルの送信を待っています..."
           },
           "status": {
             "connected": "接続済み",

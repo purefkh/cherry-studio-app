@@ -516,6 +516,7 @@
         "landrop": {
           "filename": "檔名",
           "scan_qr_code": {
+            "connecting": "正在連接...",
             "description": "從Cherry Studio掃描QR碼",
             "grant_permission": "授與權限",
             "permission_denied": "未取得相機權限。請在裝置設定中啟用相機權限以掃描QR碼。",
@@ -523,7 +524,8 @@
             "requesting_permission": "正在請求相機權限...",
             "success": "連接成功 🎉",
             "success_description": "您現在可以點擊發送按鈕來恢復資料！",
-            "title": "掃描QR碼"
+            "title": "掃描QR碼",
+            "waiting_for_file": "等待發送檔案..."
           },
           "status": {
             "connected": "已連線",

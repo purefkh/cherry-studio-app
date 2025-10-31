@@ -516,6 +516,7 @@
         "landrop": {
           "filename": "File Name",
           "scan_qr_code": {
+            "connecting": "Connecting...",
             "description": "Scan QR Code from Cherry Studio",
             "grant_permission": "Grant Permission",
             "permission_denied": "Camera permission not granted. Please enable it in your device settings to scan QR codes.",
@@ -523,7 +524,8 @@
             "requesting_permission": "Requesting camera permission...",
             "success": "Connection Successful 🎉",
             "success_description": "You can now Click Send Button to Restore Data!",
-            "title": "Scan QR Code"
+            "title": "Scan QR Code",
+            "waiting_for_file": "Waiting for file..."
           },
           "status": {
             "connected": "Connected",
