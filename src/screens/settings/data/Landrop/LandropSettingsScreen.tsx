@@ -6,11 +6,11 @@ import { File } from 'expo-file-system'
 import React, { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { SafeAreaContainer, HeaderBar, RestoreProgressModal } from '@/componentsV2'
+import { SafeAreaContainer, HeaderBar, RestoreProgressModal, YStack, Text } from '@/componentsV2'
 import { useRestore, LANDROP_RESTORE_STEPS, RESTORE_STEP_CONFIGS } from '@/hooks/useRestore'
 import { useWebSocket, WebSocketStatus } from '@/hooks/useWebSocket'
 import { DataSourcesNavigationProps } from '@/types/naviagate'
-import { Spinner, YStack, Text } from 'tamagui'
+import { Spinner } from 'heroui-native'
 
 import { QRCodeScanner } from './QRCodeScanner'
 import { DEFAULT_BACKUP_STORAGE } from '@/constants/storage'
@@ -118,18 +118,19 @@ export default function LandropSettingsScreen() {
 
       {showLoading && (
         <YStack
-          position="absolute"
-          top={0}
-          left={0}
-          right={0}
-          bottom={0}
-          backgroundColor="$background"
-          justifyContent="center"
-          alignItems="center"
-          gap="$4"
-          zIndex={10}>
-          <Spinner size="large" color="$blue10" />
-          <Text fontSize="$5" color="$color">
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 10
+          }}>
+          <Spinner />
+          <Text className="mt-4 text-white text-lg">
             {status === WebSocketStatus.CONNECTING
               ? t('settings.data.landrop.scan_qr_code.connecting')
               : t('settings.data.landrop.scan_qr_code.waiting_for_file')}
