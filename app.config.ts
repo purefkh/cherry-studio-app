@@ -48,7 +48,10 @@ export default {
             minSdkVersion: 24,
             gradleVersion: '8.13',
             androidGradlePluginVersion: '8.13.0',
-            buildArchs: ['arm64-v8a']
+            buildArchs: ['arm64-v8a'],
+            // TODO: 临时方案 - 处理大备份文件（>100MB）
+            // 长期应重构为分文件备份格式
+            largeHeap: true
           }
         }
       ],
