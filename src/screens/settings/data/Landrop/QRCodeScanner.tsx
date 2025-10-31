@@ -135,7 +135,7 @@ export function QRCodeScanner({ onQRCodeScanned }: QRCodeScannerProps) {
       <CameraView
         style={{
           width: '100%',
-          height: '60%',
+          height: '100%',
           minHeight: 300
         }}
         facing="back"
