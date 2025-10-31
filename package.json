@@ -115,6 +115,7 @@
     "fast-xml-parser": "^5.2.5",
     "heroui-native": "^1.0.0-alpha.16",
     "i18next": "^24.2.2",
+    "jsonstream": "^1.0.3",
     "lodash": "^4.17.21",
     "lru-cache": "^11.1.0",
     "lucide-react-native": "^0.544.0",

@@ -44,7 +44,7 @@ export default {
       edgeToEdgeEnabled: true,
       package: androidPackage,
       userInterfaceStyle: 'automatic',
-      predictiveBackGestureEnabled: false
+      predictiveBackGestureEnabled: false,
     },
     plugins: [
       [
@@ -58,7 +58,7 @@ export default {
             minSdkVersion: 24,
             gradleVersion: '8.13',
             androidGradlePluginVersion: '8.13.0',
-            buildArchs: ['arm64-v8a']
+            buildArchs: ['arm64-v8a'],
           }
         }
       ],
@@ -159,7 +159,8 @@ export default {
           android: ['com.facebook.katana', 'com.instagram.android', 'com.twitter.android', 'com.zhiliaoapp.musically'],
           enableBase64ShareAndroid: true
         }
-      ]
+      ],
+      './plugins/heapSize'
     ],
     experiments: {
       typedRoutes: true,
