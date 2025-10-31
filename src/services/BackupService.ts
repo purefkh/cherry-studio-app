@@ -219,6 +219,7 @@ function transformBackupData(data: string): { reduxData: ExportReduxData; indexe
   // 提取 Redux 数据
   logger.info('Extracting Redux data...')
   let localStorageData = orginalData.localStorage
+  orginalData = null
   let persistDataString = localStorageData['persist:cherry-studio']
   localStorageData = null
   let rawReduxData = JSON.parse(persistDataString)
@@ -266,21 +267,15 @@ function transformBackupData(data: string): { reduxData: ExportReduxData; indexe
     const reduxTopic = topicsFromRedux.find(t => t.id === indexedTopic.id)
     const correspondingMessages = messagesByTopicId[indexedTopic.id] || []
 
+    // 确保返回的 topic 一定包含有效的 id（使用 IndexedDB 中的 id 作为优先）
     return {
-      // 使用 Redux 的完整数据（如果存在），否则使用 IndexedDB 的数据
-      ...(reduxTopic || {
-        id: indexedTopic.id,
-        assistantId: topicToAssistantMap.get(indexedTopic.id) || 'default',
-        messages: []
-      }),
+      ...reduxTopic,
+      id: indexedTopic.id,
       messages: correspondingMessages
-    }
+    } as Topic
   })
 
-  // 清理不再需要的大对象引用，帮助 GC
   topicToAssistantMap.clear()
-  // @ts-ignore
-  orginalData = null
 
   logger.info('Backup data transformation completed')
 
