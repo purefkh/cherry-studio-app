@@ -4,8 +4,54 @@ import { File } from 'expo-file-system'
 
 import { loggerService } from '@/services/LoggerService'
 import { DEFAULT_BACKUP_STORAGE } from '@/constants/storage'
-import type { ConnectionInfo } from '@/types/network'
+import type { ConnectionInfo, CompressedConnectionInfo } from '@/types/network'
 const logger = loggerService.withContext('useWebSocket')
+
+// Helper function to convert IP address to number for compression
+const ipToNumber = (ip: string): number => {
+  return ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet), 0)
+}
+
+// Function to compress connection info for QR code generation
+export const compressConnectionInfo = (
+  ip: string,
+  candidates: { host: string; interface: string; priority: number }[],
+  port: number
+): CompressedConnectionInfo => {
+  return [
+    'CSA', // Magic identifier for Cherry Studio App
+    ipToNumber(ip),
+    candidates.map(candidate => ipToNumber(candidate.host)),
+    port, // Port number
+    Date.now() % 86400000 // Time of day in milliseconds for uniqueness
+  ] as CompressedConnectionInfo
+}
+
+// Function to decompress connection info from QR code
+export const decompressConnectionInfo = (compressedData: CompressedConnectionInfo): Omit<ConnectionInfo, 'type'> => {
+  const [, selectedIpNum, candidateIpNums, port, timestamp] = compressedData
+
+  // Helper function to convert number back to IP address
+  const numberToIp = (num: number): string => {
+    return [
+      (num >>> 24) & 255,
+      (num >>> 16) & 255,
+      (num >>> 8) & 255,
+      num & 255
+    ].join('.')
+  }
+
+  return {
+    selectedHost: numberToIp(selectedIpNum),
+    candidates: candidateIpNums.map(host => ({
+      host: numberToIp(host),
+      interface: 'unknown',
+      priority: 1
+    })),
+    port,
+    timestamp
+  }
+}
 
 // 定义 WebSocket 连接状态的枚举
 export enum WebSocketStatus {
@@ -83,34 +129,33 @@ export function useWebSocket() {
     try {
       setStatus(WebSocketStatus.CONNECTING)
 
-      // Handle legacy string format for backward compatibility
-        // Sort candidates by priority (lower number = higher priority)
-        const sortedCandidates = [...connectionInfo.candidates].sort((a, b) => a.priority - b.priority)
+      // Sort candidates by priority (lower number = higher priority)
+      const sortedCandidates = [...connectionInfo.candidates].sort((a, b) => a.priority - b.priority)
 
-        // Try each candidate until one succeeds
-        for (const candidate of sortedCandidates) {
-          try {
-            const connectionUrl = `http://${candidate.host}:${connectionInfo.port}`
+      // Try each candidate until one succeeds
+      for (const candidate of sortedCandidates) {
+        try {
+          const connectionUrl = `http://${candidate.host}:${connectionInfo.port}`
 
-            // If we reach here, this candidate worked, use it for the actual connection
-            socket.current = io(connectionUrl, {
-              timeout: 5000,
-              reconnection: false,  // 禁用自动重连，因为这是一次性文件传输
-              transports: ['websocket', 'polling']  // Try both transports
-            })
+          // If we reach here, this candidate worked, use it for the actual connection
+          socket.current = io(connectionUrl, {
+            timeout: 5000,
+            reconnection: false,  // 禁用自动重连，因为这是一次性文件传输
+            transports: ['websocket', 'polling']  // Try both transports
+          })
 
-            break // Exit the loop when we find a working candidate
+          break // Exit the loop when we find a working candidate
 
-          } catch (error) {
-            logger.warn(`Failed to connect to ${candidate.host} via ${candidate.interface}:`, error)
-            continue // Try next candidate
-          }
+        } catch (error) {
+          logger.warn(`Failed to connect to ${candidate.host} via ${candidate.interface}:`, error)
+          continue // Try next candidate
         }
+      }
 
-        // If no candidates worked
-        if (!socket.current) {
-          throw new Error('Failed to connect to any IP candidate')
-        }
+      // If no candidates worked
+      if (!socket.current) {
+        throw new Error('Failed to connect to any IP candidate')
+      }
 
       // 连接客户端
       socket.current.on('connect', () => {
@@ -189,5 +234,18 @@ export function useWebSocket() {
     socket.current = null
   }
 
-  return { connect, status, progress, filename, disconnect }
+  const connectFromCompressedData = async (compressedData: CompressedConnectionInfo) => {
+    try {
+      const connectionInfo = decompressConnectionInfo(compressedData)
+      await connect({
+        type: 'websocket',
+        ...connectionInfo
+      })
+    } catch (error) {
+      logger.error('Failed to connect from compressed data:', error)
+      setStatus(WebSocketStatus.ERROR)
+    }
+  }
+
+  return { connect, connectFromCompressedData, status, progress, filename, disconnect }
 }
