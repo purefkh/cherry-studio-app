@@ -127,7 +127,14 @@ export function useWebSocket() {
       // 断开连接
       socket.current.on('disconnect', () => {
         logger.info('disconnected from WebSocket server')
-        setStatus(WebSocketStatus.DISCONNECTED)
+        // 如果是文件传输完成后的断开，不要改变状态
+        setStatus(prevStatus => {
+          if (prevStatus === WebSocketStatus.ZIP_FILE_END) {
+            logger.info('File transfer completed, keeping ZIP_FILE_END status')
+            return prevStatus
+          }
+          return WebSocketStatus.DISCONNECTED
+        })
         socket.current = null
       })
 
@@ -154,7 +161,7 @@ export function useWebSocket() {
         zipFileChunk.current.size += chunkData.length
         const progress = Math.min((zipFileChunk.current.size / zipFileInfo.current.totalSize) * 100, 100)
         setProgress(progress)
-        logger.info('zip-file-chunk:', Math.floor(progress), '%')
+        logger.silly('zip-file-chunk:', Math.floor(progress), '%')
       })
 
       // 文件接收结束

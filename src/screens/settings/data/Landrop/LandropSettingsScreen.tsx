@@ -67,7 +67,7 @@ export default function LandropSettingsScreen() {
     const handleRestore = async () => {
       if (status === WebSocketStatus.ZIP_FILE_END) {
         const zip = new File(DEFAULT_BACKUP_STORAGE, filename)
-        console.log('zip', zip)
+        logger.debug('zip', zip)
         await startRestore(
           {
             name: zip.name,
