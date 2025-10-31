@@ -544,6 +544,8 @@
         "reset_success": "数据重置成功！应用已恢复到初始状态。",
         "reset_warning": "您确定要重置所有数据吗？这将删除所有对话、消息和用户创建的内容。此操作无法撤销。",
         "restore": {
+          "clear_error": "清除现有数据失败，请重试。",
+          "confirm_warning": "恢复操作将使用备份数据覆盖当前所有应用数据。",
           "error": "恢复错误",
           "error_message": "恢复过程中出现错误，请检查文件并重试。",
           "progress": {
