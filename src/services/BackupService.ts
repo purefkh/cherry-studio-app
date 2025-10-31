@@ -51,6 +51,31 @@ async function restoreIndexedDbData(data: ExportIndexedData, onProgress: OnProgr
   logger.info(`Processing ${topicCount} topics, ${messageCount} messages, ${blockCount} blocks`)
   logger.info(`Using batch size: ${BATCH_SIZE}`)
 
+  // 获取数据库中现有的 assistant IDs，用于验证 topics
+  const existingAssistants = await assistantDatabase.getAllAssistants()
+  const existingAssistantIds = new Set(existingAssistants.map(a => a.id))
+
+  // 检查并修复 topics 中的无效 assistantId
+  const topicAssistantIds = new Set(data.topics.map(t => t.assistantId))
+  const missingTopicAssistantIds = [...topicAssistantIds].filter(id => !existingAssistantIds.has(id))
+
+  if (missingTopicAssistantIds.length > 0) {
+    const affectedTopicsCount = data.topics.filter(t => missingTopicAssistantIds.includes(t.assistantId)).length
+    logger.warn(
+      `Fixed ${affectedTopicsCount} topics with missing assistant_id by replacing with "default". Missing IDs: ${missingTopicAssistantIds.join(', ')}`
+    )
+
+    data.topics = data.topics.map(topic => {
+      if (missingTopicAssistantIds.includes(topic.assistantId)) {
+        return {
+          ...topic,
+          assistantId: 'default'
+        }
+      }
+      return topic
+    })
+  }
+
   // 分批处理 topics
   for (let i = 0; i < topicCount; i += BATCH_SIZE) {
     const batch = data.topics.slice(i, Math.min(i + BATCH_SIZE, topicCount))
@@ -61,13 +86,52 @@ async function restoreIndexedDbData(data: ExportIndexedData, onProgress: OnProgr
     }
   }
 
+  // 验证并修复 messages 中的外键引用
+  const messageAssistantIds = new Set(data.messages.map(msg => msg.assistantId))
+  const messageTopicIds = new Set(data.messages.map(msg => msg.topicId))
+  const validTopicIds = new Set(data.topics.map(t => t.id))
+
+  // 检查是否有 messages 引用了不存在的 assistantId
+  const missingAssistantIds = [...messageAssistantIds].filter(id => !existingAssistantIds.has(id))
+  if (missingAssistantIds.length > 0) {
+    const affectedMessagesCount = data.messages.filter(msg => missingAssistantIds.includes(msg.assistantId)).length
+    logger.warn(
+      `Fixed ${affectedMessagesCount} messages with missing assistant_id by replacing with "default". Missing IDs: ${missingAssistantIds.join(', ')}`
+    )
+
+    data.messages = data.messages.map(msg => {
+      if (missingAssistantIds.includes(msg.assistantId)) {
+        return {
+          ...msg,
+          assistantId: 'default'
+        }
+      }
+      return msg
+    })
+  }
+
+  // 检查是否有 messages 引用了不存在的 topicId
+  const missingTopicIds = [...messageTopicIds].filter(id => !validTopicIds.has(id))
+  if (missingTopicIds.length > 0) {
+    const originalCount = data.messages.length
+    data.messages = data.messages.filter(msg => !missingTopicIds.includes(msg.topicId))
+    const filteredCount = originalCount - data.messages.length
+
+    if (filteredCount > 0) {
+      logger.error(
+        `Filtered out ${filteredCount} messages with invalid topic_id references. Missing topic IDs: ${missingTopicIds.join(', ')}`
+      )
+    }
+  }
+
   // 分批处理 messages
-  for (let i = 0; i < messageCount; i += BATCH_SIZE) {
-    const batch = data.messages.slice(i, Math.min(i + BATCH_SIZE, messageCount))
+  const finalMessageCount = data.messages.length
+  for (let i = 0; i < finalMessageCount; i += BATCH_SIZE) {
+    const batch = data.messages.slice(i, Math.min(i + BATCH_SIZE, finalMessageCount))
     await messageDatabase.upsertMessages(batch)
 
-    if (i % (BATCH_SIZE * 10) === 0 || i + BATCH_SIZE >= messageCount) {
-      logger.info(`Messages: ${Math.min(i + BATCH_SIZE, messageCount)}/${messageCount}`)
+    if (i % (BATCH_SIZE * 10) === 0 || i + BATCH_SIZE >= finalMessageCount) {
+      logger.info(`Messages: ${Math.min(i + BATCH_SIZE, finalMessageCount)}/${finalMessageCount}`)
     }
   }
 
@@ -133,7 +197,10 @@ async function restoreReduxData(data: ExportReduxData, onProgress: OnProgressCal
         type: index === 0 ? 'system' : 'external'
       }) as Assistant
   )
+
+  logger.info(`Restoring ${assistants.length} assistants`)
   await assistantDatabase.upsertAssistants(assistants)
+
   await websearchProviderDatabase.upsertWebSearchProviders(data.websearch.providers)
   await new Promise(resolve => setTimeout(resolve, 200)) // Delay between steps
 
@@ -219,6 +286,10 @@ function transformBackupData(data: string): { reduxData: ExportReduxData; indexe
   // 提取 Redux 数据
   logger.info('Extracting Redux data...')
   let localStorageData = orginalData.localStorage
+
+  // 从 IndexedDB 提取 topics（这是数据的真实来源，包含所有 topics）
+  const indexedDb: ImportIndexedData = orginalData.indexedDB
+
   orginalData = null
   let persistDataString = localStorageData['persist:cherry-studio']
   localStorageData = null
@@ -234,10 +305,7 @@ function transformBackupData(data: string): { reduxData: ExportReduxData; indexe
 
   rawReduxData = null
 
-  // 从 IndexedDB 提取 topics（这是数据的真实来源，包含所有 topics）
-  logger.info('Processing topics...')
-  const indexedDb: ImportIndexedData = orginalData.indexedDB
-
+  logger.info('Processing topics and messages...')
   // 从 Redux 构建 topic 的 assistantId 映射
   const topicsFromRedux = reduxData.assistants.assistants
     .flatMap(a => a.topics)
@@ -248,7 +316,6 @@ function transformBackupData(data: string): { reduxData: ExportReduxData; indexe
     topicToAssistantMap.set(topic.id, topic.assistantId)
   }
 
-  logger.info('Extracting messages from topics...')
   const allMessages: Message[] = []
   const messagesByTopicId: Record<string, Message[]> = {}
 
@@ -263,22 +330,30 @@ function transformBackupData(data: string): { reduxData: ExportReduxData; indexe
   logger.info(`Extracted ${allMessages.length} messages from ${indexedDb.topics.length} topics`)
 
   // 合并 topics：使用 IndexedDB 的 topics，补充 Redux 的元数据
-  logger.info('Merging topics with metadata...')
+  let topicsUsingDefaultFallback = 0
   const topicsWithMessages = indexedDb.topics.map(indexedTopic => {
     // 尝试从 Redux 中获取对应的 topic 元数据
     const reduxTopic = topicsFromRedux.find(t => t.id === indexedTopic.id)
-    const correspondingMessages = messagesByTopicId[indexedTopic.id] || []
 
-    // 确保返回的 topic 一定包含有效的 id（使用 IndexedDB 中的 id 作为优先）
+    if (!reduxTopic) {
+      topicsUsingDefaultFallback++
+    }
+
     return {
-      ...reduxTopic,
       id: indexedTopic.id,
-      messages: correspondingMessages
-    } as Topic
+      assistantId: reduxTopic?.assistantId ?? 'default',
+      name: reduxTopic?.name ?? 'Untitled Topic',
+      createdAt: reduxTopic?.createdAt ?? Date.now(),
+      updatedAt: reduxTopic?.updatedAt ?? Date.now(),
+      isLoading: reduxTopic?.isLoading ?? false
+    } satisfies Topic
   })
 
-  topicToAssistantMap.clear()
+  if (topicsUsingDefaultFallback > 0) {
+    logger.warn(`${topicsUsingDefaultFallback} topics not found in Redux data, using 'default' as assistantId fallback`)
+  }
 
+  topicToAssistantMap.clear()
   logger.info('Backup data transformation completed')
 
   return {

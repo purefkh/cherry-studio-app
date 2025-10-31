@@ -544,6 +544,8 @@
         "reset_success": "Data reset successful! The app has been restored to its initial state.",
         "reset_warning": "Are you sure you want to reset all data? This will delete all conversations, messages, and user-created content. This action cannot be undone.",
         "restore": {
+          "clear_error": "Failed to clear existing data. Please try again.",
+          "confirm_warning": "Restoring from backup will overwrite all current app data.",
           "error": "Restore Error",
           "error_message": "An error occurred during the restore process. Please check the file and try again.",
           "progress": {
