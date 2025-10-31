@@ -7,25 +7,6 @@ import { DEFAULT_BACKUP_STORAGE } from '@/constants/storage'
 import type { ConnectionInfo, CompressedConnectionInfo } from '@/types/network'
 const logger = loggerService.withContext('useWebSocket')
 
-// Helper function to convert IP address to number for compression
-const ipToNumber = (ip: string): number => {
-  return ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet), 0)
-}
-
-// Function to compress connection info for QR code generation
-export const compressConnectionInfo = (
-  ip: string,
-  candidates: { host: string; interface: string; priority: number }[],
-  port: number
-): CompressedConnectionInfo => {
-  return [
-    'CSA', // Magic identifier for Cherry Studio App
-    ipToNumber(ip),
-    candidates.map(candidate => ipToNumber(candidate.host)),
-    port, // Port number
-    Date.now() % 86400000 // Time of day in milliseconds for uniqueness
-  ] as CompressedConnectionInfo
-}
 
 // Function to decompress connection info from QR code
 export const decompressConnectionInfo = (compressedData: CompressedConnectionInfo): Omit<ConnectionInfo, 'type'> => {
