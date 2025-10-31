@@ -11,8 +11,34 @@ import { Overlay } from './Overlay'
 import { Spinner } from 'heroui-native'
 import { useDialog } from '@/hooks/useDialog'
 import { useNavigation } from '@react-navigation/native'
-import { ConnectionInfo } from '@/types/network'
+import { ConnectionInfo, CompressedConnectionInfo } from '@/types/network'
 const logger = loggerService.withContext('QRCodeScanner')
+
+// Helper function to convert number back to IP address
+const numberToIp = (num: number): string => {
+  return [
+    (num >>> 24) & 255,
+    (num >>> 16) & 255,
+    (num >>> 8) & 255,
+    num & 255
+  ].join('.')
+}
+
+// Function to decompress connection info from QR code
+const decompressConnectionInfo = (compressedData: CompressedConnectionInfo): Omit<ConnectionInfo, 'type'> => {
+  const [, selectedIpNum, candidateIpNums, port, timestamp] = compressedData
+
+  return {
+    selectedHost: numberToIp(selectedIpNum),
+    candidates: candidateIpNums.map(host => ({
+      host: numberToIp(host),
+      interface: 'unknown',
+      priority: 1
+    })),
+    port,
+    timestamp
+  }
+}
 
 interface QRCodeScannerProps {
   onQRCodeScanned: (connectionInfo: ConnectionInfo) => void
@@ -53,6 +79,7 @@ export function QRCodeScanner({ onQRCodeScanned }: QRCodeScannerProps) {
 
   const handleBarcodeScanned = ({ data }: { data: string }) => {
     if (isProcessing) {
+      logger.warn('Already processing, ignoring scan')
       return // 防止重复扫描
     }
 
@@ -60,13 +87,17 @@ export function QRCodeScanner({ onQRCodeScanned }: QRCodeScannerProps) {
       setIsProcessing(true)
       const qrData = JSON.parse(data)
 
-      // Handle new format with multiple IP candidates
-      if (qrData && qrData.type === 'cherry-studio-app' && qrData.candidates && qrData.selectedHost && qrData.port) {
-        logger.info(`QR code parsed: ${qrData.candidates.length} candidates, selected: ${qrData.selectedHost}`)
-        onQRCodeScanned(qrData as ConnectionInfo)
-      } else {
-        setIsProcessing(false)
+      if (qrData && qrData.length === 5 && qrData[0] === 'CSA') {
+        logger.info(`Compressed QR code detected with ${qrData[2].length} candidates`)
+        const connectionInfo = decompressConnectionInfo(qrData as CompressedConnectionInfo)
+        onQRCodeScanned({
+          type: 'websocket',
+          ...connectionInfo
+        })
+        return
       }
+
+      setIsProcessing(false)
     } catch (error) {
       logger.error('Failed to parse QR code data:', error)
       setIsProcessing(false)
@@ -100,15 +131,17 @@ export function QRCodeScanner({ onQRCodeScanned }: QRCodeScannerProps) {
         <ScanQrCode />
         <Text>{t('settings.data.landrop.scan_qr_code.description')}</Text>
       </XStack>
+
       <CameraView
         style={{
           width: '100%',
-          height: '100%'
-          // aspectRatio: 1,
-          // maxHeight: '70%'
+          height: '60%',
+          minHeight: 300
         }}
         facing="back"
-        onBarcodeScanned={isProcessing ? undefined : handleBarcodeScanned}
+        onBarcodeScanned={isProcessing ? undefined : (data) => {
+          handleBarcodeScanned(data)
+        }}
         barcodeScannerSettings={{
           barcodeTypes: ['qr']
         }}

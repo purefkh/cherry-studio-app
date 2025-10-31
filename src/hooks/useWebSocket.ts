@@ -83,34 +83,33 @@ export function useWebSocket() {
     try {
       setStatus(WebSocketStatus.CONNECTING)
 
-      // Handle legacy string format for backward compatibility
-        // Sort candidates by priority (lower number = higher priority)
-        const sortedCandidates = [...connectionInfo.candidates].sort((a, b) => a.priority - b.priority)
+      // Sort candidates by priority (lower number = higher priority)
+      const sortedCandidates = [...connectionInfo.candidates].sort((a, b) => a.priority - b.priority)
 
-        // Try each candidate until one succeeds
-        for (const candidate of sortedCandidates) {
-          try {
-            const connectionUrl = `http://${candidate.host}:${connectionInfo.port}`
+      // Try each candidate until one succeeds
+      for (const candidate of sortedCandidates) {
+        try {
+          const connectionUrl = `http://${candidate.host}:${connectionInfo.port}`
 
-            // If we reach here, this candidate worked, use it for the actual connection
-            socket.current = io(connectionUrl, {
-              timeout: 5000,
-              reconnection: false,  // 禁用自动重连，因为这是一次性文件传输
-              transports: ['websocket', 'polling']  // Try both transports
-            })
+          // If we reach here, this candidate worked, use it for the actual connection
+          socket.current = io(connectionUrl, {
+            timeout: 5000,
+            reconnection: false,  // 禁用自动重连，因为这是一次性文件传输
+            transports: ['websocket', 'polling']  // Try both transports
+          })
 
-            break // Exit the loop when we find a working candidate
+          break // Exit the loop when we find a working candidate
 
-          } catch (error) {
-            logger.warn(`Failed to connect to ${candidate.host} via ${candidate.interface}:`, error)
-            continue // Try next candidate
-          }
+        } catch (error) {
+          logger.warn(`Failed to connect to ${candidate.host} via ${candidate.interface}:`, error)
+          continue // Try next candidate
         }
+      }
 
-        // If no candidates worked
-        if (!socket.current) {
-          throw new Error('Failed to connect to any IP candidate')
-        }
+      // If no candidates worked
+      if (!socket.current) {
+        throw new Error('Failed to connect to any IP candidate')
+      }
 
       // 连接客户端
       socket.current.on('connect', () => {
