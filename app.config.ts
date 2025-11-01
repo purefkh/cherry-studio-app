@@ -13,6 +13,7 @@ const appSlug = isProduction ? 'cherry-studio' : 'cherry-studio-dev'
 const appScheme = isProduction ? 'cherry-studio' : 'cherry-studio-dev'
 const iosBundleId = isProduction ? 'com.cherry-ai.cherry-studio' : 'com.cherry-ai.cherry-studio-dev'
 const androidPackage = isProduction ? 'com.cherry_ai.cherry_studio' : 'com.cherry_ai.cherry_studio_dev'
+const projectId = isProduction ? '391369ab-82f7-4dd1-9368-f32d1ff6183a': 'bad66361-a571-4a5f-afa1-abaeb2786860'
 
 export default {
   expo: {
@@ -169,7 +170,7 @@ export default {
     },
     extra: {
       eas: {
-        projectId: '80096eaf-3ad0-4b87-a466-15f04da1bacc'
+        projectId: projectId
       },
       appVersion
     }
