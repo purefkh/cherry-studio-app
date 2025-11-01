@@ -1,5 +1,5 @@
-import { RouteProp, useNavigation, useRoute } from '@react-navigation/native'
-import React from 'react'
+import { useNavigation } from '@react-navigation/native'
+import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 import WebView from 'react-native-webview'
@@ -7,15 +7,20 @@ import WebView from 'react-native-webview'
 import { ArrowLeft } from '@/componentsV2/icons/LucideIcon'
 import { HeaderBar, SafeAreaContainer } from '@/componentsV2'
 import { HomeNavigationProps } from '@/types/naviagate'
-import { HomeStackParamList } from '@/navigators/HomeStackNavigator'
-
-type HtmlPreviewRouteProp = RouteProp<HomeStackParamList, 'HtmlPreviewScreen'>
+import { useAppDispatch, useAppSelector } from '@/store'
+import { setHtmlPreviewContent } from '@/store/runtime'
 
 export default function HtmlPreviewScreen() {
   const { t } = useTranslation()
   const navigation = useNavigation<HomeNavigationProps>()
-  const route = useRoute<HtmlPreviewRouteProp>()
-  const { htmlContent } = route.params
+  const dispatch = useAppDispatch()
+  const htmlContent = useAppSelector(state => state.runtime.htmlPreviewContent)
+
+  useEffect(() => {
+    return () => {
+      dispatch(setHtmlPreviewContent(null))
+    }
+  }, [dispatch])
 
   const handleBack = () => {
     navigation.goBack()
@@ -35,7 +40,7 @@ export default function HtmlPreviewScreen() {
   </style>
 </head>
 <body>
-${htmlContent}
+${htmlContent || ''}
 </body>
 </html>
   `.trim()

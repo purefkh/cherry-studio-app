@@ -9,6 +9,8 @@ import { Copy, Eye } from '@/componentsV2/icons/LucideIcon'
 import { getCodeLanguageIcon } from '@/utils/icons/codeLanguage'
 import { markdownColors } from '../MarkdownStyles'
 import { HomeNavigationProps } from '@/types/naviagate'
+import { useAppDispatch } from '@/store'
+import { setHtmlPreviewContent } from '@/store/runtime'
 
 interface MarkdownCodeProps {
   text: string
@@ -30,9 +32,11 @@ export const MarkdownCode: React.FC<MarkdownCodeProps> = ({
   const currentColors = isDark ? markdownColors.dark : markdownColors.light
   const lang = language || 'text'
   const navigation = useNavigation<HomeNavigationProps>()
+  const dispatch = useAppDispatch()
 
   const handlePreview = () => {
-    navigation.navigate('HtmlPreviewScreen', { htmlContent: text })
+    dispatch(setHtmlPreviewContent(text))
+    navigation.navigate('HtmlPreviewScreen')
   }
 
   const isHtml = lang.toLowerCase() === 'html'

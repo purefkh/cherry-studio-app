@@ -17,7 +17,7 @@ export type HomeStackParamList = {
   ChatScreen: { topicId: string }
   TopicScreen: undefined
   SettingsScreen: undefined
-  HtmlPreviewScreen: { htmlContent: string }
+  HtmlPreviewScreen: undefined
   GeneralSettings: { screen?: string; params?: any } | undefined
   AssistantSettings: { screen?: string; params?: any } | undefined
   ProvidersSettings: { screen?: string; params?: any } | undefined
