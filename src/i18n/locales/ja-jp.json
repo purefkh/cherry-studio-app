@@ -304,7 +304,9 @@
       }
     },
     "html_preview": {
-      "title": "HTMLプレビュー"
+      "title": "HTMLプレビュー",
+      "loading": "HTMLを読み込み中...",
+      "file_too_large": "HTMLファイルが大きすぎます（最大{{maxSize}}MB）。プレビューが正しく動作しない可能性があります。"
     },
     "inputs": {
       "mentions": "@ {{number}} モデル",
