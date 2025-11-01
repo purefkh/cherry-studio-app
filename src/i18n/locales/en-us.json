@@ -303,6 +303,9 @@
         "empty": " No topics found"
       }
     },
+    "html_preview": {
+      "title": "HTML Preview"
+    },
     "inputs": {
       "mentions": "@ {{number}} models",
       "placeholder": "Send Message..."

@@ -303,6 +303,9 @@
         "empty": "Темы не найдены"
       }
     },
+    "html_preview": {
+      "title": "Предварительный просмотр HTML"
+    },
     "inputs": {
       "mentions": "@ {{number}} моделей",
       "placeholder": "Отправить сообщение..."
