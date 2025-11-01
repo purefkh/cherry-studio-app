@@ -305,8 +305,7 @@
     },
     "html_preview": {
       "title": "HTML Preview",
-      "loading": "Loading HTML...",
-      "file_too_large": "HTML file is too large (max {{maxSize}}MB). Preview may not work correctly."
+      "loading": "Loading HTML..."
     },
     "inputs": {
       "mentions": "@ {{number}} models",

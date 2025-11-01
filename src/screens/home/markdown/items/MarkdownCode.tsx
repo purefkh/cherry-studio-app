@@ -1,9 +1,8 @@
 import React from 'react'
-import { ViewStyle, TextStyle, View, Alert } from 'react-native'
+import { ViewStyle, TextStyle, View } from 'react-native'
 import CodeHighlighter from 'react-native-code-highlighter'
 import { atomOneDark, atomOneLight } from 'react-syntax-highlighter/dist/esm/styles/hljs'
 import { useNavigation } from '@react-navigation/native'
-import { useTranslation } from 'react-i18next'
 
 import { IconButton, Image, Text, XStack } from '@/componentsV2'
 import { Copy, Eye } from '@/componentsV2/icons/LucideIcon'
@@ -12,9 +11,6 @@ import { markdownColors } from '../MarkdownStyles'
 import { HomeNavigationProps } from '@/types/naviagate'
 import { useAppDispatch } from '@/store'
 import { setHtmlPreviewContent } from '@/store/runtime'
-
-const MAX_HTML_SIZE_MB = 2
-const MAX_HTML_SIZE_BYTES = MAX_HTML_SIZE_MB * 1024 * 1024
 
 interface MarkdownCodeProps {
   text: string
@@ -37,19 +33,11 @@ export const MarkdownCode: React.FC<MarkdownCodeProps> = ({
   const lang = language || 'text'
   const navigation = useNavigation<HomeNavigationProps>()
   const dispatch = useAppDispatch()
-  const { t } = useTranslation()
 
   const handlePreview = () => {
     const sizeInBytes = new Blob([text]).size
 
-    if (sizeInBytes > MAX_HTML_SIZE_BYTES) {
-      Alert.alert(
-        t('html_preview.title'),
-        t('html_preview.file_too_large', { maxSize: MAX_HTML_SIZE_MB })
-      )
-    }
-
-    dispatch(setHtmlPreviewContent(text))
+    dispatch(setHtmlPreviewContent({ content: text, sizeBytes: sizeInBytes }))
     navigation.navigate('HtmlPreviewScreen')
   }
 

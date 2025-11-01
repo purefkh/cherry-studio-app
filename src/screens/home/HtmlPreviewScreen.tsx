@@ -15,11 +15,15 @@ export default function HtmlPreviewScreen() {
   const navigation = useNavigation<HomeNavigationProps>()
   const dispatch = useAppDispatch()
   const htmlContent = useAppSelector(state => state.runtime.htmlPreviewContent)
+  const htmlSizeBytes = useAppSelector(state => state.runtime.htmlPreviewSizeBytes)
   const [isLoading, setIsLoading] = useState(true)
+
+  const MAX_HTML_SIZE_BYTES = 2 * 1024 * 1024
+  const shouldShowLoading = htmlSizeBytes > MAX_HTML_SIZE_BYTES
 
   useEffect(() => {
     return () => {
-      dispatch(setHtmlPreviewContent(null))
+      dispatch(setHtmlPreviewContent({ content: null, sizeBytes: 0 }))
     }
   }, [dispatch])
 
@@ -56,7 +60,7 @@ ${htmlContent || ''}
         }}
       />
       <View className="flex-1">
-        {isLoading && (
+        {shouldShowLoading && isLoading && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#007AFF" />
             <Text className="text-base mt-3">{t('html_preview.loading')}</Text>

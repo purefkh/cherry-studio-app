@@ -305,8 +305,7 @@
     },
     "html_preview": {
       "title": "HTML 預覽",
-      "loading": "載入 HTML 中...",
-      "file_too_large": "HTML 檔案過大（最大 {{maxSize}}MB）。預覽可能無法正常運作。"
+      "loading": "載入 HTML 中..."
     },
     "inputs": {
       "mentions": "@ {{number}} 個模型",
